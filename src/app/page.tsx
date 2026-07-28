@@ -1,65 +1,161 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Mail, KeyRound, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
+
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<"email" | "otp">("email");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to send OTP");
+      } else {
+        setStep("otp");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: otp }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Invalid OTP");
+      } else {
+        // Redirect to dashboard
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="flex-1 flex items-center justify-center p-4">
+      <div className="glass-panel w-full max-w-md p-8 animate-fade-in relative overflow-hidden">
+        {/* Decorative background blob */}
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+        
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/20">
+            <ShieldCheck className="w-8 h-8 text-blue-400" />
+          </div>
+          <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
+          <p className="text-slate-400 text-sm">
+            University Campus Life Course Registration Portal
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-md mb-6 text-sm flex items-center gap-2">
+            <div className="w-1 h-full bg-red-500 rounded-full"></div>
+            {error}
+          </div>
+        )}
+
+        {step === "email" ? (
+          <form onSubmit={handleSendOtp} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300 ml-1">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="student@university.edu"
+                  className="input-glass pl-10"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+            
+            <button 
+              type="submit" 
+              className="btn-primary w-full flex items-center justify-center gap-2"
+              disabled={loading || !email}
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue with Email"}
+              {!loading && <ArrowRight className="w-5 h-5" />}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="space-y-6 animate-fade-in">
+            <div className="text-center mb-6">
+              <p className="text-sm text-slate-300">
+                We sent a 6-digit code to <br/>
+                <span className="font-semibold text-white">{email}</span>
+              </p>
+              <button 
+                type="button" 
+                onClick={() => { setStep("email"); setOtp(""); setError(""); }}
+                className="text-blue-400 text-xs mt-2 hover:underline"
+              >
+                Change Email
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300 ml-1">One-Time Password</label>
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="text"
+                  required
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="123456"
+                  maxLength={6}
+                  className="input-glass pl-10 tracking-[0.5em] font-mono text-center"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+            
+            <button 
+              type="submit" 
+              className="btn-primary w-full flex items-center justify-center gap-2"
+              disabled={loading || otp.length < 6}
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Login"}
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }
