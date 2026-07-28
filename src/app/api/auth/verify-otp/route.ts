@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email and code are required" }, { status: 400 });
     }
 
-    const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
+    const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: 'signup' });
     
     if (error || !data.user) {
       return NextResponse.json({ error: "Invalid or expired OTP" }, { status: 401 });

@@ -2,33 +2,53 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, KeyRound, Loader2, ArrowRight, ShieldCheck } from "lucide-react";
+import { Mail, KeyRound, Loader2, ArrowRight, ShieldCheck, Lock } from "lucide-react";
 
 export default function LoginPage() {
+  const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"email" | "otp">("email");
+  const [step, setStep] = useState<"credentials" | "otp">("credentials");
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
+      if (mode === "login") {
+        // Login Flow (No OTP needed for returning users)
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Failed to send OTP");
+        if (!res.ok) {
+          setError(data.error || "Failed to log in");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
-        setStep("otp");
+        // Signup Flow (Requires OTP)
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.error || "Failed to sign up");
+        } else {
+          setStep("otp");
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred.");
@@ -53,7 +73,6 @@ export default function LoginPage() {
       if (!res.ok) {
         setError(data.error || "Invalid OTP");
       } else {
-        // Redirect to dashboard
         router.push("/dashboard");
       }
     } catch (err) {
@@ -73,7 +92,9 @@ export default function LoginPage() {
           <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/20">
             <ShieldCheck className="w-8 h-8 text-blue-400" />
           </div>
-          <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            {mode === "login" ? "Welcome Back" : "Create Account"}
+          </h1>
           <p className="text-slate-400 text-sm">
             University Campus Life Course Registration Portal
           </p>
@@ -86,8 +107,8 @@ export default function LoginPage() {
           </div>
         )}
 
-        {step === "email" ? (
-          <form onSubmit={handleSendOtp} className="space-y-6">
+        {step === "credentials" ? (
+          <form onSubmit={handleCredentialsSubmit} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-300 ml-1">Email Address</label>
               <div className="relative">
@@ -103,29 +124,61 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300 ml-1">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="input-glass pl-10"
+                  disabled={loading}
+                  minLength={6}
+                />
+              </div>
+            </div>
             
             <button 
               type="submit" 
               className="btn-primary w-full flex items-center justify-center gap-2"
-              disabled={loading || !email}
+              disabled={loading || !email || !password}
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue with Email"}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (mode === "login" ? "Sign In" : "Create Account")}
               {!loading && <ArrowRight className="w-5 h-5" />}
             </button>
+
+            <div className="text-center mt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode(mode === "login" ? "signup" : "login");
+                  setError("");
+                }}
+                className="text-sm text-blue-400 hover:underline"
+              >
+                {mode === "login" 
+                  ? "Don't have an account? Sign up" 
+                  : "Already have an account? Sign in"}
+              </button>
+            </div>
           </form>
         ) : (
           <form onSubmit={handleVerifyOtp} className="space-y-6 animate-fade-in">
             <div className="text-center mb-6">
               <p className="text-sm text-slate-300">
-                We sent a 6-digit code to <br/>
+                We sent a 6-digit code to verify your email <br/>
                 <span className="font-semibold text-white">{email}</span>
               </p>
               <button 
                 type="button" 
-                onClick={() => { setStep("email"); setOtp(""); setError(""); }}
+                onClick={() => { setStep("credentials"); setOtp(""); setError(""); }}
                 className="text-blue-400 text-xs mt-2 hover:underline"
               >
-                Change Email
+                Go back
               </button>
             </div>
 
@@ -151,7 +204,7 @@ export default function LoginPage() {
               className="btn-primary w-full flex items-center justify-center gap-2"
               disabled={loading || otp.length < 6}
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Login"}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Complete Signup"}
             </button>
           </form>
         )}
