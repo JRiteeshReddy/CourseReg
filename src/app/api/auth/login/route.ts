@@ -35,8 +35,12 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error("Login error:", error);
+    let message = error.message || "Failed to log in.";
+    if (message.includes("fetch failed") || message.includes("ENOTFOUND")) {
+      message = "Could not connect to Supabase authentication server. Please check your internet connection or restart your dev server to load environment variables.";
+    }
     return NextResponse.json(
-      { error: error.message || "Failed to log in." },
+      { error: message },
       { status: 500 }
     );
   }
