@@ -1,51 +1,66 @@
 import { NextResponse } from 'next/server';
-import { getRegistrations } from '@/lib/db';
-import { ALL_COURSES } from '@/lib/courses';
+import { supabase } from '@/lib/supabase';
 import { getSession } from '@/lib/auth';
 
-const ADMIN_EMAILS = ['jriteshreddy@gmail.com'];
+const ADMIN_EMAIL = 'jriteeshreddy@gmail.com';
 
-export async function GET(request: Request) {
+export async function GET() {
+  const email = await getSession();
+  
+  if (!email || email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
+  }
+
   try {
-    const session = await getSession();
-    if (!session || !ADMIN_EMAILS.includes(session.email.toLowerCase())) {
-      return NextResponse.json({ error: "Forbidden: Admins Only" }, { status: 403 });
+    // Fetch courses
+    const { data: courses, error: coursesError } = await supabase
+      .from('courses')
+      .select('*')
+      .order('name');
+      
+    if (coursesError) throw coursesError;
+
+    // Fetch registrations
+    const { data: registrations, error: regError } = await supabase
+      .from('registrations')
+      .select('*');
+      
+    if (regError) throw regError;
+
+    // Generate CSV export data
+    const exportData = [];
+
+    for (const course of courses) {
+      // Find all students registered for this course in either session 1 or 2
+      const registeredStudents = registrations.filter(
+        r => r.session1_course_id === course.id || r.session2_course_id === course.id
+      );
+
+      for (const reg of registeredStudents) {
+        exportData.push({
+          CourseID: course.id,
+          CourseName: course.name,
+          Category: course.category,
+          StudentEmail: reg.email,
+          Session: reg.session1_course_id === course.id ? 1 : 2,
+          RegisteredAt: reg.created_at
+        });
+      }
     }
 
-    const registrations = await getRegistrations();
-
-    const courseStats = ALL_COURSES.map(course => {
-      // Find students in Session 1
-      const s1Students = registrations.filter(r => 
-        r.s1Sports === course.id || r.s1StudentLife === course.id
-      ).map(r => ({ regNo: r.regNo, name: r.name, email: r.email, timestamp: r.timestamp }));
-
-      // Find students in Session 2
-      const s2Students = registrations.filter(r => 
-        r.s2Sports === course.id || r.s2StudentLife === course.id
-      ).map(r => ({ regNo: r.regNo, name: r.name, email: r.email, timestamp: r.timestamp }));
-
-      return {
-        ...course,
-        s1Taken: s1Students.length,
-        s2Taken: s2Students.length,
-        s1Remaining: Math.max(0, course.maxCapacity - s1Students.length),
-        s2Remaining: Math.max(0, course.maxCapacity - s2Students.length),
-        s1Students,
-        s2Students
-      };
-    });
-
     return NextResponse.json({
-      totalRegistrations: registrations.length,
-      courses: courseStats
+      courses: courses.map(c => ({
+        id: c.id,
+        name: c.name,
+        category: c.category,
+        maxSeats: c.max_seats,
+        seats: c.seats
+      })),
+      exportData
     });
-    
-  } catch (error) {
-    console.error("Admin API Error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch admin stats" },
-      { status: 500 }
-    );
+
+  } catch (error: any) {
+    console.error("Admin stats error:", error);
+    return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
   }
 }

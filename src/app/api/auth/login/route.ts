@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { setSession } from '@/lib/auth';
-import { checkEmailExists } from '@/lib/db';
+import { checkEmailExists } from '@/lib/google-sheets';
 
 export async function POST(request: Request) {
   try {
