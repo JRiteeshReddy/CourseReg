@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     const student = await checkEmailExists(email);
     if (!student) {
       return NextResponse.json(
-        { error: "Didn't register to DOSL course" },
+        { error: "student not registered" },
         { status: 403 }
       );
     }
