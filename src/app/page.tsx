@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, KeyRound, Loader2, ArrowRight, ShieldCheck, Sun, Moon, Eye, EyeOff } from "lucide-react";
+import { Mail, KeyRound, Loader2, ArrowRight, ShieldCheck, Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -10,19 +10,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isDark, setIsDark] = useState(true);
   const router = useRouter();
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-    if (!isDark) {
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.remove("light");
-    } else {
-      document.documentElement.classList.add("light");
-      document.documentElement.classList.remove("dark");
-    }
-  };
 
   const emailPrefix = email.trim() ? email.split('@')[0].toLowerCase() : 'username';
   const hintPassword = `${emailPrefix}@reg_pass`;
@@ -57,15 +45,6 @@ export default function AuthPage() {
       {/* Dynamic Background Glow Spheres */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#037A74]/20 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#A07850]/15 rounded-full blur-3xl pointer-events-none"></div>
-
-      {/* Theme Toggle Button */}
-      <button
-        onClick={toggleTheme}
-        className="absolute top-6 right-6 p-3 rounded-full glass-card hover:scale-105 transition-all text-[#D6C7A1] hover:text-[#F5EBE0]"
-        title="Toggle Light / Dark Mode"
-      >
-        {isDark ? <Sun className="w-5 h-5 text-[#D6C7A1]" /> : <Moon className="w-5 h-5 text-[#037A74]" />}
-      </button>
 
       {/* Main Glass Panel */}
       <div className="glass-panel w-full max-w-md p-8 animate-fade-in relative overflow-hidden border border-[#7ECEB7]/20 shadow-2xl">
