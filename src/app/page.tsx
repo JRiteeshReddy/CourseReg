@@ -80,7 +80,7 @@ export default function AuthPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="<name>@student.gitam.edu"
+                placeholder="username@student.gitam.edu"
                 className="input-glass input-glass-icon-left"
                 disabled={loading}
               />
