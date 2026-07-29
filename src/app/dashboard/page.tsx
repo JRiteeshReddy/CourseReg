@@ -61,10 +61,12 @@ export default function StudentDashboard() {
           setIsRegistrationOpen(data.isRegistrationOpen);
         }
 
-        const isConfirmed = data.registration?.status?.toUpperCase() === "CONFIRMED";
-        setIsAlreadyRegistered(isConfirmed);
-
         const userEmail = (data.student?.email || "").toLowerCase();
+        const isConfirmed =
+          data.registration?.status?.toUpperCase() === "CONFIRMED" ||
+          (userEmail && localStorage.getItem(`confirmed_registration_${userEmail}`) === "CONFIRMED");
+
+        setIsAlreadyRegistered(Boolean(isConfirmed));
 
         // Read draft selections from localStorage (durable per user) or sessionStorage or confirmed registration
         const draftS1Sports = (userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
@@ -182,25 +184,24 @@ export default function StudentDashboard() {
 
       {/* PERMANENTLY LOCKED NOTIFICATION BANNER IF REGISTERED */}
       {isAlreadyRegistered && (
-        <div className="bg-[#7ECEB7]/10 border border-[#7ECEB7]/30 text-[#7ECEB7] p-6 rounded-2xl flex items-center justify-between gap-4 animate-fade-in">
+        <div className="bg-[#7ECEB7]/10 border border-[#7ECEB7]/30 text-[#7ECEB7] p-6 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-in">
           <div className="flex items-center gap-3">
             <ShieldCheck className="w-8 h-8 text-[#7ECEB7] flex-shrink-0" />
             <div>
               <h3 className="text-lg font-bold text-[#F5EBE0]">Course Registration Complete & Locked</h3>
               <p className="text-xs text-[#7ECEB7]">
-                Your course choices have been saved permanently. Modifications can only be performed by a portal administrator.
+                Your course choices have been saved permanently. Your registration is now locked and read-only.
               </p>
             </div>
           </div>
 
-          {registration?.timestamp && (
-            <div className="text-right hidden sm:block">
-              <span className="text-[10px] uppercase tracking-wider text-[#D6C7A1] block">Submitted On</span>
-              <span className="text-xs font-mono text-[#F5EBE0] font-medium">
-                {new Date(registration.timestamp).toLocaleString()}
-              </span>
-            </div>
-          )}
+          <button
+            onClick={() => router.push("/review")}
+            className="btn-primary px-4 py-2.5 flex items-center gap-2 text-xs font-bold text-[#F5EBE0] whitespace-nowrap shadow-md"
+          >
+            <Printer className="w-4 h-4" />
+            <span>Print Confirmation</span>
+          </button>
         </div>
       )}
 

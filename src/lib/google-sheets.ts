@@ -1,4 +1,4 @@
-import { RegistrationRow } from './courses';
+import { RegistrationRow, SeatHold } from './courses';
 import { supabase } from './supabase';
 import fs from 'fs';
 import path from 'path';
@@ -315,5 +315,79 @@ export async function upsertRegistration(entry: RegistrationRow): Promise<void> 
   } catch (err) {
     console.error("Supabase upsert exception:", err);
   }
+
+  // Remove active draft seat hold since registration is confirmed
+  deleteSeatHold(normalizedEmail);
+}
+
+const SEAT_HOLDS_FILE = path.join(DATA_DIR, 'seat_holds.json');
+let inMemorySeatHolds: SeatHold[] = [];
+
+function loadLocalSeatHolds(): SeatHold[] {
+  try {
+    ensureDataDir();
+    if (fs.existsSync(SEAT_HOLDS_FILE)) {
+      const content = fs.readFileSync(SEAT_HOLDS_FILE, 'utf-8');
+      return JSON.parse(content);
+    }
+  } catch (err) {
+    console.error("Failed to load local seat_holds.json:", err);
+  }
+  return [];
+}
+
+function saveLocalSeatHolds(holds: SeatHold[]): void {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(SEAT_HOLDS_FILE, JSON.stringify(holds, null, 2), 'utf-8');
+  } catch (err) {
+    console.error("Failed to save local seat_holds.json:", err);
+  }
+}
+
+export function fetchActiveSeatHolds(): SeatHold[] {
+  if (inMemorySeatHolds.length === 0) {
+    inMemorySeatHolds = loadLocalSeatHolds();
+  }
+  const now = Date.now();
+  const TEN_MINUTES_MS = 10 * 60 * 1000;
+  // Filter out holds older than 10 minutes
+  inMemorySeatHolds = inMemorySeatHolds.filter(h => now - h.updatedAt < TEN_MINUTES_MS);
+  saveLocalSeatHolds(inMemorySeatHolds);
+  return inMemorySeatHolds;
+}
+
+export function upsertSeatHold(
+  email: string,
+  choices: { s1Sports?: string; s1StudentLife?: string; s2Sports?: string; s2StudentLife?: string }
+): SeatHold[] {
+  const normalizedEmail = email.toLowerCase();
+  fetchActiveSeatHolds();
+
+  const index = inMemorySeatHolds.findIndex(h => h.email.toLowerCase() === normalizedEmail);
+  const existing = index >= 0 ? inMemorySeatHolds[index] : { email: normalizedEmail, updatedAt: Date.now() };
+
+  const updatedHold: SeatHold = {
+    ...existing,
+    ...choices,
+    email: normalizedEmail,
+    updatedAt: Date.now(),
+  };
+
+  if (index >= 0) {
+    inMemorySeatHolds[index] = updatedHold;
+  } else {
+    inMemorySeatHolds.push(updatedHold);
+  }
+
+  saveLocalSeatHolds(inMemorySeatHolds);
+  return inMemorySeatHolds;
+}
+
+export function deleteSeatHold(email: string): void {
+  const normalizedEmail = email.toLowerCase();
+  fetchActiveSeatHolds();
+  inMemorySeatHolds = inMemorySeatHolds.filter(h => h.email.toLowerCase() !== normalizedEmail);
+  saveLocalSeatHolds(inMemorySeatHolds);
 }
 

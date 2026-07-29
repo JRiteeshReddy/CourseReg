@@ -41,6 +41,15 @@ export interface RegistrationRow {
   status: string;
 }
 
+export interface SeatHold {
+  email: string;
+  s1Sports?: string;
+  s1StudentLife?: string;
+  s2Sports?: string;
+  s2StudentLife?: string;
+  updatedAt: number;
+}
+
 export interface CalculatedCourse extends Course {
   s1SeatsOccupied: number;
   s1SeatsAvailable: number;
@@ -48,15 +57,22 @@ export interface CalculatedCourse extends Course {
   s2SeatsAvailable: number;
 }
 
+const DRAFT_HOLD_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes temporary seat hold
+
 /**
- * Calculates dynamic seat counts over confirmed registration rows.
+ * Calculates dynamic seat counts over confirmed registrations and active draft seat holds.
  */
-export function calculateDynamicSeats(registrations: RegistrationRow[]): CalculatedCourse[] {
+export function calculateDynamicSeats(
+  registrations: RegistrationRow[],
+  seatHolds: SeatHold[] = []
+): CalculatedCourse[] {
   const confirmed = registrations.filter(r => r.status?.toUpperCase() === 'CONFIRMED');
+  const confirmedEmails = new Set(confirmed.map(r => r.email.toLowerCase()));
 
   const s1Counts: Record<string, number> = {};
   const s2Counts: Record<string, number> = {};
 
+  // 1. Count confirmed registrations
   for (const reg of confirmed) {
     if (reg.s1Sports) s1Counts[reg.s1Sports] = (s1Counts[reg.s1Sports] || 0) + 1;
     if (reg.s1StudentLife) s1Counts[reg.s1StudentLife] = (s1Counts[reg.s1StudentLife] || 0) + 1;
@@ -64,9 +80,21 @@ export function calculateDynamicSeats(registrations: RegistrationRow[]): Calcula
     if (reg.s2StudentLife) s2Counts[reg.s2StudentLife] = (s2Counts[reg.s2StudentLife] || 0) + 1;
   }
 
+  // 2. Count active non-expired draft seat holds for unconfirmed students
+  const now = Date.now();
+  for (const hold of seatHolds) {
+    if (!hold.email || confirmedEmails.has(hold.email.toLowerCase())) continue;
+    if (now - hold.updatedAt > DRAFT_HOLD_TIMEOUT_MS) continue; // expired hold
+
+    if (hold.s1Sports) s1Counts[hold.s1Sports] = (s1Counts[hold.s1Sports] || 0) + 1;
+    if (hold.s1StudentLife) s1Counts[hold.s1StudentLife] = (s1Counts[hold.s1StudentLife] || 0) + 1;
+    if (hold.s2Sports) s2Counts[hold.s2Sports] = (s2Counts[hold.s2Sports] || 0) + 1;
+    if (hold.s2StudentLife) s2Counts[hold.s2StudentLife] = (s2Counts[hold.s2StudentLife] || 0) + 1;
+  }
+
   return COURSES.map(course => {
-    const s1Occupied = s1Counts[course.id] || s1Counts[course.name] || 0;
-    const s2Occupied = s2Counts[course.id] || s2Counts[course.name] || 0;
+    const s1Occupied = (s1Counts[course.id] || 0) + (s1Counts[course.name] || 0);
+    const s2Occupied = (s2Counts[course.id] || 0) + (s2Counts[course.name] || 0);
 
     return {
       ...course,

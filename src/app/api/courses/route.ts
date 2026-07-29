@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getFullSession } from '@/lib/auth';
-import { fetchRegistrations, checkStudentAuthorized, getRegistrationStatus } from '@/lib/google-sheets';
+import { fetchRegistrations, fetchActiveSeatHolds, checkStudentAuthorized, getRegistrationStatus } from '@/lib/google-sheets';
 import { calculateDynamicSeats } from '@/lib/courses';
 
 export async function GET() {
@@ -12,10 +12,14 @@ export async function GET() {
   try {
     const student = await checkStudentAuthorized(sessionUser.email) || sessionUser;
     const registrations = await fetchRegistrations();
-    const courses = calculateDynamicSeats(registrations);
+    const activeHolds = fetchActiveSeatHolds();
+    const courses = calculateDynamicSeats(registrations, activeHolds);
     const isRegistrationOpen = await getRegistrationStatus();
 
-    const userRegistration = registrations.find(r => r.email.toLowerCase() === sessionUser.email.toLowerCase()) || null;
+    const userRegistration = registrations.find(r => 
+      (r.email && sessionUser.email && r.email.toLowerCase() === sessionUser.email.toLowerCase()) ||
+      (student?.regNo && r.regNo && r.regNo.toLowerCase() === student.regNo.toLowerCase())
+    ) || null;
 
     return NextResponse.json({
       student,

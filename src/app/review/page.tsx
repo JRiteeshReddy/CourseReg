@@ -61,9 +61,13 @@ export default function ReviewPage() {
         setS2Sports(draftS2Sports);
         setS2Life(draftS2Life);
 
-        if (data.registration && data.registration.status?.toUpperCase() === "CONFIRMED") {
+        const isConfirmed =
+          (data.registration && data.registration.status?.toUpperCase() === "CONFIRMED") ||
+          (userEmail && localStorage.getItem(`confirmed_registration_${userEmail}`) === "CONFIRMED");
+
+        if (isConfirmed) {
           setIsCompleted(true);
-          setTimestamp(data.registration.timestamp);
+          setTimestamp(data.registration?.timestamp || new Date().toISOString());
         }
       } catch (err) {
         console.error("Failed to load review data", err);
@@ -111,6 +115,7 @@ export default function ReviewPage() {
         setTimestamp(new Date().toISOString());
         if (student?.email) {
           const userEmail = student.email.toLowerCase();
+          localStorage.setItem(`confirmed_registration_${userEmail}`, "CONFIRMED");
           localStorage.setItem(`s1Sports_${userEmail}`, s1Sports);
           localStorage.setItem(`s1StudentLife_${userEmail}`, s1Life);
           localStorage.setItem(`s2Sports_${userEmail}`, s2Sports);

@@ -17,6 +17,23 @@ export default function Session1Page() {
 
   const router = useRouter();
 
+  // Helper to send seat holds to backend
+  const syncSeatHold = async (sports: string, life: string) => {
+    try {
+      const res = await fetch("/api/hold-seats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ s1Sports: sports, s1StudentLife: life }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.courses) setCourses(data.courses);
+      }
+    } catch (e) {
+      console.warn("Failed to sync seat hold:", e);
+    }
+  };
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -41,6 +58,10 @@ export default function Session1Page() {
 
         if (savedSports) setSelectedSports(savedSports);
         if (savedLife) setSelectedStudentLife(savedLife);
+
+        if (savedSports || savedLife) {
+          syncSeatHold(savedSports, savedLife);
+        }
       } catch (err) {
         console.error("Failed to load Session 1 data", err);
       } finally {
@@ -48,6 +69,19 @@ export default function Session1Page() {
       }
     }
     loadData();
+
+    // Poll every 5s for real-time dynamic seat updates across devices
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/courses");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.courses) setCourses(data.courses);
+        }
+      } catch (e) {}
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [router]);
 
   if (loading) {
@@ -128,7 +162,10 @@ export default function Session1Page() {
               <div
                 key={course.id}
                 onClick={() => {
-                  if (!isFull) setSelectedSports(course.id);
+                  if (!isFull) {
+                    setSelectedSports(course.id);
+                    syncSeatHold(course.id, selectedStudentLife);
+                  }
                 }}
                 className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all ${
                   isFull
@@ -186,7 +223,10 @@ export default function Session1Page() {
               <div
                 key={course.id}
                 onClick={() => {
-                  if (!isFull) setSelectedStudentLife(course.id);
+                  if (!isFull) {
+                    setSelectedStudentLife(course.id);
+                    syncSeatHold(selectedSports, course.id);
+                  }
                 }}
                 className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all ${
                   isFull

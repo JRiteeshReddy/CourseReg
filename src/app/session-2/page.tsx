@@ -21,6 +21,32 @@ export default function Session2Page() {
 
   const router = useRouter();
 
+  // Helper to send seat holds to backend
+  const syncSeatHold = async (s2Sports: string, s2Life: string) => {
+    try {
+      const userEmail = (student?.email || "").toLowerCase();
+      const s1Sports = (userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || "";
+      const s1Life = (userEmail && localStorage.getItem(`s1StudentLife_${userEmail}`)) || sessionStorage.getItem("s1StudentLife") || "";
+
+      const res = await fetch("/api/hold-seats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          s1Sports,
+          s1StudentLife: s1Life,
+          s2Sports,
+          s2StudentLife: s2Life,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.courses) setCourses(data.courses);
+      }
+    } catch (e) {
+      console.warn("Failed to sync seat hold:", e);
+    }
+  };
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -52,6 +78,10 @@ export default function Session2Page() {
         setSelectedSports(savedS2Sports);
         setSelectedStudentLife(savedS2Life);
 
+        if (savedS2Sports || savedS2Life) {
+          syncSeatHold(savedS2Sports, savedS2Life);
+        }
+
       } catch (err) {
         console.error("Failed to load Session 2 data", err);
       } finally {
@@ -59,6 +89,19 @@ export default function Session2Page() {
       }
     }
     loadData();
+
+    // Poll every 5s for real-time dynamic seat updates across devices
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/courses");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.courses) setCourses(data.courses);
+        }
+      } catch (e) {}
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [router]);
 
   if (loading) {
@@ -141,7 +184,10 @@ export default function Session2Page() {
               <div
                 key={course.id}
                 onClick={() => {
-                  if (!isDisabled) setSelectedSports(course.id);
+                  if (!isDisabled) {
+                    setSelectedSports(course.id);
+                    syncSeatHold(course.id, selectedStudentLife);
+                  }
                 }}
                 className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all ${
                   isSelectedInSession1
@@ -213,7 +259,10 @@ export default function Session2Page() {
               <div
                 key={course.id}
                 onClick={() => {
-                  if (!isDisabled) setSelectedStudentLife(course.id);
+                  if (!isDisabled) {
+                    setSelectedStudentLife(course.id);
+                    syncSeatHold(selectedSports, course.id);
+                  }
                 }}
                 className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all ${
                   isSelectedInSession1
