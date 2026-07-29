@@ -2,87 +2,73 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CalculatedCourse } from "@/lib/courses";
-import { RegistrationRow } from "@/lib/courses";
 import { MasterStudent } from "@/lib/google-sheets";
-import { Trophy, Compass, CheckCircle2, AlertTriangle, LogOut, Loader2, Sparkles, UserCheck } from "lucide-react";
+import { 
+  CheckCircle2, 
+  Lock, 
+  LogOut, 
+  Loader2, 
+  UserCheck, 
+  Sparkles, 
+  ChevronRight, 
+  Calendar, 
+  Trophy, 
+  Compass, 
+  ArrowRight,
+  ShieldCheck
+} from "lucide-react";
 
 export default function StudentDashboard() {
   const [student, setStudent] = useState<MasterStudent | null>(null);
-  const [courses, setCourses] = useState<CalculatedCourse[]>([]);
-  const [registration, setRegistration] = useState<RegistrationRow | null>(null);
-
-  const [s1Sports, setS1Sports] = useState<string>("");
-  const [s1StudentLife, setS1StudentLife] = useState<string>("");
-  const [s2Sports, setS2Sports] = useState<string>("");
-  const [s2StudentLife, setS2StudentLife] = useState<string>("");
-
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+
+  // Track session completion state for unlocking
+  const [isSession1Complete, setIsSession1Complete] = useState(false);
+  const [isSession2Complete, setIsSession2Complete] = useState(false);
+
+  // Selected courses preview
+  const [s1Sports, setS1Sports] = useState("");
+  const [s1Life, setS1Life] = useState("");
+  const [s2Sports, setS2Sports] = useState("");
+  const [s2Life, setS2Life] = useState("");
 
   const router = useRouter();
 
-  const loadData = async () => {
-    try {
-      const res = await fetch("/api/courses");
-      if (res.status === 401) {
-        router.push("/");
-        return;
-      }
-      const data = await res.json();
-      setStudent(data.student);
-      setCourses(data.courses || []);
-      setRegistration(data.registration);
-
-      if (data.registration) {
-        setS1Sports(data.registration.s1Sports || "");
-        setS1StudentLife(data.registration.s1StudentLife || "");
-        setS2Sports(data.registration.s2Sports || "");
-        setS2StudentLife(data.registration.s2StudentLife || "");
-      }
-    } catch (err) {
-      setError("Failed to load course catalogue");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadData();
-  }, []);
+    async function loadStudent() {
+      try {
+        const res = await fetch("/api/courses");
+        if (res.status === 401) {
+          router.push("/");
+          return;
+        }
+        const data = await res.json();
+        setStudent(data.student);
+
+        if (data.registration) {
+          if (data.registration.s1Sports && data.registration.s1StudentLife) {
+            setIsSession1Complete(true);
+            setS1Sports(data.registration.s1Sports);
+            setS1Life(data.registration.s1StudentLife);
+          }
+          if (data.registration.s2Sports && data.registration.s2StudentLife) {
+            setIsSession2Complete(true);
+            setS2Sports(data.registration.s2Sports);
+            setS2Life(data.registration.s2StudentLife);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load student data", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadStudent();
+  }, [router]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/");
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError("");
-    setSuccessMsg("");
-
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ s1Sports, s1StudentLife, s2Sports, s2StudentLife }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Registration failed");
-      } else {
-        setSuccessMsg(data.message || "Registration confirmed!");
-        await loadData();
-      }
-    } catch (err) {
-      setError("An unexpected error occurred.");
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   if (loading) {
@@ -93,274 +79,244 @@ export default function StudentDashboard() {
     );
   }
 
-  const sportsCourses = courses.filter((c) => c.category === "Sports");
-  const studentLifeCourses = courses.filter((c) => c.category === "Student Life");
+  // Calculate current progress step (1 to 5)
+  const currentStep = isSession2Complete ? 4 : isSession1Complete ? 3 : 2;
+
+  const steps = [
+    { label: "Login", status: "completed" },
+    { label: "Session 1", status: isSession1Complete ? "completed" : "active" },
+    { label: "Session 2", status: isSession2Complete ? "completed" : isSession1Complete ? "active" : "locked" },
+    { label: "Review", status: isSession1Complete && isSession2Complete ? "active" : "upcoming" },
+    { label: "Completed", status: "upcoming" },
+  ];
 
   return (
     <div className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in">
-      {/* Header Bar */}
-      <header className="glass-panel p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center border border-blue-500/20">
-            <UserCheck className="w-6 h-6 text-blue-400" />
+      {/* HEADER / WELCOME BANNER */}
+      <header className="glass-panel p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="flex items-center gap-5 z-10">
+          <div className="w-16 h-16 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/10">
+            <UserCheck className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">{student?.name || "Student Portal"}</h1>
-            <p className="text-sm text-slate-400">
-              Reg No: <span className="text-slate-200 font-mono">{student?.regNo}</span> | Email: <span className="text-slate-200">{student?.email}</span>
-            </p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                Welcome, {student?.name || "Student"}
+              </h1>
+              <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400 mt-1">
+              <span>Reg No: <strong className="text-slate-200 font-mono">{student?.regNo || "N/A"}</strong></span>
+              <span>•</span>
+              <span>Email: <strong className="text-slate-200">{student?.email}</strong></span>
+            </div>
           </div>
         </div>
 
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 text-sm font-medium transition-all"
+          className="z-10 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 text-sm font-medium transition-all"
         >
           <LogOut className="w-4 h-4" /> Log Out
         </button>
       </header>
 
-      {/* Notifications */}
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl text-sm flex items-center gap-3 animate-fade-in">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-          <span>{error}</span>
+      {/* PROGRESS TRACKER */}
+      <section className="glass-panel p-6 md:p-8 space-y-4">
+        <h2 className="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2">Registration Progress</h2>
+        
+        <div className="flex items-center justify-between relative">
+          {/* Progress Connecting Line */}
+          <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-800 -translate-y-1/2 z-0"></div>
+
+          {steps.map((step, idx) => {
+            const isDone = step.status === "completed";
+            const isActive = step.status === "active";
+            const isLocked = step.status === "locked";
+
+            return (
+              <div key={idx} className="flex flex-col items-center gap-2 z-10">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                    isDone
+                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 border-2 border-emerald-400"
+                      : isActive
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/40 ring-4 ring-blue-500/20 border-2 border-blue-400 scale-110"
+                      : "bg-slate-900 text-slate-500 border border-slate-700"
+                  }`}
+                >
+                  {isDone ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
+                </div>
+                <span
+                  className={`text-xs font-medium ${
+                    isDone
+                      ? "text-emerald-400 font-semibold"
+                      : isActive
+                      ? "text-blue-400 font-semibold"
+                      : "text-slate-500"
+                  }`}
+                >
+                  {step.label} {isDone && "✓"}
+                </span>
+              </div>
+            );
+          })}
         </div>
-      )}
+      </section>
 
-      {successMsg && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-xl text-sm flex items-center gap-3 animate-fade-in">
-          <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-          <span>{successMsg}</span>
-        </div>
-      )}
+      {/* TWO LARGE CARDS: SESSION 1 & SESSION 2 */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* LARGE CARD 1: SESSION 1 */}
+        <div className="glass-panel p-8 space-y-6 relative overflow-hidden flex flex-col justify-between border-blue-500/30 hover:border-blue-500/60 transition-all group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full pointer-events-none transition-all group-hover:scale-110"></div>
 
-      {/* Course Selection Form */}
-      <form onSubmit={handleRegister} className="space-y-8">
-        {/* SESSION 1 */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-            <Sparkles className="w-5 h-5 text-amber-400" />
-            <h2 className="text-xl font-semibold">Session 1 Selections</h2>
-          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="px-3 py-1 rounded-full text-xs font-bold font-mono tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" /> Session 1
+              </span>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Session 1 Sports */}
-            <div className="glass-panel p-6 space-y-4">
-              <div className="flex items-center gap-2 text-blue-400 font-medium">
-                <Trophy className="w-5 h-5" />
-                <h3>Sports Category</h3>
-              </div>
-
-              <div className="space-y-3">
-                {sportsCourses.map((c) => {
-                  const isFull = c.s1SeatsAvailable <= 0;
-                  const isSelected = s1Sports === c.id;
-
-                  return (
-                    <label
-                      key={c.id}
-                      className={`glass-card p-4 flex items-center justify-between cursor-pointer border ${
-                        isSelected
-                          ? "border-blue-500 bg-blue-500/10"
-                          : isFull
-                          ? "opacity-50 border-slate-800 cursor-not-allowed"
-                          : "border-slate-800 hover:border-slate-700"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="s1Sports"
-                          value={c.id}
-                          disabled={isFull}
-                          checked={isSelected}
-                          onChange={(e) => setS1Sports(e.target.value)}
-                          className="accent-blue-500"
-                        />
-                        <span className="font-medium text-sm">{c.name}</span>
-                      </div>
-
-                      <div className="text-right">
-                        <span className={`text-xs font-mono px-2.5 py-1 rounded-full ${isFull ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"}`}>
-                          {isFull ? "FULL" : `${c.s1SeatsAvailable} / ${c.maxSeats} left`}
-                        </span>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
+              {isSession1Complete ? (
+                <span className="flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Completed
+                </span>
+              ) : (
+                <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
+                  In Progress
+                </span>
+              )}
             </div>
 
-            {/* Session 1 Student Life */}
-            <div className="glass-panel p-6 space-y-4">
-              <div className="flex items-center gap-2 text-purple-400 font-medium">
-                <Compass className="w-5 h-5" />
-                <h3>Student Life Category</h3>
-              </div>
-
-              <div className="space-y-3">
-                {studentLifeCourses.map((c) => {
-                  const isFull = c.s1SeatsAvailable <= 0;
-                  const isSelected = s1StudentLife === c.id;
-
-                  return (
-                    <label
-                      key={c.id}
-                      className={`glass-card p-4 flex items-center justify-between cursor-pointer border ${
-                        isSelected
-                          ? "border-purple-500 bg-purple-500/10"
-                          : isFull
-                          ? "opacity-50 border-slate-800 cursor-not-allowed"
-                          : "border-slate-800 hover:border-slate-700"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="s1StudentLife"
-                          value={c.id}
-                          disabled={isFull}
-                          checked={isSelected}
-                          onChange={(e) => setS1StudentLife(e.target.value)}
-                          className="accent-purple-500"
-                        />
-                        <span className="font-medium text-sm">{c.name}</span>
-                      </div>
-
-                      <div className="text-right">
-                        <span className={`text-xs font-mono px-2.5 py-1 rounded-full ${isFull ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-purple-500/10 text-purple-400 border border-purple-500/20"}`}>
-                          {isFull ? "FULL" : `${c.s1SeatsAvailable} / ${c.maxSeats} left`}
-                        </span>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* SESSION 2 */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-            <Sparkles className="w-5 h-5 text-indigo-400" />
-            <h2 className="text-xl font-semibold">Session 2 Selections</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Session 2 Sports */}
-            <div className="glass-panel p-6 space-y-4">
-              <div className="flex items-center gap-2 text-blue-400 font-medium">
-                <Trophy className="w-5 h-5" />
-                <h3>Sports Category</h3>
-              </div>
-
-              <div className="space-y-3">
-                {sportsCourses.map((c) => {
-                  const isFull = c.s2SeatsAvailable <= 0;
-                  const isSelected = s2Sports === c.id;
-
-                  return (
-                    <label
-                      key={c.id}
-                      className={`glass-card p-4 flex items-center justify-between cursor-pointer border ${
-                        isSelected
-                          ? "border-blue-500 bg-blue-500/10"
-                          : isFull
-                          ? "opacity-50 border-slate-800 cursor-not-allowed"
-                          : "border-slate-800 hover:border-slate-700"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="s2Sports"
-                          value={c.id}
-                          disabled={isFull}
-                          checked={isSelected}
-                          onChange={(e) => setS2Sports(e.target.value)}
-                          className="accent-blue-500"
-                        />
-                        <span className="font-medium text-sm">{c.name}</span>
-                      </div>
-
-                      <div className="text-right">
-                        <span className={`text-xs font-mono px-2.5 py-1 rounded-full ${isFull ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"}`}>
-                          {isFull ? "FULL" : `${c.s2SeatsAvailable} / ${c.maxSeats} left`}
-                        </span>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-2">Session 1 Course Selection</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Choose 1 Sports activity and 1 Student Life course for your first semester session.
+              </p>
             </div>
 
-            {/* Session 2 Student Life */}
-            <div className="glass-panel p-6 space-y-4">
-              <div className="flex items-center gap-2 text-purple-400 font-medium">
-                <Compass className="w-5 h-5" />
-                <h3>Student Life Category</h3>
+            {/* Course Summary Preview */}
+            <div className="space-y-3 pt-2">
+              <div className="glass-card p-4 flex items-center justify-between border-slate-800">
+                <div className="flex items-center gap-3">
+                  <Trophy className="w-5 h-5 text-blue-400" />
+                  <span className="text-sm font-medium">Sports Activity</span>
+                </div>
+                <span className="text-xs font-mono text-slate-300 bg-slate-800 px-3 py-1 rounded-md border border-slate-700">
+                  {s1Sports || "Not Selected"}
+                </span>
               </div>
 
-              <div className="space-y-3">
-                {studentLifeCourses.map((c) => {
-                  const isFull = c.s2SeatsAvailable <= 0;
-                  const isSelected = s2StudentLife === c.id;
-
-                  return (
-                    <label
-                      key={c.id}
-                      className={`glass-card p-4 flex items-center justify-between cursor-pointer border ${
-                        isSelected
-                          ? "border-purple-500 bg-purple-500/10"
-                          : isFull
-                          ? "opacity-50 border-slate-800 cursor-not-allowed"
-                          : "border-slate-800 hover:border-slate-700"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="s2StudentLife"
-                          value={c.id}
-                          disabled={isFull}
-                          checked={isSelected}
-                          onChange={(e) => setS2StudentLife(e.target.value)}
-                          className="accent-purple-500"
-                        />
-                        <span className="font-medium text-sm">{c.name}</span>
-                      </div>
-
-                      <div className="text-right">
-                        <span className={`text-xs font-mono px-2.5 py-1 rounded-full ${isFull ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-purple-500/10 text-purple-400 border border-purple-500/20"}`}>
-                          {isFull ? "FULL" : `${c.s2SeatsAvailable} / ${c.maxSeats} left`}
-                        </span>
-                      </div>
-                    </label>
-                  );
-                })}
+              <div className="glass-card p-4 flex items-center justify-between border-slate-800">
+                <div className="flex items-center gap-3">
+                  <Compass className="w-5 h-5 text-purple-400" />
+                  <span className="text-sm font-medium">Student Life Course</span>
+                </div>
+                <span className="text-xs font-mono text-slate-300 bg-slate-800 px-3 py-1 rounded-md border border-slate-700">
+                  {s1Life || "Not Selected"}
+                </span>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* SUBMIT BUTTON */}
-        <div className="glass-panel p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <h4 className="font-medium">Ready to confirm your choices?</h4>
-            <p className="text-xs text-slate-400">You can edit your selections at any time while seats are available.</p>
           </div>
 
           <button
-            type="submit"
-            className="btn-primary w-full sm:w-auto flex items-center justify-center gap-2"
-            disabled={submitting || !s1Sports || !s1StudentLife || !s2Sports || !s2StudentLife}
+            onClick={() => setIsSession1Complete(!isSession1Complete)}
+            className="btn-primary w-full mt-4 flex items-center justify-center gap-2 group-hover:shadow-blue-500/30"
           >
-            {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirm Course Registration"}
+            {isSession1Complete ? "Edit Session 1 Choices" : "Select Session 1 Courses"}
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
-      </form>
+
+        {/* LARGE CARD 2: SESSION 2 (LOCKED UNTIL SESSION 1 IS COMPLETE) */}
+        <div
+          className={`glass-panel p-8 space-y-6 relative overflow-hidden flex flex-col justify-between transition-all ${
+            !isSession1Complete
+              ? "border-slate-800/80 bg-slate-950/80"
+              : "border-purple-500/30 hover:border-purple-500/60"
+          }`}
+        >
+          {/* LOCKED OVERLAY (If Session 1 is incomplete) */}
+          {!isSession1Complete && (
+            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-20 flex flex-col items-center justify-center p-6 text-center space-y-4 animate-fade-in">
+              <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center shadow-xl">
+                <Lock className="w-8 h-8 text-amber-400" />
+              </div>
+              <div className="space-y-1 max-w-xs">
+                <h4 className="text-lg font-bold text-white">Session 2 Locked</h4>
+                <p className="text-xs text-slate-400">
+                  Complete your Session 1 selections first to unlock Session 2.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsSession1Complete(true)}
+                className="text-xs font-semibold text-blue-400 hover:text-blue-300 underline"
+              >
+                (Demo: Click to simulate Session 1 completion)
+              </button>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="px-3 py-1 rounded-full text-xs font-bold font-mono tracking-wider bg-purple-500/20 text-purple-400 border border-purple-500/30 uppercase flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" /> Session 2
+              </span>
+
+              {isSession2Complete ? (
+                <span className="flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Completed
+                </span>
+              ) : (
+                <span className="text-xs font-semibold text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+                  Unlocked
+                </span>
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-2">Session 2 Course Selection</h3>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Choose 1 Sports activity and 1 Student Life course for your second semester session.
+              </p>
+            </div>
+
+            {/* Course Summary Preview */}
+            <div className="space-y-3 pt-2">
+              <div className="glass-card p-4 flex items-center justify-between border-slate-800">
+                <div className="flex items-center gap-3">
+                  <Trophy className="w-5 h-5 text-blue-400" />
+                  <span className="text-sm font-medium">Sports Activity</span>
+                </div>
+                <span className="text-xs font-mono text-slate-300 bg-slate-800 px-3 py-1 rounded-md border border-slate-700">
+                  {s2Sports || "Not Selected"}
+                </span>
+              </div>
+
+              <div className="glass-card p-4 flex items-center justify-between border-slate-800">
+                <div className="flex items-center gap-3">
+                  <Compass className="w-5 h-5 text-purple-400" />
+                  <span className="text-sm font-medium">Student Life Course</span>
+                </div>
+                <span className="text-xs font-mono text-slate-300 bg-slate-800 px-3 py-1 rounded-md border border-slate-700">
+                  {s2Life || "Not Selected"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsSession2Complete(!isSession2Complete)}
+            className="btn-primary w-full mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
+          >
+            {isSession2Complete ? "Edit Session 2 Choices" : "Select Session 2 Courses"}
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+
+      </section>
     </div>
   );
 }
