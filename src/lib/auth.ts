@@ -8,8 +8,7 @@ const JWT_SECRET = new TextEncoder().encode(
 const COOKIE_NAME = 'coursereg_session';
 
 export const ADMIN_EMAILS = [
-  'riteesh4754x@gmail.com',
-  'jriteeshreddy@gmail.com'
+  'riteesh4754x@gmail.com'
 ];
 
 export function isAdminEmail(email: string): boolean {
