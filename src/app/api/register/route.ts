@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getFullSession } from '@/lib/auth';
 import { runWithRegistrationLock } from '@/lib/concurrency';
 import { fetchRegistrations, upsertRegistration, checkStudentAuthorized } from '@/lib/google-sheets';
-import { calculateDynamicSeats } from '@/lib/courses';
+import { calculateDynamicSeats, COURSES } from '@/lib/courses';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   const sessionUser = await getFullSession();
@@ -26,22 +27,63 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "You cannot select the same Student Life course for both Session 1 and Session 2." }, { status: 400 });
     }
 
-    // Execute under concurrency Mutex lock to guarantee serial seat reservation and prevent race conditions
-    const result = await runWithRegistrationLock(async () => {
-      const student = await checkStudentAuthorized(sessionUser.email) || sessionUser;
+    const student = await checkStudentAuthorized(sessionUser.email) || sessionUser;
 
+    // Resolve course full names
+    const getCourseName = (idOrName: string) => COURSES.find(c => c.id === idOrName || c.name === idOrName)?.name || idOrName;
+    const s1SportsName = getCourseName(s1Sports);
+    const s1LifeName = getCourseName(s1StudentLife);
+    const s2SportsName = getCourseName(s2Sports);
+    const s2LifeName = getCourseName(s2StudentLife);
+
+    // 3. Attempt Atomic Database Seat Reservation in Supabase Postgres RPC (locks natively across all serverless instances)
+    try {
+      const { data: rpcData, error: rpcError } = await supabase.rpc('reserve_courses', {
+        p_reg_no: student.regNo,
+        p_name: student.name,
+        p_email: student.email.toLowerCase(),
+        p_s1_sports: s1SportsName,
+        p_s1_life: s1LifeName,
+        p_s2_sports: s2SportsName,
+        p_s2_life: s2LifeName,
+        p_max_seats: 25,
+      });
+
+      if (!rpcError && rpcData) {
+        if (rpcData.success) {
+          // Sync local cache
+          await upsertRegistration({
+            regNo: student.regNo,
+            name: student.name,
+            email: student.email.toLowerCase(),
+            s1Sports: s1SportsName,
+            s1StudentLife: s1LifeName,
+            s2Sports: s2SportsName,
+            s2StudentLife: s2LifeName,
+            timestamp: new Date().toISOString(),
+            status: 'CONFIRMED',
+          });
+
+          return NextResponse.json({ success: true, message: "Registration completed successfully! Your choices are now locked." });
+        } else if (rpcData.error) {
+          return NextResponse.json({ error: rpcData.error }, { status: 400 });
+        }
+      }
+    } catch (rpcErr) {
+      console.warn("Supabase reserve_courses RPC fallback to app-level lock:", rpcErr);
+    }
+
+    // 4. Fallback execution under concurrency Mutex lock
+    const result = await runWithRegistrationLock(async () => {
       const currentRegistrations = await fetchRegistrations();
       
-      // 3. Validation: Student has not already completed registration (Read-only forever after registration)
       const existingReg = currentRegistrations.find(r => r.email.toLowerCase() === sessionUser.email.toLowerCase());
       if (existingReg && existingReg.status?.toUpperCase() === 'CONFIRMED') {
         return { error: "You have already completed your registration. Your course selections are locked and read-only." };
       }
 
-      // Compute dynamic seat counts over current registrations
       const computedSeats = calculateDynamicSeats(currentRegistrations);
 
-      // 4. Validation: Check seat capacity for all 4 courses
       const s1SportsCourse = computedSeats.find(c => c.id === s1Sports || c.name === s1Sports);
       if (!s1SportsCourse || s1SportsCourse.s1SeatsAvailable <= 0) {
         return { error: `Sorry, Session 1 Sports (${s1SportsCourse?.name || s1Sports}) is full.` };
@@ -62,7 +104,6 @@ export async function POST(request: Request) {
         return { error: `Sorry, Session 2 Student Life (${s2LifeCourse?.name || s2LifeCourse}) is full.` };
       }
 
-      // Atomically save: RegNo, Student Name, Email, Session 1 Sports, Session 1 Life, Session 2 Sports, Session 2 Life, Timestamp
       await upsertRegistration({
         regNo: student.regNo,
         name: student.name,
