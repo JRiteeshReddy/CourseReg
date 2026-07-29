@@ -222,7 +222,7 @@ export default function StudentDashboard() {
           </div>
 
           <button
-            onClick={() => setIsSession1Complete(!isSession1Complete)}
+            onClick={() => router.push("/session-1")}
             className="btn-primary w-full mt-4 flex items-center justify-center gap-2 group-hover:shadow-blue-500/30"
           >
             {isSession1Complete ? "Edit Session 1 Choices" : "Select Session 1 Courses"}

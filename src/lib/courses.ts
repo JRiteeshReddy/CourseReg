@@ -6,17 +6,28 @@ export interface Course {
 }
 
 export const COURSES: Course[] = [
-  // Session 1 & 2 Available Sports
+  // Exactly 8 Sports Courses
   { id: "SP01", name: "Basketball", category: "Sports", maxSeats: 25 },
   { id: "SP02", name: "Tennis", category: "Sports", maxSeats: 25 },
   { id: "SP03", name: "Swimming", category: "Sports", maxSeats: 25 },
   { id: "SP04", name: "Football", category: "Sports", maxSeats: 25 },
+  { id: "SP05", name: "Volleyball", category: "Sports", maxSeats: 25 },
+  { id: "SP06", name: "Badminton", category: "Sports", maxSeats: 25 },
+  { id: "SP07", name: "Table Tennis", category: "Sports", maxSeats: 25 },
+  { id: "SP08", name: "Athletics", category: "Sports", maxSeats: 25 },
 
-  // Session 1 & 2 Available Student Life
+  // Exactly 11 Student Life Courses
   { id: "SL01", name: "Photography", category: "Student Life", maxSeats: 25 },
   { id: "SL02", name: "Music Band", category: "Student Life", maxSeats: 25 },
   { id: "SL03", name: "Debate Club", category: "Student Life", maxSeats: 25 },
   { id: "SL04", name: "Art Workshop", category: "Student Life", maxSeats: 25 },
+  { id: "SL05", name: "Theatre & Drama", category: "Student Life", maxSeats: 25 },
+  { id: "SL06", name: "Creative Writing", category: "Student Life", maxSeats: 25 },
+  { id: "SL07", name: "Robotics & AI", category: "Student Life", maxSeats: 25 },
+  { id: "SL08", name: "Social Service", category: "Student Life", maxSeats: 25 },
+  { id: "SL09", name: "Culinary Arts", category: "Student Life", maxSeats: 25 },
+  { id: "SL10", name: "Astronomy & Space", category: "Student Life", maxSeats: 25 },
+  { id: "SL11", name: "Event Management", category: "Student Life", maxSeats: 25 },
 ];
 
 export interface RegistrationRow {
@@ -40,7 +51,6 @@ export interface CalculatedCourse extends Course {
 
 /**
  * Calculates dynamic seat counts over confirmed registration rows.
- * No static seat counter columns exist.
  */
 export function calculateDynamicSeats(registrations: RegistrationRow[]): CalculatedCourse[] {
   const confirmed = registrations.filter(r => r.status?.toUpperCase() === 'CONFIRMED');
