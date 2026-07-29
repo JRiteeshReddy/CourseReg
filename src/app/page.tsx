@@ -65,7 +65,7 @@ export default function AuthPage() {
       if (!res.ok) {
         setError(data.error || "Invalid OTP");
       } else {
-        router.push("/dashboard");
+        router.push(data.redirectTo || "/dashboard");
       }
     } catch (err) {
       setError("An unexpected error occurred.");

@@ -7,10 +7,21 @@ const JWT_SECRET = new TextEncoder().encode(
 
 const COOKIE_NAME = 'coursereg_session';
 
+export const ADMIN_EMAILS = [
+  'riteesh4754x@gmail.com',
+  'jriteeshreddy@gmail.com'
+];
+
+export function isAdminEmail(email: string): boolean {
+  if (!email) return false;
+  return ADMIN_EMAILS.some(adminEmail => adminEmail.toLowerCase() === email.trim().toLowerCase());
+}
+
 export interface SessionUser {
   email: string;
   name: string;
   regNo: string;
+  isAdmin: boolean;
 }
 
 export async function setSession(user: SessionUser) {
@@ -18,6 +29,7 @@ export async function setSession(user: SessionUser) {
     email: user.email,
     name: user.name,
     regNo: user.regNo,
+    isAdmin: user.isAdmin,
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -54,10 +66,12 @@ export async function getFullSession(): Promise<SessionUser | null> {
     if (!token) return null;
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
+    const email = (payload.email as string) || '';
     return {
-      email: (payload.email as string) || '',
+      email,
       name: (payload.name as string) || '',
       regNo: (payload.regNo as string) || '',
+      isAdmin: Boolean(payload.isAdmin || isAdminEmail(email)),
     };
   } catch (err) {
     return null;

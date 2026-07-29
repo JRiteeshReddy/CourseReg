@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyOtpCode } from '@/lib/otp';
-import { setSession } from '@/lib/auth';
+import { setSession, isAdminEmail } from '@/lib/auth';
 import { checkStudentAuthorized } from '@/lib/google-sheets';
 
 export async function POST(request: Request) {
@@ -19,30 +19,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid or expired OTP code" }, { status: 401 });
     }
 
-    // Automatically retrieve student profile (Registration Number, Student Name, Email) from Master Google Sheet
+    const isAdmin = isAdminEmail(normalizedEmail);
     const student = await checkStudentAuthorized(normalizedEmail);
-    if (!student) {
+
+    if (!isAdmin && !student) {
       return NextResponse.json(
         { error: "You are not authorized to access this portal." },
         { status: 403 }
       );
     }
 
-    // Store complete authenticated profile in secure HTTP-only JWT cookie
+    // Set secure HTTP-Only session token with Admin role flag
     await setSession({
-      email: student.email,
-      name: student.name,
-      regNo: student.regNo,
+      email: normalizedEmail,
+      name: student?.name || (isAdmin ? "System Administrator" : normalizedEmail.split('@')[0]),
+      regNo: student?.regNo || (isAdmin ? "ADMIN-01" : "N/A"),
+      isAdmin,
     });
 
     return NextResponse.json({
       success: true,
       message: "Authenticated successfully",
-      student: {
-        email: student.email,
-        name: student.name,
-        regNo: student.regNo,
-      }
+      isAdmin,
+      redirectTo: isAdmin ? "/admin" : "/dashboard"
     });
 
   } catch (error: any) {

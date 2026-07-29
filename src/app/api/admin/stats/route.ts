@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getFullSession, isAdminEmail } from '@/lib/auth';
 import { fetchRegistrations, fetchMasterStudents } from '@/lib/google-sheets';
-import { calculateDynamicSeats, COURSES } from '@/lib/courses';
-
-const ADMIN_EMAIL = 'jriteeshreddy@gmail.com';
+import { calculateDynamicSeats } from '@/lib/courses';
 
 export async function GET() {
-  const email = await getSession();
+  const session = await getFullSession();
 
-  if (!email || email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-    return NextResponse.json({ error: "Forbidden. Admin access required." }, { status: 403 });
+  if (!session || !isAdminEmail(session.email)) {
+    return NextResponse.json({ error: "Access Denied. Admin authorization required." }, { status: 403 });
   }
 
   try {
@@ -18,6 +16,7 @@ export async function GET() {
     const coursesWithSeats = calculateDynamicSeats(registrations);
 
     return NextResponse.json({
+      adminEmail: session.email,
       totalMasterStudents: masterStudents.length,
       totalRegisteredStudents: registrations.length,
       courses: coursesWithSeats,
