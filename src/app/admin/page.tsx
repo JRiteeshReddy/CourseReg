@@ -422,7 +422,7 @@ export default function AdminDashboard() {
             <BookOpen className="w-5 h-5 text-[#A07850]" />
           </div>
           <div className="text-3xl font-bold text-[#F5EBE0]">{courses.length}</div>
-          <p className="text-xs text-[#D6C7A1]/70">8 Sports + 11 Student Life courses</p>
+          <p className="text-xs text-[#D6C7A1]/70">8 Sports + 10 Student Life courses</p>
         </div>
       </div>
 

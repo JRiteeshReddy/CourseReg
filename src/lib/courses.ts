@@ -6,28 +6,27 @@ export interface Course {
 }
 
 export const COURSES: Course[] = [
-  // Exactly 8 Sports Courses
+  // 8 Sports Courses
   { id: "SP01", name: "Basketball", category: "Sports", maxSeats: 25 },
-  { id: "SP02", name: "Tennis", category: "Sports", maxSeats: 25 },
-  { id: "SP03", name: "Swimming", category: "Sports", maxSeats: 25 },
+  { id: "SP02", name: "Cricket", category: "Sports", maxSeats: 25 },
+  { id: "SP03", name: "Fitness and Nutrition", category: "Sports", maxSeats: 25 },
   { id: "SP04", name: "Football", category: "Sports", maxSeats: 25 },
-  { id: "SP05", name: "Volleyball", category: "Sports", maxSeats: 25 },
-  { id: "SP06", name: "Badminton", category: "Sports", maxSeats: 25 },
-  { id: "SP07", name: "Table Tennis", category: "Sports", maxSeats: 25 },
-  { id: "SP08", name: "Athletics", category: "Sports", maxSeats: 25 },
+  { id: "SP05", name: "Kabaddi", category: "Sports", maxSeats: 25 },
+  { id: "SP06", name: "Holistic Wellbeing and Yoga Therapy", category: "Sports", maxSeats: 25 },
+  { id: "SP07", name: "Throwball", category: "Sports", maxSeats: 25 },
+  { id: "SP08", name: "Volleyball", category: "Sports", maxSeats: 25 },
 
-  // Exactly 11 Student Life Courses
-  { id: "SL01", name: "Photography", category: "Student Life", maxSeats: 25 },
-  { id: "SL02", name: "Music Band", category: "Student Life", maxSeats: 25 },
-  { id: "SL03", name: "Debate Club", category: "Student Life", maxSeats: 25 },
-  { id: "SL04", name: "Art Workshop", category: "Student Life", maxSeats: 25 },
-  { id: "SL05", name: "Theatre & Drama", category: "Student Life", maxSeats: 25 },
-  { id: "SL06", name: "Creative Writing", category: "Student Life", maxSeats: 25 },
-  { id: "SL07", name: "Robotics & AI", category: "Student Life", maxSeats: 25 },
-  { id: "SL08", name: "Social Service", category: "Student Life", maxSeats: 25 },
-  { id: "SL09", name: "Culinary Arts", category: "Student Life", maxSeats: 25 },
-  { id: "SL10", name: "Astronomy & Space", category: "Student Life", maxSeats: 25 },
-  { id: "SL11", name: "Event Management", category: "Student Life", maxSeats: 25 },
+  // 10 Student Life Courses
+  { id: "SL01", name: "Basics of Theatre Acting", category: "Student Life", maxSeats: 25 },
+  { id: "SL02", name: "Communication, Life skills and Soft skills", category: "Student Life", maxSeats: 25 },
+  { id: "SL03", name: "Contemporary Dance, Hip Hop and Freestyle", category: "Student Life", maxSeats: 25 },
+  { id: "SL04", name: "Folk Dance", category: "Student Life", maxSeats: 25 },
+  { id: "SL05", name: "Mental Wellbeing and Peer Support", category: "Student Life", maxSeats: 25 },
+  { id: "SL06", name: "Introduction to traditional music", category: "Student Life", maxSeats: 25 },
+  { id: "SL07", name: "Music Band- Contemporary and Light", category: "Student Life", maxSeats: 25 },
+  { id: "SL08", name: "Rhythm Appreciation", category: "Student Life", maxSeats: 25 },
+  { id: "SL09", name: "Creative Design, Innovation and Sustainability", category: "Student Life", maxSeats: 25 },
+  { id: "SL10", name: "Social media and digital content creation", category: "Student Life", maxSeats: 25 },
 ];
 
 export interface RegistrationRow {
