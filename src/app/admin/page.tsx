@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { RegistrationRow } from "@/lib/courses";
-import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, KeyRound, Lock, Unlock } from "lucide-react";
+import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, KeyRound, Lock, Unlock, ChevronDown, ChevronUp } from "lucide-react";
 import * as XLSX from "xlsx";
 
 export default function AdminDashboard() {
@@ -14,6 +14,7 @@ export default function AdminDashboard() {
   const [totalReg, setTotalReg] = useState(0);
   const [adminEmail, setAdminEmail] = useState("");
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
+  const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [togglingReg, setTogglingReg] = useState(false);
@@ -439,6 +440,17 @@ export default function AdminDashboard() {
           {courses.map((course) => {
             const s1Percentage = Math.round((course.s1SeatsOccupied / course.maxSeats) * 100);
             const s2Percentage = Math.round((course.s2SeatsOccupied / course.maxSeats) * 100);
+            const isExpanded = expandedCourseId === course.id;
+
+            const s1Students = registrations.filter((r) => {
+              if (r.status?.toUpperCase() !== "CONFIRMED") return false;
+              return r.s1Sports === course.id || r.s1Sports === course.name || r.s1StudentLife === course.id || r.s1StudentLife === course.name;
+            });
+
+            const s2Students = registrations.filter((r) => {
+              if (r.status?.toUpperCase() !== "CONFIRMED") return false;
+              return r.s2Sports === course.id || r.s2Sports === course.name || r.s2StudentLife === course.id || r.s2StudentLife === course.name;
+            });
 
             return (
               <div key={course.id} className="glass-card p-5 space-y-4 flex flex-col justify-between border-[#7ECEB7]/15">
@@ -479,14 +491,63 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* COURSE SPECIFIC COMBINED EXPORT BUTTON */}
-                <div className="pt-3 border-t border-[#7ECEB7]/15">
+                {/* EXPANDABLE INLINE ROSTER VIEW */}
+                {isExpanded && (
+                  <div className="pt-3 border-t border-[#7ECEB7]/15 space-y-4 animate-fade-in text-xs">
+                    {/* Session 1 List */}
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-[#7ECEB7]">Session 1 Enrolled ({s1Students.length})</h4>
+                      {s1Students.length > 0 ? (
+                        <div className="max-h-36 overflow-y-auto space-y-1 bg-[#072C28] p-2 rounded-lg border border-[#7ECEB7]/15">
+                          {s1Students.map((s, idx) => (
+                            <div key={idx} className="flex items-center justify-between text-[11px] font-mono text-[#F5EBE0] py-0.5 border-b border-[#7ECEB7]/10 last:border-none">
+                              <span className="text-[#D6C7A1]">{s.regNo}</span>
+                              <span className="truncate max-w-[120px] font-sans font-medium">{s.name}</span>
+                              <span className="text-[#D6C7A1]/70 truncate max-w-[120px]">{s.email}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-[#D6C7A1]/50 italic">No students registered for Session 1 yet.</p>
+                      )}
+                    </div>
+
+                    {/* Session 2 List */}
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-[#A07850]">Session 2 Enrolled ({s2Students.length})</h4>
+                      {s2Students.length > 0 ? (
+                        <div className="max-h-36 overflow-y-auto space-y-1 bg-[#072C28] p-2 rounded-lg border border-[#7ECEB7]/15">
+                          {s2Students.map((s, idx) => (
+                            <div key={idx} className="flex items-center justify-between text-[11px] font-mono text-[#F5EBE0] py-0.5 border-b border-[#7ECEB7]/10 last:border-none">
+                              <span className="text-[#D6C7A1]">{s.regNo}</span>
+                              <span className="truncate max-w-[120px] font-sans font-medium">{s.name}</span>
+                              <span className="text-[#D6C7A1]/70 truncate max-w-[120px]">{s.email}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-[#D6C7A1]/50 italic">No students registered for Session 2 yet.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ACTION BUTTONS: VIEW ENROLLED & EXPORT COMBINED EXCEL */}
+                <div className="pt-3 border-t border-[#7ECEB7]/15 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setExpandedCourseId(isExpanded ? null : course.id)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#072C28] hover:bg-[#037A74]/20 text-[#D6C7A1] border border-[#7ECEB7]/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <span>{isExpanded ? "Hide List" : `View Students (${s1Students.length + s2Students.length})`}</span>
+                    {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </button>
+
                   <button
                     onClick={() => exportCourseExcel(course.id, course.name, course.category)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#037A74]/20 hover:bg-[#037A74]/35 text-[#7ECEB7] border border-[#037A74]/50 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#037A74]/20 hover:bg-[#037A74]/35 text-[#7ECEB7] border border-[#037A74]/50 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm"
                   >
-                    <FileSpreadsheet className="w-4 h-4 text-[#7ECEB7]" />
-                    <span>Export Combined Roster (.xlsx)</span>
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-[#7ECEB7]" />
+                    <span>Export Excel (.xlsx)</span>
                   </button>
                 </div>
               </div>
