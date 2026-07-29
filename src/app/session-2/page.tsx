@@ -33,7 +33,7 @@ export default function Session2Page() {
         setStudent(data.student);
         setCourses(data.courses || []);
 
-        if (data.registration?.status?.toUpperCase() === "CONFIRMED") {
+        if (data.isRegistrationOpen === false || data.registration?.status?.toUpperCase() === "CONFIRMED") {
           router.push("/dashboard");
           return;
         }

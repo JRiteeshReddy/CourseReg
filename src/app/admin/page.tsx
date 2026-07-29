@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { RegistrationRow } from "@/lib/courses";
-import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, KeyRound } from "lucide-react";
+import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, KeyRound, Lock, Unlock } from "lucide-react";
 import * as XLSX from "xlsx";
 
 export default function AdminDashboard() {
@@ -13,8 +13,10 @@ export default function AdminDashboard() {
   const [totalMaster, setTotalMaster] = useState(0);
   const [totalReg, setTotalReg] = useState(0);
   const [adminEmail, setAdminEmail] = useState("");
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
 
   const [loading, setLoading] = useState(true);
+  const [togglingReg, setTogglingReg] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetPasswordInput, setResetPasswordInput] = useState("");
@@ -41,6 +43,9 @@ export default function AdminDashboard() {
       setTotalMaster(data.totalMasterStudents || 0);
       setTotalReg(data.totalRegisteredStudents || 0);
       setAdminEmail(data.adminEmail || "");
+      if (typeof data.isRegistrationOpen === "boolean") {
+        setIsRegistrationOpen(data.isRegistrationOpen);
+      }
     } catch (err) {
       setError("Failed to fetch admin dashboard statistics");
     } finally {
@@ -51,6 +56,27 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadAdminData();
   }, []);
+
+  const handleToggleRegistration = async (newStatus: boolean) => {
+    setTogglingReg(true);
+    try {
+      const res = await fetch("/api/admin/toggle-registration", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isOpen: newStatus }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsRegistrationOpen(data.isRegistrationOpen);
+      } else {
+        alert(data.error || "Failed to update registration status");
+      }
+    } catch (err) {
+      alert("Error toggling registration status");
+    } finally {
+      setTogglingReg(false);
+    }
+  };
 
   const handleClearAllRegistrations = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -260,6 +286,65 @@ export default function AdminDashboard() {
           </button>
         </div>
       </header>
+
+      {/* REGISTRATION OPEN / CLOSE CONTROL PANEL */}
+      <section className={`glass-panel p-6 border transition-all ${
+        isRegistrationOpen ? "border-emerald-500/30 bg-emerald-950/10" : "border-red-500/30 bg-red-950/10"
+      }`}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-lg ${
+              isRegistrationOpen
+                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+                : "bg-red-500/20 text-red-400 border-red-500/40"
+            }`}>
+              {isRegistrationOpen ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
+            </div>
+            <div>
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold text-[#F5EBE0]">Course Registration Control</h2>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono border flex items-center gap-1.5 ${
+                  isRegistrationOpen
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                    : "bg-red-500/20 text-red-300 border-red-500/40"
+                }`}>
+                  <span className={`w-2 h-2 rounded-full animate-ping ${isRegistrationOpen ? "bg-emerald-400" : "bg-red-400"}`}></span>
+                  REGISTRATION {isRegistrationOpen ? "OPEN" : "CLOSED"}
+                </span>
+              </div>
+              <p className="text-xs text-[#D6C7A1] mt-1">
+                {isRegistrationOpen
+                  ? "Students can currently select courses and submit their course registration."
+                  : "Registration is CLOSED. Students cannot select courses or submit new registrations."}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => handleToggleRegistration(!isRegistrationOpen)}
+            disabled={togglingReg}
+            className={`px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg border disabled:opacity-50 ${
+              isRegistrationOpen
+                ? "bg-red-500/20 hover:bg-red-500/30 text-red-300 border-red-500/40 shadow-red-500/20"
+                : "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-500/40 shadow-emerald-500/20"
+            }`}
+          >
+            {togglingReg ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isRegistrationOpen ? (
+              <>
+                <Lock className="w-4 h-4 text-red-400" />
+                <span>Close Course Registration</span>
+              </>
+            ) : (
+              <>
+                <Unlock className="w-4 h-4 text-emerald-400" />
+                <span>Open Course Registration</span>
+              </>
+            )}
+          </button>
+        </div>
+      </section>
 
       {/* Analytics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">

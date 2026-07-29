@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getFullSession, isAdminEmail } from '@/lib/auth';
-import { fetchRegistrations, fetchMasterStudents } from '@/lib/google-sheets';
+import { fetchRegistrations, fetchMasterStudents, getRegistrationStatus } from '@/lib/google-sheets';
 import { calculateDynamicSeats } from '@/lib/courses';
 
 export async function GET() {
@@ -14,6 +14,7 @@ export async function GET() {
     const masterStudents = await fetchMasterStudents();
     const registrations = await fetchRegistrations();
     const coursesWithSeats = calculateDynamicSeats(registrations);
+    const isRegistrationOpen = await getRegistrationStatus();
 
     return NextResponse.json({
       adminEmail: session.email,
@@ -21,6 +22,7 @@ export async function GET() {
       totalRegisteredStudents: registrations.length,
       courses: coursesWithSeats,
       registrations,
+      isRegistrationOpen,
     });
   } catch (error: any) {
     console.error("Admin stats error:", error);

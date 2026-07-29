@@ -17,6 +17,7 @@ import {
 
 export default function ReviewPage() {
   const [student, setStudent] = useState<MasterStudent | null>(null);
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -41,6 +42,12 @@ export default function ReviewPage() {
         }
         const data = await res.json();
         setStudent(data.student);
+        if (typeof data.isRegistrationOpen === "boolean") {
+          setIsRegistrationOpen(data.isRegistrationOpen);
+          if (!data.isRegistrationOpen && data.registration?.status?.toUpperCase() !== "CONFIRMED") {
+            setError("Course registration is currently CLOSED by the Administrator.");
+          }
+        }
 
         const draftS1Sports = sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
         const draftS1Life = sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
@@ -285,7 +292,7 @@ export default function ReviewPage() {
         ) : (
           <button
             onClick={handleRegisterSubmit}
-            disabled={submitting || !isAllSelected}
+            disabled={submitting || !isAllSelected || !isRegistrationOpen}
             className="btn-primary w-full sm:w-auto px-8 py-3 flex items-center justify-center gap-2 text-base font-bold disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-[#037A74]/30 text-[#F5EBE0]"
           >
             {submitting ? (

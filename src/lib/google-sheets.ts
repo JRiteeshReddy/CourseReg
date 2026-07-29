@@ -1,5 +1,7 @@
 import { RegistrationRow } from './courses';
 import { supabase } from './supabase';
+import fs from 'fs';
+import path from 'path';
 
 export interface MasterStudent {
   regNo: string;
@@ -13,14 +15,141 @@ let cachedMasterStudents: MasterStudent[] | null = null;
 let lastMasterFetch = 0;
 const CACHE_TTL = 30 * 1000; // 30 seconds
 
-// In-memory registration store as local fallback/cache
-let inMemoryRegistrations: RegistrationRow[] = [];
+// Local persistent file paths as durable fallback/backup
+const DATA_DIR = path.join(process.cwd(), 'data');
+const REGISTRATIONS_FILE = path.join(DATA_DIR, 'registrations.json');
+const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
+
+function ensureDataDir(): void {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+  } catch (err) {
+    console.error("Failed to create data directory:", err);
+  }
+}
+
+function loadLocalRegistrations(): RegistrationRow[] {
+  try {
+    ensureDataDir();
+    if (fs.existsSync(REGISTRATIONS_FILE)) {
+      const data = fs.readFileSync(REGISTRATIONS_FILE, 'utf-8');
+      return JSON.parse(data) || [];
+    }
+  } catch (err) {
+    console.error("Failed to read local registrations file:", err);
+  }
+  return [];
+}
+
+function saveLocalRegistrations(rows: RegistrationRow[]): void {
+  try {
+    ensureDataDir();
+    fs.writeFileSync(REGISTRATIONS_FILE, JSON.stringify(rows, null, 2), 'utf-8');
+  } catch (err) {
+    console.error("Failed to save local registrations file:", err);
+  }
+}
+
+// In-memory registration store pre-loaded from local file
+let inMemoryRegistrations: RegistrationRow[] = loadLocalRegistrations();
 
 /**
- * Resets local in-memory registration cache
+ * Resets local in-memory and file-based registration cache
  */
 export function clearRegistrationsCache(): void {
   inMemoryRegistrations = [];
+  try {
+    ensureDataDir();
+    if (fs.existsSync(REGISTRATIONS_FILE)) {
+      fs.writeFileSync(REGISTRATIONS_FILE, JSON.stringify([]), 'utf-8');
+    }
+  } catch (err) {
+    console.error("Failed to wipe local registrations file:", err);
+  }
+}
+
+/**
+ * Registration Open/Closed System Settings Management
+ */
+let inMemoryRegistrationOpen = true;
+
+export async function getRegistrationStatus(): Promise<boolean> {
+  // 1. Try reading from Supabase system_settings table
+  try {
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'registration_open')
+      .maybeSingle();
+
+    if (!error && data) {
+      const isOpen = data.value === 'true' || data.value === true;
+      inMemoryRegistrationOpen = isOpen;
+      saveLocalSettings({ registration_open: isOpen });
+      return isOpen;
+    }
+  } catch (err) {
+    // Fallback to local settings file
+  }
+
+  // 2. Try reading from local settings.json
+  try {
+    ensureDataDir();
+    if (fs.existsSync(SETTINGS_FILE)) {
+      const content = fs.readFileSync(SETTINGS_FILE, 'utf-8');
+      const settings = JSON.parse(content);
+      if (typeof settings.registration_open === 'boolean') {
+        inMemoryRegistrationOpen = settings.registration_open;
+        return settings.registration_open;
+      }
+    }
+  } catch (err) {
+    // Fallback to memory state
+  }
+
+  return inMemoryRegistrationOpen;
+}
+
+export async function setRegistrationStatus(isOpen: boolean): Promise<boolean> {
+  inMemoryRegistrationOpen = isOpen;
+  saveLocalSettings({ registration_open: isOpen });
+
+  // Update Supabase system_settings table if available
+  try {
+    const { error } = await supabase
+      .from('system_settings')
+      .upsert({
+        key: 'registration_open',
+        value: isOpen ? 'true' : 'false',
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'key' });
+
+    if (error) {
+      console.warn("Could not update system_settings in Supabase:", error.message);
+    }
+  } catch (err) {
+    console.warn("Supabase settings upsert exception:", err);
+  }
+
+  return isOpen;
+}
+
+function saveLocalSettings(newSettings: Record<string, any>): void {
+  try {
+    ensureDataDir();
+    let currentSettings: Record<string, any> = {};
+    if (fs.existsSync(SETTINGS_FILE)) {
+      try {
+        currentSettings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
+      } catch (e) {}
+    }
+    const updated = { ...currentSettings, ...newSettings };
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(updated, null, 2), 'utf-8');
+  } catch (err) {
+    console.error("Failed to save local settings file:", err);
+  }
 }
 
 /**
@@ -100,7 +229,7 @@ export async function checkStudentAuthorized(email: string): Promise<MasterStude
 }
 
 /**
- * Reads Registrations from Supabase database (or fallback in-memory cache)
+ * Reads Registrations from Supabase database (or fallback durable file/memory store)
  */
 export async function fetchRegistrations(): Promise<RegistrationRow[]> {
   try {
@@ -108,7 +237,7 @@ export async function fetchRegistrations(): Promise<RegistrationRow[]> {
       .from('registrations')
       .select('*');
 
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       const rows: RegistrationRow[] = data.map((row: any) => ({
         regNo: row.reg_no || row.regNo || '',
         name: row.name || '',
@@ -122,17 +251,22 @@ export async function fetchRegistrations(): Promise<RegistrationRow[]> {
       }));
 
       inMemoryRegistrations = rows;
+      saveLocalRegistrations(rows);
       return rows;
     }
   } catch (err) {
-    console.warn("Supabase registrations query error, falling back to memory:", err);
+    console.warn("Supabase registrations query error, falling back to local store:", err);
+  }
+
+  if (inMemoryRegistrations.length === 0) {
+    inMemoryRegistrations = loadLocalRegistrations();
   }
 
   return inMemoryRegistrations;
 }
 
 /**
- * Upserts a registration entry to Supabase database (and local cache)
+ * Upserts a registration entry to Supabase database, in-memory cache, and local JSON backup file
  */
 export async function upsertRegistration(entry: RegistrationRow): Promise<void> {
   const normalizedEmail = entry.email.toLowerCase();
@@ -144,6 +278,9 @@ export async function upsertRegistration(entry: RegistrationRow): Promise<void> 
   } else {
     inMemoryRegistrations.push({ ...entry, email: normalizedEmail });
   }
+
+  // Save to durable local JSON file backup
+  saveLocalRegistrations(inMemoryRegistrations);
 
   // Upsert to Supabase
   try {
@@ -168,3 +305,4 @@ export async function upsertRegistration(entry: RegistrationRow): Promise<void> 
     console.error("Supabase upsert exception:", err);
   }
 }
+

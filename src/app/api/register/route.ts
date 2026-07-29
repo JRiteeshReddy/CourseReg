@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getFullSession } from '@/lib/auth';
 import { runWithRegistrationLock } from '@/lib/concurrency';
-import { fetchRegistrations, upsertRegistration, checkStudentAuthorized } from '@/lib/google-sheets';
+import { fetchRegistrations, upsertRegistration, checkStudentAuthorized, getRegistrationStatus } from '@/lib/google-sheets';
 import { calculateDynamicSeats, COURSES } from '@/lib/courses';
 import { supabase } from '@/lib/supabase';
 
@@ -9,6 +9,14 @@ export async function POST(request: Request) {
   const sessionUser = await getFullSession();
   if (!sessionUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Check if Registration is OPEN by Admin
+  const isRegistrationOpen = await getRegistrationStatus();
+  if (!isRegistrationOpen) {
+    return NextResponse.json({
+      error: "Course registration is currently CLOSED by the Administrator. Please try again when registration opens."
+    }, { status: 403 });
   }
 
   try {

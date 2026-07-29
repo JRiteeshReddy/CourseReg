@@ -16,12 +16,14 @@ import {
   Compass, 
   ArrowRight,
   ShieldCheck,
-  Printer
+  Printer,
+  AlertTriangle
 } from "lucide-react";
 
 export default function StudentDashboard() {
   const [student, setStudent] = useState<MasterStudent | null>(null);
   const [registration, setRegistration] = useState<RegistrationRow | null>(null);
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [loading, setLoading] = useState(true);
 
   // Track session completion state for unlocking
@@ -48,6 +50,9 @@ export default function StudentDashboard() {
         const data = await res.json();
         setStudent(data.student);
         setRegistration(data.registration);
+        if (typeof data.isRegistrationOpen === "boolean") {
+          setIsRegistrationOpen(data.isRegistrationOpen);
+        }
 
         if (data.registration) {
           setS1Sports(data.registration.s1Sports || "");
@@ -144,6 +149,19 @@ export default function StudentDashboard() {
           </button>
         </div>
       </header>
+
+      {/* REGISTRATION CLOSED BANNER */}
+      {!isRegistrationOpen && !isAlreadyRegistered && (
+        <div className="bg-red-500/15 border border-red-500/30 text-red-300 p-6 rounded-2xl flex items-center gap-4 animate-fade-in shadow-lg">
+          <AlertTriangle className="w-8 h-8 text-red-400 flex-shrink-0" />
+          <div>
+            <h3 className="text-lg font-bold text-red-200">Course Registration is Currently Closed</h3>
+            <p className="text-xs text-red-300/80 mt-0.5">
+              The administrator has closed course registration. Course selection and submission are disabled until the administrator reopens registration.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* PERMANENTLY LOCKED NOTIFICATION BANNER IF REGISTERED */}
       {isAlreadyRegistered && (
@@ -260,11 +278,21 @@ export default function StudentDashboard() {
           {/* EDIT BUTTON HIDDEN IF ALREADY REGISTERED */}
           {!isAlreadyRegistered ? (
             <button
-              onClick={() => router.push("/session-1")}
-              className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
+              onClick={() => { if (isRegistrationOpen) router.push("/session-1"); }}
+              disabled={!isRegistrationOpen}
+              className="btn-primary w-full mt-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSession1Complete ? "Edit Session 1 Choices" : "Select Session 1 Courses"}
-              <ArrowRight className="w-4 h-4" />
+              {!isRegistrationOpen ? (
+                <>
+                  <Lock className="w-4 h-4 text-red-400" />
+                  <span>Registration Closed</span>
+                </>
+              ) : (
+                <>
+                  <span>{isSession1Complete ? "Edit Session 1 Choices" : "Select Session 1 Courses"}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           ) : (
             <div className="mt-4 p-3 bg-[#072C28]/80 border border-[#7ECEB7]/20 rounded-xl flex items-center justify-center gap-2 text-[#D6C7A1] text-xs font-medium">
@@ -321,11 +349,21 @@ export default function StudentDashboard() {
           {/* EDIT BUTTON HIDDEN IF ALREADY REGISTERED */}
           {!isAlreadyRegistered ? (
             <button
-              onClick={() => router.push("/session-2")}
-              className="btn-bronze w-full mt-4 flex items-center justify-center gap-2"
+              onClick={() => { if (isRegistrationOpen) router.push("/session-2"); }}
+              disabled={!isRegistrationOpen}
+              className="btn-bronze w-full mt-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSession2Complete ? "Edit Session 2 Choices" : "Select Session 2 Courses"}
-              <ArrowRight className="w-4 h-4" />
+              {!isRegistrationOpen ? (
+                <>
+                  <Lock className="w-4 h-4 text-red-400" />
+                  <span>Registration Closed</span>
+                </>
+              ) : (
+                <>
+                  <span>{isSession2Complete ? "Edit Session 2 Choices" : "Select Session 2 Courses"}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           ) : (
             <div className="mt-4 p-3 bg-[#072C28]/80 border border-[#7ECEB7]/20 rounded-xl flex items-center justify-center gap-2 text-[#D6C7A1] text-xs font-medium">
