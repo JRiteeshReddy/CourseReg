@@ -33,6 +33,11 @@ export default function Session2Page() {
         setStudent(data.student);
         setCourses(data.courses || []);
 
+        if (data.registration?.status?.toUpperCase() === "CONFIRMED") {
+          router.push("/dashboard");
+          return;
+        }
+
         // Read Session 1 draft choices from sessionStorage or registration
         const savedS1Sports = sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
         const savedS1Life = sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";

@@ -29,6 +29,11 @@ export default function Session1Page() {
         setStudent(data.student);
         setCourses(data.courses || []);
 
+        if (data.registration?.status?.toUpperCase() === "CONFIRMED") {
+          router.push("/dashboard");
+          return;
+        }
+
         // Load existing draft if available
         if (data.registration?.s1Sports) setSelectedSports(data.registration.s1Sports);
         if (data.registration?.s1StudentLife) setSelectedStudentLife(data.registration.s1StudentLife);
