@@ -1,23 +1,23 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getFullSession } from '@/lib/auth';
 import { fetchRegistrations, checkStudentAuthorized } from '@/lib/google-sheets';
 import { calculateDynamicSeats } from '@/lib/courses';
 
 export async function GET() {
-  const email = await getSession();
-  if (!email) {
+  const sessionUser = await getFullSession();
+  if (!sessionUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const student = await checkStudentAuthorized(email);
+    const student = await checkStudentAuthorized(sessionUser.email) || sessionUser;
     const registrations = await fetchRegistrations();
     const courses = calculateDynamicSeats(registrations);
 
-    const userRegistration = registrations.find(r => r.email.toLowerCase() === email.toLowerCase()) || null;
+    const userRegistration = registrations.find(r => r.email.toLowerCase() === sessionUser.email.toLowerCase()) || null;
 
     return NextResponse.json({
-      student: student || { email, name: email.split('@')[0], regNo: 'N/A' },
+      student,
       courses,
       registration: userRegistration,
     });

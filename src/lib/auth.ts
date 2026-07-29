@@ -7,8 +7,18 @@ const JWT_SECRET = new TextEncoder().encode(
 
 const COOKIE_NAME = 'coursereg_session';
 
-export async function setSession(email: string) {
-  const token = await new SignJWT({ email })
+export interface SessionUser {
+  email: string;
+  name: string;
+  regNo: string;
+}
+
+export async function setSession(user: SessionUser) {
+  const token = await new SignJWT({
+    email: user.email,
+    name: user.name,
+    regNo: user.regNo,
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('24h')
@@ -32,6 +42,23 @@ export async function getSession(): Promise<string | null> {
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
     return (payload.email as string) || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function getFullSession(): Promise<SessionUser | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(COOKIE_NAME)?.value;
+    if (!token) return null;
+
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return {
+      email: (payload.email as string) || '',
+      name: (payload.name as string) || '',
+      regNo: (payload.regNo as string) || '',
+    };
   } catch (err) {
     return null;
   }

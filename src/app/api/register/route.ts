@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getFullSession } from '@/lib/auth';
 import { runWithRegistrationLock } from '@/lib/concurrency';
 import { fetchRegistrations, upsertRegistration, checkStudentAuthorized } from '@/lib/google-sheets';
-import { calculateDynamicSeats, COURSES } from '@/lib/courses';
+import { calculateDynamicSeats } from '@/lib/courses';
 
 export async function POST(request: Request) {
-  const email = await getSession();
-  if (!email) {
+  const sessionUser = await getFullSession();
+  if (!sessionUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -19,16 +19,14 @@ export async function POST(request: Request) {
 
     // Execute under concurrency Mutex lock to guarantee serial seat reservation
     const result = await runWithRegistrationLock(async () => {
-      const student = await checkStudentAuthorized(email);
-      const regNo = student ? student.regNo : 'N/A';
-      const name = student ? student.name : email.split('@')[0];
+      const student = await checkStudentAuthorized(sessionUser.email) || sessionUser;
 
       // Fetch fresh registrations and check dynamic seat availability
       const currentRegistrations = await fetchRegistrations();
       
       // Filter out this student's existing registration when calculating seat availability
       // so editing their own choices does not count against themselves
-      const otherRegistrations = currentRegistrations.filter(r => r.email.toLowerCase() !== email.toLowerCase());
+      const otherRegistrations = currentRegistrations.filter(r => r.email.toLowerCase() !== sessionUser.email.toLowerCase());
       const computedSeats = calculateDynamicSeats(otherRegistrations);
 
       const requestedCourseIds = [s1Sports, s1StudentLife, s2Sports, s2StudentLife];
@@ -47,11 +45,11 @@ export async function POST(request: Request) {
         }
       }
 
-      // Upsert registration (Ensures every student appears ONLY ONCE)
+      // Upsert registration automatically using authenticated student profile (Zero manual personal data entry)
       await upsertRegistration({
-        regNo,
-        name,
-        email: email.toLowerCase(),
+        regNo: student.regNo,
+        name: student.name,
+        email: student.email.toLowerCase(),
         s1Sports,
         s1StudentLife,
         s2Sports,

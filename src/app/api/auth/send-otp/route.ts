@@ -7,30 +7,31 @@ export async function POST(request: Request) {
     const { email } = await request.json();
 
     if (!email || typeof email !== 'string') {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+      return NextResponse.json({ error: "Email address is required" }, { status: 400 });
     }
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Verify student is pre-approved in Google Sheets Master List
+    // Check if email exists in Master Students Google Sheet BEFORE generating OTP
     const student = await checkStudentAuthorized(normalizedEmail);
     if (!student) {
+      // Do NOT send OTP if email is missing from master list
       return NextResponse.json(
-        { error: "student not registered" },
+        { error: "You are not authorized to access this portal." },
         { status: 403 }
       );
     }
 
-    // Generate & deliver OTP code
+    // Email is authorized -> Generate & deliver OTP code
     generateOtp(normalizedEmail);
 
     return NextResponse.json({
       success: true,
-      message: "OTP sent successfully. Check your terminal logs for the code!"
+      message: "OTP generated and delivered successfully."
     });
 
   } catch (error: any) {
     console.error("Send OTP error:", error);
-    return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to process OTP request" }, { status: 500 });
   }
 }
