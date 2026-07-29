@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MasterStudent } from "@/lib/google-sheets";
-import { RegistrationRow } from "@/lib/courses";
+import { RegistrationRow, COURSES } from "@/lib/courses";
 import { 
   CheckCircle2, 
   Lock, 
@@ -17,7 +17,8 @@ import {
   ArrowRight,
   ShieldCheck,
   Printer,
-  AlertTriangle
+  AlertTriangle,
+  Clock
 } from "lucide-react";
 
 export default function StudentDashboard() {
@@ -39,6 +40,12 @@ export default function StudentDashboard() {
 
   const router = useRouter();
 
+  const getCourseName = (idOrName: string) => {
+    if (!idOrName) return "";
+    const found = COURSES.find(c => c.id === idOrName || c.name === idOrName);
+    return found ? found.name : idOrName;
+  };
+
   useEffect(() => {
     async function loadStudent() {
       try {
@@ -54,22 +61,30 @@ export default function StudentDashboard() {
           setIsRegistrationOpen(data.isRegistrationOpen);
         }
 
-        if (data.registration) {
-          setS1Sports(data.registration.s1Sports || "");
-          setS1Life(data.registration.s1StudentLife || "");
-          setS2Sports(data.registration.s2Sports || "");
-          setS2Life(data.registration.s2StudentLife || "");
+        const isConfirmed = data.registration?.status?.toUpperCase() === "CONFIRMED";
+        setIsAlreadyRegistered(isConfirmed);
 
-          if (data.registration.s1Sports && data.registration.s1StudentLife) {
-            setIsSession1Complete(true);
-          }
-          if (data.registration.s2Sports && data.registration.s2StudentLife) {
-            setIsSession2Complete(true);
-          }
-          if (data.registration.status?.toUpperCase() === "CONFIRMED") {
-            setIsAlreadyRegistered(true);
-          }
-        }
+        // Read draft selections from sessionStorage or confirmed registration
+        const draftS1Sports = sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
+        const draftS1Life = sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
+        const draftS2Sports = sessionStorage.getItem("s2Sports") || data.registration?.s2Sports || "";
+        const draftS2Life = sessionStorage.getItem("s2StudentLife") || data.registration?.s2StudentLife || "";
+
+        const resolvedS1Sports = getCourseName(draftS1Sports);
+        const resolvedS1Life = getCourseName(draftS1Life);
+        const resolvedS2Sports = getCourseName(draftS2Sports);
+        const resolvedS2Life = getCourseName(draftS2Life);
+
+        setS1Sports(resolvedS1Sports);
+        setS1Life(resolvedS1Life);
+        setS2Sports(resolvedS2Sports);
+        setS2Life(resolvedS2Life);
+
+        const s1Done = Boolean(resolvedS1Sports && resolvedS1Life);
+        const s2Done = Boolean(resolvedS2Sports && resolvedS2Life);
+
+        setIsSession1Complete(s1Done || isConfirmed);
+        setIsSession2Complete(s2Done || isConfirmed);
       } catch (err) {
         console.error("Failed to load student data", err);
       } finally {
@@ -239,9 +254,19 @@ export default function StudentDashboard() {
                 <Calendar className="w-3.5 h-3.5 text-[#7ECEB7]" /> Session 1 Selections
               </span>
 
-              <span className="flex items-center gap-1 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/10 border border-[#7ECEB7]/20 px-3 py-1 rounded-full">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Confirmed
-              </span>
+              {isAlreadyRegistered ? (
+                <span className="flex items-center gap-1 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/10 border border-[#7ECEB7]/20 px-3 py-1 rounded-full">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Confirmed
+                </span>
+              ) : isSession1Complete ? (
+                <span className="flex items-center gap-1 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/10 border border-[#7ECEB7]/20 px-3 py-1 rounded-full">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Saved (Draft)
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-xs font-semibold text-[#D6C7A1]/70 bg-[#072C28] border border-[#7ECEB7]/15 px-3 py-1 rounded-full">
+                  <Clock className="w-3.5 h-3.5 text-[#A07850]" /> Pending Selection
+                </span>
+              )}
             </div>
 
             <div>
@@ -310,9 +335,23 @@ export default function StudentDashboard() {
                 <Calendar className="w-3.5 h-3.5 text-[#A07850]" /> Session 2 Selections
               </span>
 
-              <span className="flex items-center gap-1 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/10 border border-[#7ECEB7]/20 px-3 py-1 rounded-full">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Confirmed
-              </span>
+              {isAlreadyRegistered ? (
+                <span className="flex items-center gap-1 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/10 border border-[#7ECEB7]/20 px-3 py-1 rounded-full">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Confirmed
+                </span>
+              ) : isSession2Complete ? (
+                <span className="flex items-center gap-1 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/10 border border-[#7ECEB7]/20 px-3 py-1 rounded-full">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Saved (Draft)
+                </span>
+              ) : isSession1Complete ? (
+                <span className="flex items-center gap-1 text-xs font-semibold text-[#A07850] bg-[#A07850]/15 border border-[#A07850]/30 px-3 py-1 rounded-full">
+                  <Sparkles className="w-3.5 h-3.5" /> Ready for Selection
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-xs font-semibold text-[#D6C7A1]/50 bg-[#072C28] border border-[#7ECEB7]/15 px-3 py-1 rounded-full">
+                  <Lock className="w-3.5 h-3.5" /> Complete Session 1 First
+                </span>
+              )}
             </div>
 
             <div>
@@ -349,14 +388,23 @@ export default function StudentDashboard() {
           {/* EDIT BUTTON HIDDEN IF ALREADY REGISTERED */}
           {!isAlreadyRegistered ? (
             <button
-              onClick={() => { if (isRegistrationOpen) router.push("/session-2"); }}
-              disabled={!isRegistrationOpen}
-              className="btn-bronze w-full mt-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => { if (isRegistrationOpen && isSession1Complete) router.push("/session-2"); }}
+              disabled={!isRegistrationOpen || !isSession1Complete}
+              className={`w-full mt-4 flex items-center justify-center gap-2 transition-all ${
+                !isSession1Complete
+                  ? "py-3 rounded-xl bg-[#072C28] text-[#D6C7A1]/50 border border-[#7ECEB7]/15 text-sm font-semibold opacity-60 cursor-not-allowed"
+                  : "btn-bronze text-sm font-bold"
+              }`}
             >
               {!isRegistrationOpen ? (
                 <>
                   <Lock className="w-4 h-4 text-red-400" />
                   <span>Registration Closed</span>
+                </>
+              ) : !isSession1Complete ? (
+                <>
+                  <Lock className="w-4 h-4 text-[#A07850]" />
+                  <span>Complete Session 1 First</span>
                 </>
               ) : (
                 <>
@@ -374,6 +422,32 @@ export default function StudentDashboard() {
         </div>
 
       </section>
+
+      {/* PROCEED TO REVIEW BANNER WHEN BOTH SESSIONS ARE READY */}
+      {isSession1Complete && isSession2Complete && !isAlreadyRegistered && (
+        <div className="glass-panel p-6 border-2 border-[#7ECEB7] bg-[#037A74]/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in shadow-xl">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#7ECEB7] text-[#041C19] flex items-center justify-center font-bold shadow-lg">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-[#F5EBE0]">All 4 Courses Selected!</h3>
+              <p className="text-xs text-[#D6C7A1]">
+                Session 1 & Session 2 courses are selected. Click below to review and submit your final registration.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { if (isRegistrationOpen) router.push("/review"); }}
+            disabled={!isRegistrationOpen}
+            className="btn-primary px-8 py-3.5 flex items-center gap-2 text-base font-bold text-[#F5EBE0] shadow-lg shadow-[#037A74]/40"
+          >
+            <span>Proceed to Review & Register</span>
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -63,7 +63,7 @@ export default function Session1Page() {
     if (!canContinue) return;
     sessionStorage.setItem("s1Sports", selectedSports);
     sessionStorage.setItem("s1StudentLife", selectedStudentLife);
-    router.push("/dashboard");
+    router.push("/session-2");
   };
 
   return (
