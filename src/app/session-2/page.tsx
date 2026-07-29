@@ -38,14 +38,16 @@ export default function Session2Page() {
           return;
         }
 
-        const savedS1Sports = sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
-        const savedS1Life = sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
+        const userEmail = (data.student?.email || "").toLowerCase();
+
+        const savedS1Sports = (userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
+        const savedS1Life = (userEmail && localStorage.getItem(`s1StudentLife_${userEmail}`)) || sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
 
         setS1SportsChoice(savedS1Sports);
         setS1LifeChoice(savedS1Life);
 
-        const savedS2Sports = sessionStorage.getItem("s2Sports") || data.registration?.s2Sports || "";
-        const savedS2Life = sessionStorage.getItem("s2StudentLife") || data.registration?.s2StudentLife || "";
+        const savedS2Sports = (userEmail && localStorage.getItem(`s2Sports_${userEmail}`)) || sessionStorage.getItem("s2Sports") || data.registration?.s2Sports || "";
+        const savedS2Life = (userEmail && localStorage.getItem(`s2StudentLife_${userEmail}`)) || sessionStorage.getItem("s2StudentLife") || data.registration?.s2StudentLife || "";
 
         setSelectedSports(savedS2Sports);
         setSelectedStudentLife(savedS2Life);
@@ -74,6 +76,11 @@ export default function Session2Page() {
 
   const handleContinue = () => {
     if (!canContinue) return;
+    if (student?.email) {
+      const userEmail = student.email.toLowerCase();
+      localStorage.setItem(`s2Sports_${userEmail}`, selectedSports);
+      localStorage.setItem(`s2StudentLife_${userEmail}`, selectedStudentLife);
+    }
     sessionStorage.setItem("s2Sports", selectedSports);
     sessionStorage.setItem("s2StudentLife", selectedStudentLife);
     router.push("/review");

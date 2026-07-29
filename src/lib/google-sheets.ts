@@ -232,37 +232,48 @@ export async function checkStudentAuthorized(email: string): Promise<MasterStude
  * Reads Registrations from Supabase database (or fallback durable file/memory store)
  */
 export async function fetchRegistrations(): Promise<RegistrationRow[]> {
+  const localRows = loadLocalRegistrations();
+  const registrationMap = new Map<string, RegistrationRow>();
+
+  // 1. Populate from local durable JSON file store
+  for (const row of localRows) {
+    if (row.email) {
+      registrationMap.set(row.email.toLowerCase(), row);
+    }
+  }
+
+  // 2. Fetch from Supabase and merge
   try {
     const { data, error } = await supabase
       .from('registrations')
       .select('*');
 
     if (!error && data && data.length > 0) {
-      const rows: RegistrationRow[] = data.map((row: any) => ({
-        regNo: row.reg_no || row.regNo || '',
-        name: row.name || '',
-        email: (row.email || '').toLowerCase(),
-        s1Sports: row.s1_sports || row.s1Sports || '',
-        s1StudentLife: row.s1_student_life || row.s1StudentLife || '',
-        s2Sports: row.s2_sports || row.s2Sports || '',
-        s2StudentLife: row.s2_student_life || row.s2StudentLife || '',
-        timestamp: row.timestamp || new Date().toISOString(),
-        status: row.status || 'CONFIRMED',
-      }));
-
-      inMemoryRegistrations = rows;
-      saveLocalRegistrations(rows);
-      return rows;
+      for (const row of data) {
+        const email = (row.email || '').toLowerCase();
+        if (email) {
+          registrationMap.set(email, {
+            regNo: row.reg_no || row.regNo || '',
+            name: row.name || '',
+            email,
+            s1Sports: row.s1_sports || row.s1Sports || '',
+            s1StudentLife: row.s1_student_life || row.s1StudentLife || '',
+            s2Sports: row.s2_sports || row.s2Sports || '',
+            s2StudentLife: row.s2_student_life || row.s2StudentLife || '',
+            timestamp: row.timestamp || new Date().toISOString(),
+            status: row.status || 'CONFIRMED',
+          });
+        }
+      }
     }
   } catch (err) {
-    console.warn("Supabase registrations query error, falling back to local store:", err);
+    console.warn("Supabase registrations query error, using local store fallback:", err);
   }
 
-  if (inMemoryRegistrations.length === 0) {
-    inMemoryRegistrations = loadLocalRegistrations();
-  }
-
-  return inMemoryRegistrations;
+  const mergedRows = Array.from(registrationMap.values());
+  inMemoryRegistrations = mergedRows;
+  saveLocalRegistrations(mergedRows);
+  return mergedRows;
 }
 
 /**

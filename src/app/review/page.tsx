@@ -49,10 +49,12 @@ export default function ReviewPage() {
           }
         }
 
-        const draftS1Sports = sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
-        const draftS1Life = sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
-        const draftS2Sports = sessionStorage.getItem("s2Sports") || data.registration?.s2Sports || "";
-        const draftS2Life = sessionStorage.getItem("s2StudentLife") || data.registration?.s2StudentLife || "";
+        const userEmail = (data.student?.email || "").toLowerCase();
+
+        const draftS1Sports = (userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
+        const draftS1Life = (userEmail && localStorage.getItem(`s1StudentLife_${userEmail}`)) || sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
+        const draftS2Sports = (userEmail && localStorage.getItem(`s2Sports_${userEmail}`)) || sessionStorage.getItem("s2Sports") || data.registration?.s2Sports || "";
+        const draftS2Life = (userEmail && localStorage.getItem(`s2StudentLife_${userEmail}`)) || sessionStorage.getItem("s2StudentLife") || data.registration?.s2StudentLife || "";
 
         setS1Sports(draftS1Sports);
         setS1Life(draftS1Life);
@@ -107,7 +109,13 @@ export default function ReviewPage() {
       } else {
         setIsCompleted(true);
         setTimestamp(new Date().toISOString());
-        sessionStorage.clear();
+        if (student?.email) {
+          const userEmail = student.email.toLowerCase();
+          localStorage.setItem(`s1Sports_${userEmail}`, s1Sports);
+          localStorage.setItem(`s1StudentLife_${userEmail}`, s1Life);
+          localStorage.setItem(`s2Sports_${userEmail}`, s2Sports);
+          localStorage.setItem(`s2StudentLife_${userEmail}`, s2Life);
+        }
       }
     } catch (err) {
       setError("An unexpected network error occurred.");

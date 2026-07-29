@@ -35,8 +35,12 @@ export default function Session1Page() {
         }
 
         // Load existing draft if available
-        if (data.registration?.s1Sports) setSelectedSports(data.registration.s1Sports);
-        if (data.registration?.s1StudentLife) setSelectedStudentLife(data.registration.s1StudentLife);
+        const userEmail = (data.student?.email || "").toLowerCase();
+        const savedSports = (userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
+        const savedLife = (userEmail && localStorage.getItem(`s1StudentLife_${userEmail}`)) || sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
+
+        if (savedSports) setSelectedSports(savedSports);
+        if (savedLife) setSelectedStudentLife(savedLife);
       } catch (err) {
         console.error("Failed to load Session 1 data", err);
       } finally {
@@ -61,6 +65,11 @@ export default function Session1Page() {
 
   const handleContinue = () => {
     if (!canContinue) return;
+    if (student?.email) {
+      const userEmail = student.email.toLowerCase();
+      localStorage.setItem(`s1Sports_${userEmail}`, selectedSports);
+      localStorage.setItem(`s1StudentLife_${userEmail}`, selectedStudentLife);
+    }
     sessionStorage.setItem("s1Sports", selectedSports);
     sessionStorage.setItem("s1StudentLife", selectedStudentLife);
     router.push("/session-2");

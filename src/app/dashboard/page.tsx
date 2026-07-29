@@ -64,11 +64,13 @@ export default function StudentDashboard() {
         const isConfirmed = data.registration?.status?.toUpperCase() === "CONFIRMED";
         setIsAlreadyRegistered(isConfirmed);
 
-        // Read draft selections from sessionStorage or confirmed registration
-        const draftS1Sports = sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
-        const draftS1Life = sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
-        const draftS2Sports = sessionStorage.getItem("s2Sports") || data.registration?.s2Sports || "";
-        const draftS2Life = sessionStorage.getItem("s2StudentLife") || data.registration?.s2StudentLife || "";
+        const userEmail = (data.student?.email || "").toLowerCase();
+
+        // Read draft selections from localStorage (durable per user) or sessionStorage or confirmed registration
+        const draftS1Sports = (userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
+        const draftS1Life = (userEmail && localStorage.getItem(`s1StudentLife_${userEmail}`)) || sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
+        const draftS2Sports = (userEmail && localStorage.getItem(`s2Sports_${userEmail}`)) || sessionStorage.getItem("s2Sports") || data.registration?.s2Sports || "";
+        const draftS2Life = (userEmail && localStorage.getItem(`s2StudentLife_${userEmail}`)) || sessionStorage.getItem("s2StudentLife") || data.registration?.s2StudentLife || "";
 
         const resolvedS1Sports = getCourseName(draftS1Sports);
         const resolvedS1Life = getCourseName(draftS1Life);
