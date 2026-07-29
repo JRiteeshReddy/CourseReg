@@ -130,35 +130,85 @@ export default function AdminDashboard() {
     XLSX.writeFile(workbook, `Master_University_Course_Registrations_${new Date().toISOString().split("T")[0]}.xlsx`);
   };
 
-  // Course-Specific Dynamic Export for Session 1 or Session 2
-  const exportCourseExcel = (courseId: string, courseName: string, sessionNum: 1 | 2) => {
-    const filteredStudents = registrations.filter((r) => {
+  // Course-Specific Dynamic Combined Excel Export (Session 1 + Session 2 in 1 File)
+  const exportCourseExcel = (courseId: string, courseName: string, category: string) => {
+    const s1Students = registrations.filter((r) => {
       if (r.status?.toUpperCase() !== "CONFIRMED") return false;
-      if (sessionNum === 1) {
-        return r.s1Sports === courseId || r.s1Sports === courseName || r.s1StudentLife === courseId || r.s1StudentLife === courseName;
-      } else {
-        return r.s2Sports === courseId || r.s2Sports === courseName || r.s2StudentLife === courseId || r.s2StudentLife === courseName;
-      }
+      return r.s1Sports === courseId || r.s1Sports === courseName || r.s1StudentLife === courseId || r.s1StudentLife === courseName;
     });
 
-    if (filteredStudents.length === 0) {
-      alert(`No students are currently registered for ${courseName} in Session ${sessionNum}.`);
+    const s2Students = registrations.filter((r) => {
+      if (r.status?.toUpperCase() !== "CONFIRMED") return false;
+      return r.s2Sports === courseId || r.s2Sports === courseName || r.s2StudentLife === courseId || r.s2StudentLife === courseName;
+    });
+
+    if (s1Students.length === 0 && s2Students.length === 0) {
+      alert(`No students are currently registered for ${courseName} in either session.`);
       return;
     }
 
-    const exportData = filteredStudents.map((r) => ({
-      "Registration Number": r.regNo,
-      "Student Name": r.name,
-      "Email": r.email,
-      "Timestamp": r.timestamp,
-    }));
+    const aoaData: any[][] = [];
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    // Course Title & Metadata Header
+    aoaData.push(["COURSE NAME:", courseName]);
+    aoaData.push(["COURSE CODE:", courseId]);
+    aoaData.push(["CATEGORY:", category]);
+    aoaData.push([]); // blank spacing row
+
+    // Session 1 Section
+    aoaData.push([`--- SESSION 1 REGISTERED STUDENTS (${s1Students.length}) ---`]);
+    aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Registration Timestamp"]);
+
+    if (s1Students.length > 0) {
+      s1Students.forEach((r, idx) => {
+        aoaData.push([
+          idx + 1,
+          r.regNo,
+          r.name,
+          r.email,
+          r.timestamp ? new Date(r.timestamp).toLocaleString() : "N/A"
+        ]);
+      });
+    } else {
+      aoaData.push(["-", "No students registered for Session 1", "-", "-", "-"]);
+    }
+
+    aoaData.push([]); // blank spacing row
+    aoaData.push([]); // blank spacing row
+
+    // Session 2 Section
+    aoaData.push([`--- SESSION 2 REGISTERED STUDENTS (${s2Students.length}) ---`]);
+    aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Registration Timestamp"]);
+
+    if (s2Students.length > 0) {
+      s2Students.forEach((r, idx) => {
+        aoaData.push([
+          idx + 1,
+          r.regNo,
+          r.name,
+          r.email,
+          r.timestamp ? new Date(r.timestamp).toLocaleString() : "N/A"
+        ]);
+      });
+    } else {
+      aoaData.push(["-", "No students registered for Session 2", "-", "-", "-"]);
+    }
+
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, `${courseName} S${sessionNum}`);
-    
+
+    // Main Sheet containing both sessions clearly titled
+    const mainWorksheet = XLSX.utils.aoa_to_sheet(aoaData);
+    mainWorksheet['!cols'] = [
+      { wch: 8 },  // S.No
+      { wch: 22 }, // Reg No
+      { wch: 28 }, // Name
+      { wch: 35 }, // Email
+      { wch: 25 }, // Timestamp
+    ];
+    XLSX.utils.book_append_sheet(workbook, mainWorksheet, "Course Roster");
+
     const safeFileName = courseName.replace(/[^a-zA-Z0-9]/g, "_");
-    XLSX.writeFile(workbook, `${safeFileName}_Session_${sessionNum}_Students.xlsx`);
+    XLSX.writeFile(workbook, `${safeFileName}_Combined_Course_Roster.xlsx`);
   };
 
   const handleLogout = async () => {
@@ -429,20 +479,14 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* COURSE SPECIFIC EXPORT BUTTONS */}
-                <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-[#7ECEB7]/15">
+                {/* COURSE SPECIFIC COMBINED EXPORT BUTTON */}
+                <div className="pt-3 border-t border-[#7ECEB7]/15">
                   <button
-                    onClick={() => exportCourseExcel(course.id, course.name, 1)}
-                    className="flex-1 px-3 py-2 rounded-lg bg-[#037A74]/20 hover:bg-[#037A74]/30 text-[#7ECEB7] border border-[#037A74]/40 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                    onClick={() => exportCourseExcel(course.id, course.name, course.category)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#037A74]/20 hover:bg-[#037A74]/35 text-[#7ECEB7] border border-[#037A74]/50 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm"
                   >
-                    <FileSpreadsheet className="w-3.5 h-3.5" /> Export Session 1 Excel
-                  </button>
-
-                  <button
-                    onClick={() => exportCourseExcel(course.id, course.name, 2)}
-                    className="flex-1 px-3 py-2 rounded-lg bg-[#A07850]/20 hover:bg-[#A07850]/30 text-[#D6C7A1] border border-[#A07850]/40 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
-                  >
-                    <FileSpreadsheet className="w-3.5 h-3.5" /> Export Session 2 Excel
+                    <FileSpreadsheet className="w-4 h-4 text-[#7ECEB7]" />
+                    <span>Export Combined Roster (.xlsx)</span>
                   </button>
                 </div>
               </div>
