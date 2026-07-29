@@ -194,7 +194,7 @@ export default function AdminDashboard() {
                   value={resetPasswordInput}
                   onChange={(e) => setResetPasswordInput(e.target.value)}
                   placeholder="Enter Security Password"
-                  className="input-glass pl-10 text-sm"
+                  className="input-glass input-glass-icon-left text-sm"
                   disabled={resetting}
                 />
               </div>

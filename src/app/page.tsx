@@ -94,15 +94,15 @@ export default function AuthPage() {
           {/* Email Address */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-[#D6C7A1] ml-1">University Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7ECEB7]/70" />
+            <div className="relative flex items-center">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7ECEB7] pointer-events-none z-10" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="rjulappa@student.gitam.edu"
-                className="input-glass pl-11"
+                className="input-glass input-glass-icon-left"
                 disabled={loading}
               />
             </div>
@@ -111,21 +111,21 @@ export default function AuthPage() {
           {/* Password Input */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-[#D6C7A1] ml-1">Password</label>
-            <div className="relative">
-              <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7ECEB7]/70" />
+            <div className="relative flex items-center">
+              <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7ECEB7] pointer-events-none z-10" />
               <input
                 type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={`${hintPassword}`}
-                className="input-glass pl-11 pr-11"
+                className="input-glass input-glass-icon-left input-glass-icon-right"
                 disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0]"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] z-10"
                 title={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
