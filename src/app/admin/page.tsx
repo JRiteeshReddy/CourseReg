@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { RegistrationRow } from "@/lib/courses";
-import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet } from "lucide-react";
+import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, RefreshCw } from "lucide-react";
 import * as XLSX from "xlsx";
 
 export default function AdminDashboard() {
@@ -15,6 +15,8 @@ export default function AdminDashboard() {
   const [adminEmail, setAdminEmail] = useState("");
 
   const [loading, setLoading] = useState(true);
+  const [resetting, setResetting] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
@@ -47,6 +49,23 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadAdminData();
   }, []);
+
+  const handleClearAllRegistrations = async () => {
+    setResetting(true);
+    try {
+      const res = await fetch("/api/admin/reset", { method: "POST" });
+      if (!res.ok) {
+        alert("Failed to reset registrations.");
+      } else {
+        await loadAdminData();
+        setShowResetModal(false);
+      }
+    } catch (err) {
+      alert("Error resetting registrations.");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   // Full Master Export
   const exportAllToExcel = () => {
@@ -134,6 +153,39 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in bg-[#041C19] text-[#F5EBE0]">
+      {/* Reset Confirmation Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-panel max-w-md w-full p-6 space-y-5 border border-red-500/30">
+            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto border border-red-500/20 text-red-400">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-bold text-[#F5EBE0]">Clear All Test Registrations?</h3>
+              <p className="text-xs text-[#D6C7A1] leading-relaxed">
+                This will permanently delete all student course registrations from the database and reset seat occupancies back to zero. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="flex-1 py-2.5 rounded-lg bg-[#072C28] hover:bg-[#037A74]/30 text-[#D6C7A1] text-xs font-semibold border border-[#7ECEB7]/20 transition-all"
+                disabled={resetting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClearAllRegistrations}
+                disabled={resetting}
+                className="flex-1 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-500/30"
+              >
+                {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Wipe All"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Admin Header */}
       <header className="glass-panel p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-[#7ECEB7]/20">
         <div className="flex items-center gap-4">
@@ -148,12 +200,20 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <button
+            onClick={() => setShowResetModal(true)}
+            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+            title="Clear all test registrations"
+          >
+            <Trash2 className="w-4 h-4 text-red-400" /> Clear Test Data
+          </button>
+
           <button
             onClick={exportAllToExcel}
             className="btn-primary flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm text-[#F5EBE0]"
           >
-            <Download className="w-4 h-4 text-[#F5EBE0]" /> Export All Registrations (.xlsx)
+            <Download className="w-4 h-4 text-[#F5EBE0]" /> Export All (.xlsx)
           </button>
 
           <button

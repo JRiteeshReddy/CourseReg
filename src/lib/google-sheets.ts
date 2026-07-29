@@ -17,6 +17,13 @@ const CACHE_TTL = 30 * 1000; // 30 seconds
 let inMemoryRegistrations: RegistrationRow[] = [];
 
 /**
+ * Resets local in-memory registration cache
+ */
+export function clearRegistrationsCache(): void {
+  inMemoryRegistrations = [];
+}
+
+/**
  * Reads Master Students from Supabase table or Google Sheets CSV fallback
  */
 export async function fetchMasterStudents(): Promise<MasterStudent[]> {
