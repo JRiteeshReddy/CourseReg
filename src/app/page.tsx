@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, KeyRound, Loader2, ArrowRight, ShieldCheck, Sun, Moon } from "lucide-react";
+import { Mail, KeyRound, Loader2, ArrowRight, ShieldCheck, Sun, Moon, Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"email" | "otp">("email");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isDark, setIsDark] = useState(true);
@@ -24,46 +24,24 @@ export default function AuthPage() {
     }
   };
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const emailPrefix = email.trim() ? email.split('@')[0].toLowerCase() : 'username';
+  const hintPassword = `${emailPrefix}@reg_pass`;
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const res = await fetch("/api/auth/send-otp", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Failed to send OTP");
-      } else {
-        setStep("otp");
-      }
-    } catch (err) {
-      setError("An unexpected error occurred.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: otp }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Invalid OTP");
+        setError(data.error || "Failed to log in");
       } else {
         router.push(data.redirectTo || "/dashboard");
       }
@@ -108,75 +86,63 @@ export default function AuthPage() {
           </div>
         )}
 
-        {step === "email" ? (
-          <form onSubmit={handleSendOtp} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">University Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="student@university.edu"
-                  className="input-glass pl-11"
-                  disabled={loading}
-                />
-              </div>
+        <form onSubmit={handleLogin} className="space-y-5">
+          {/* Email Address */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300 ml-1">University Email Address</label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="student@university.edu"
+                className="input-glass pl-11"
+                disabled={loading}
+              />
             </div>
-            
-            <button 
-              type="submit" 
-              className="btn-primary w-full flex items-center justify-center gap-2"
-              disabled={loading || !email}
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Request OTP Code"}
-              {!loading && <ArrowRight className="w-5 h-5" />}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleVerifyOtp} className="space-y-6 animate-fade-in">
-            <div className="text-center mb-6 bg-slate-800/40 p-3 rounded-lg border border-slate-700/50">
-              <p className="text-sm text-slate-300">
-                We generated a 6-digit OTP code for <br/>
-                <span className="font-semibold text-blue-400">{email}</span>
-              </p>
-              <button 
-                type="button" 
-                onClick={() => { setStep("email"); setOtp(""); setError(""); }}
-                className="text-xs text-slate-400 hover:text-white mt-2 underline"
+          </div>
+
+          {/* Password Input */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300 ml-1">Password</label>
+            <div className="relative">
+              <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={`${hintPassword}`}
+                className="input-glass pl-11 pr-11"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                title={showPassword ? "Hide password" : "Show password"}
               >
-                Change Email
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">One-Time Password (OTP)</label>
-              <div className="relative">
-                <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  type="text"
-                  required
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  placeholder="123456"
-                  maxLength={6}
-                  className="input-glass pl-11 tracking-[0.5em] font-mono text-center text-lg"
-                  disabled={loading}
-                />
-              </div>
-            </div>
             
-            <button 
-              type="submit" 
-              className="btn-primary w-full flex items-center justify-center gap-2"
-              disabled={loading || otp.length < 6}
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Access Portal"}
-            </button>
-          </form>
-        )}
+            {/* Format Hint */}
+            <p className="text-xs text-slate-400 ml-1">
+              Default password format: <span className="font-mono text-blue-400 font-semibold">{hintPassword}</span>
+            </p>
+          </div>
+
+          <button 
+            type="submit" 
+            className="btn-primary w-full flex items-center justify-center gap-2 mt-4"
+            disabled={loading || !email || !password}
+          >
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Login & Access Portal"}
+            {!loading && <ArrowRight className="w-5 h-5" />}
+          </button>
+        </form>
       </div>
     </div>
   );

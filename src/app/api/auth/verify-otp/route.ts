@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyOtpCode } from '@/lib/otp';
 import { setSession, isAdminEmail } from '@/lib/auth';
 import { checkStudentAuthorized } from '@/lib/google-sheets';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
@@ -12,9 +13,30 @@ export async function POST(request: Request) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    const cleanCode = String(code).trim();
 
-    // Verify OTP code
-    const isValid = verifyOtpCode(normalizedEmail, code);
+    let isValid = false;
+
+    // 1. Verify 6-digit code against memory store (sent via Resend)
+    isValid = verifyOtpCode(normalizedEmail, cleanCode);
+
+    // 2. Fallback check against Supabase Auth
+    if (!isValid) {
+      try {
+        const { data, error } = await supabase.auth.verifyOtp({
+          email: normalizedEmail,
+          token: cleanCode,
+          type: 'email',
+        });
+
+        if (!error && data?.session) {
+          isValid = true;
+        }
+      } catch (err) {
+        // Ignore Supabase check error
+      }
+    }
+
     if (!isValid) {
       return NextResponse.json({ error: "Invalid or expired OTP code" }, { status: 401 });
     }
