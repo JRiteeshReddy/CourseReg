@@ -1,5 +1,14 @@
 const otpStore = new Map<string, { code: string; expiresAt: number }>();
 
+export function renderOtpEmailHtml(token: string): string {
+  return `
+    <h2>Confirm your signup</h2>
+    <p>Your 6-digit verification code for Campus Life Registration is:</p>
+    <h1 style="font-size: 32px; letter-spacing: 6px; color: #2563eb;">${token}</h1>
+    <p>Enter this code in the portal to verify your email and complete your registration.</p>
+  `.trim();
+}
+
 export function generateOtp(email: string): string {
   const normalizedEmail = email.toLowerCase();
   const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -7,9 +16,12 @@ export function generateOtp(email: string): string {
 
   otpStore.set(normalizedEmail, { code, expiresAt });
 
+  const emailHtml = renderOtpEmailHtml(code);
+
   console.log(`\n========================================`);
   console.log(`[OTP GENERATED] To: ${normalizedEmail}`);
   console.log(`[OTP CODE]: ${code}`);
+  console.log(`[EMAIL TEMPLATE OUTPUT]:\n${emailHtml}`);
   console.log(`========================================\n`);
 
   return code;
