@@ -53,35 +53,39 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden bg-[#041C19] text-[#F5EBE0]">
+      {/* Dynamic Background Glow Spheres */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#037A74]/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#A07850]/15 rounded-full blur-3xl pointer-events-none"></div>
+
       {/* Theme Toggle Button */}
       <button
         onClick={toggleTheme}
-        className="absolute top-6 right-6 p-3 rounded-full glass-card hover:scale-105 transition-all text-slate-300 hover:text-white"
+        className="absolute top-6 right-6 p-3 rounded-full glass-card hover:scale-105 transition-all text-[#D6C7A1] hover:text-[#F5EBE0]"
         title="Toggle Light / Dark Mode"
       >
-        {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-blue-600" />}
+        {isDark ? <Sun className="w-5 h-5 text-[#D6C7A1]" /> : <Moon className="w-5 h-5 text-[#037A74]" />}
       </button>
 
       {/* Main Glass Panel */}
-      <div className="glass-panel w-full max-w-md p-8 animate-fade-in relative overflow-hidden">
-        {/* Top Decorative Gradient */}
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+      <div className="glass-panel w-full max-w-md p-8 animate-fade-in relative overflow-hidden border border-[#7ECEB7]/20 shadow-2xl">
+        {/* Top Decorative Gradient Line */}
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#A07850] via-[#7ECEB7] to-[#037A74]"></div>
 
         <div className="text-center mb-8 mt-2">
-          <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-500/20 shadow-inner">
-            <ShieldCheck className="w-8 h-8 text-blue-400" />
+          <div className="w-16 h-16 bg-[#037A74]/15 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-[#7ECEB7]/30 shadow-inner">
+            <ShieldCheck className="w-8 h-8 text-[#7ECEB7]" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Student Portal</h1>
-          <p className="text-slate-400 text-sm">
+          <h1 className="text-3xl font-bold tracking-tight mb-2 text-[#F5EBE0]">Student Portal</h1>
+          <p className="text-[#D6C7A1] text-sm">
             University Campus Life Course Registration System
           </p>
         </div>
 
         {/* Error Alert Box */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3.5 rounded-lg mb-6 text-sm flex items-center gap-3 animate-fade-in">
-            <div className="w-1.5 h-6 bg-red-500 rounded-full flex-shrink-0"></div>
+          <div className="bg-red-500/10 border border-red-500/30 text-red-300 p-3.5 rounded-xl mb-6 text-sm flex items-center gap-3 animate-fade-in">
+            <div className="w-1.5 h-6 bg-red-400 rounded-full flex-shrink-0"></div>
             <span className="font-medium">{error}</span>
           </div>
         )}
@@ -89,15 +93,15 @@ export default function AuthPage() {
         <form onSubmit={handleLogin} className="space-y-5">
           {/* Email Address */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300 ml-1">University Email Address</label>
+            <label className="text-sm font-medium text-[#D6C7A1] ml-1">University Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7ECEB7]/70" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="student@university.edu"
+                placeholder="rjulappa@student.gitam.edu"
                 className="input-glass pl-11"
                 disabled={loading}
               />
@@ -106,9 +110,9 @@ export default function AuthPage() {
 
           {/* Password Input */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300 ml-1">Password</label>
+            <label className="text-sm font-medium text-[#D6C7A1] ml-1">Password</label>
             <div className="relative">
-              <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7ECEB7]/70" />
               <input
                 type={showPassword ? "text" : "password"}
                 required
@@ -121,7 +125,7 @@ export default function AuthPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0]"
                 title={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -129,18 +133,18 @@ export default function AuthPage() {
             </div>
             
             {/* Format Hint */}
-            <p className="text-xs text-slate-400 ml-1">
-              Default password format: <span className="font-mono text-blue-400 font-semibold">{hintPassword}</span>
+            <p className="text-xs text-[#D6C7A1]/80 ml-1">
+              Default password format: <span className="font-mono text-[#7ECEB7] font-semibold">{hintPassword}</span>
             </p>
           </div>
 
           <button 
             type="submit" 
-            className="btn-primary w-full flex items-center justify-center gap-2 mt-4"
+            className="btn-primary w-full flex items-center justify-center gap-2 mt-4 text-[#F5EBE0]"
             disabled={loading || !email || !password}
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Login & Access Portal"}
-            {!loading && <ArrowRight className="w-5 h-5" />}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin text-[#F5EBE0]" /> : "Login & Access Portal"}
+            {!loading && <ArrowRight className="w-5 h-5 text-[#F5EBE0]" />}
           </button>
         </form>
       </div>

@@ -7,13 +7,11 @@ import {
   CheckCircle2, 
   ArrowLeft, 
   Loader2, 
-  Sparkles, 
   Trophy, 
   Compass, 
   Calendar, 
   ShieldCheck, 
   AlertTriangle,
-  Lock,
   Printer
 } from "lucide-react";
 
@@ -44,7 +42,6 @@ export default function ReviewPage() {
         const data = await res.json();
         setStudent(data.student);
 
-        // Read temporary choices from sessionStorage or existing registration
         const draftS1Sports = sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
         const draftS1Life = sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
         const draftS2Sports = sessionStorage.getItem("s2Sports") || data.registration?.s2Sports || "";
@@ -70,8 +67,8 @@ export default function ReviewPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      <div className="flex-1 flex items-center justify-center bg-[#041C19]">
+        <Loader2 className="w-8 h-8 text-[#7ECEB7] animate-spin" />
       </div>
     );
   }
@@ -113,14 +110,14 @@ export default function ReviewPage() {
   };
 
   return (
-    <div className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in">
+    <div className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in bg-[#041C19] text-[#F5EBE0]">
       {/* HEADER BANNER */}
-      <header className="glass-panel p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <header className="glass-panel p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-[#7ECEB7]/20">
         <div className="flex items-center gap-4">
           {!isCompleted && (
             <button
               onClick={() => router.push("/session-2")}
-              className="p-2.5 rounded-xl glass-card hover:bg-slate-800 text-slate-300 transition-all border border-slate-800"
+              className="p-2.5 rounded-xl glass-card hover:bg-[#037A74]/30 text-[#D6C7A1] transition-all border border-[#7ECEB7]/20"
               title="Back to Session 2"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -128,15 +125,15 @@ export default function ReviewPage() {
           )}
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-[#7ECEB7]/20 text-[#7ECEB7] border border-[#7ECEB7]/30">
                 FINAL REVIEW & REGISTRATION
               </span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight mt-1">
+            <h1 className="text-2xl font-bold tracking-tight mt-1 text-[#F5EBE0]">
               {isCompleted ? "Registration Confirmed!" : "Review Selected Courses"}
             </h1>
-            <p className="text-xs text-slate-400">
-              Student: <span className="text-white font-medium">{student?.name}</span> ({student?.regNo})
+            <p className="text-xs text-[#D6C7A1]">
+              Student: <span className="text-[#F5EBE0] font-medium">{student?.name}</span> ({student?.regNo})
             </p>
           </div>
         </div>
@@ -144,35 +141,35 @@ export default function ReviewPage() {
         {isCompleted && (
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#072C28] hover:bg-[#037A74]/30 text-[#F5EBE0] text-xs font-medium border border-[#7ECEB7]/20 transition-all"
           >
-            <Printer className="w-4 h-4" /> Print Confirmation
+            <Printer className="w-4 h-4 text-[#7ECEB7]" /> Print Confirmation
           </button>
         )}
       </header>
 
       {/* ERROR ALERT */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl text-sm flex items-center gap-3 animate-fade-in">
+        <div className="bg-red-500/10 border border-red-500/30 text-red-300 p-4 rounded-xl text-sm flex items-center gap-3 animate-fade-in">
           <AlertTriangle className="w-5 h-5 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* SUCCESS CONFIRMATION BANNER (READ-ONLY FOREVER) */}
+      {/* SUCCESS CONFIRMATION BANNER */}
       {isCompleted && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-6 rounded-2xl space-y-2 animate-fade-in">
+        <div className="bg-[#7ECEB7]/10 border border-[#7ECEB7]/30 text-[#7ECEB7] p-6 rounded-2xl space-y-2 animate-fade-in">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400 flex-shrink-0" />
+            <CheckCircle2 className="w-8 h-8 text-[#7ECEB7] flex-shrink-0" />
             <div>
-              <h2 className="text-xl font-bold text-white">Course Registration Complete!</h2>
-              <p className="text-xs text-emerald-300">
+              <h2 className="text-xl font-bold text-[#F5EBE0]">Course Registration Complete!</h2>
+              <p className="text-xs text-[#7ECEB7]">
                 Your selections have been permanently recorded. Your registration is now locked and read-only.
               </p>
             </div>
           </div>
           {timestamp && (
-            <p className="text-xs font-mono text-emerald-400/80 pt-2 border-t border-emerald-500/20">
+            <p className="text-xs font-mono text-[#D6C7A1] pt-2 border-t border-[#7ECEB7]/20">
               Timestamp: {new Date(timestamp).toLocaleString()}
             </p>
           )}
@@ -182,83 +179,83 @@ export default function ReviewPage() {
       {/* SUMMARY REVIEW CARDS */}
       <div className="space-y-6">
         {/* STUDENT PROFILE CARD */}
-        <div className="glass-panel p-6 space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">
+        <div className="glass-panel p-6 space-y-3 border border-[#7ECEB7]/20">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#D6C7A1] border-b border-[#7ECEB7]/15 pb-2">
             Student Profile Details
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div>
-              <span className="text-slate-500 text-xs block">Student Name</span>
-              <strong className="text-white font-medium">{student?.name}</strong>
+              <span className="text-[#D6C7A1]/70 text-xs block">Student Name</span>
+              <strong className="text-[#F5EBE0] font-medium">{student?.name}</strong>
             </div>
             <div>
-              <span className="text-slate-500 text-xs block">Registration Number</span>
-              <strong className="text-white font-mono">{student?.regNo}</strong>
+              <span className="text-[#D6C7A1]/70 text-xs block">Registration Number</span>
+              <strong className="text-[#F5EBE0] font-mono">{student?.regNo}</strong>
             </div>
             <div>
-              <span className="text-slate-500 text-xs block">University Email</span>
-              <strong className="text-white font-mono">{student?.email}</strong>
+              <span className="text-[#D6C7A1]/70 text-xs block">University Email</span>
+              <strong className="text-[#F5EBE0] font-mono">{student?.email}</strong>
             </div>
           </div>
         </div>
 
         {/* SESSION 1 SUMMARY */}
-        <div className="glass-panel p-6 space-y-4 border-blue-500/30">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-2 text-blue-400 font-bold">
+        <div className="glass-panel p-6 space-y-4 border-[#037A74]/40">
+          <div className="flex items-center justify-between border-b border-[#7ECEB7]/15 pb-3">
+            <div className="flex items-center gap-2 text-[#7ECEB7] font-bold">
               <Calendar className="w-5 h-5" />
               <h4>Session 1 Selections</h4>
             </div>
-            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-[#037A74]/20 text-[#7ECEB7] border border-[#037A74]/40">
               Session 1
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="glass-card p-4 flex items-center gap-3 border-slate-800">
-              <Trophy className="w-5 h-5 text-blue-400 flex-shrink-0" />
+            <div className="glass-card p-4 flex items-center gap-3 border-[#7ECEB7]/15">
+              <Trophy className="w-5 h-5 text-[#7ECEB7] flex-shrink-0" />
               <div>
-                <span className="text-xs text-slate-400 block">Sports Course</span>
-                <strong className="text-white font-semibold">{s1Sports || "None Selected"}</strong>
+                <span className="text-xs text-[#D6C7A1] block">Sports Course</span>
+                <strong className="text-[#F5EBE0] font-semibold">{s1Sports || "None Selected"}</strong>
               </div>
             </div>
 
-            <div className="glass-card p-4 flex items-center gap-3 border-slate-800">
-              <Compass className="w-5 h-5 text-purple-400 flex-shrink-0" />
+            <div className="glass-card p-4 flex items-center gap-3 border-[#7ECEB7]/15">
+              <Compass className="w-5 h-5 text-[#A07850] flex-shrink-0" />
               <div>
-                <span className="text-xs text-slate-400 block">Student Life Course</span>
-                <strong className="text-white font-semibold">{s1Life || "None Selected"}</strong>
+                <span className="text-xs text-[#D6C7A1] block">Student Life Course</span>
+                <strong className="text-[#F5EBE0] font-semibold">{s1Life || "None Selected"}</strong>
               </div>
             </div>
           </div>
         </div>
 
         {/* SESSION 2 SUMMARY */}
-        <div className="glass-panel p-6 space-y-4 border-purple-500/30">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-2 text-purple-400 font-bold">
+        <div className="glass-panel p-6 space-y-4 border-[#A07850]/40">
+          <div className="flex items-center justify-between border-b border-[#7ECEB7]/15 pb-3">
+            <div className="flex items-center gap-2 text-[#D6C7A1] font-bold">
               <Calendar className="w-5 h-5" />
               <h4>Session 2 Selections</h4>
             </div>
-            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-[#A07850]/20 text-[#D6C7A1] border border-[#A07850]/40">
               Session 2
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="glass-card p-4 flex items-center gap-3 border-slate-800">
-              <Trophy className="w-5 h-5 text-blue-400 flex-shrink-0" />
+            <div className="glass-card p-4 flex items-center gap-3 border-[#7ECEB7]/15">
+              <Trophy className="w-5 h-5 text-[#7ECEB7] flex-shrink-0" />
               <div>
-                <span className="text-xs text-slate-400 block">Sports Course</span>
-                <strong className="text-white font-semibold">{s2Sports || "None Selected"}</strong>
+                <span className="text-xs text-[#D6C7A1] block">Sports Course</span>
+                <strong className="text-[#F5EBE0] font-semibold">{s2Sports || "None Selected"}</strong>
               </div>
             </div>
 
-            <div className="glass-card p-4 flex items-center gap-3 border-slate-800">
-              <Compass className="w-5 h-5 text-purple-400 flex-shrink-0" />
+            <div className="glass-card p-4 flex items-center gap-3 border-[#7ECEB7]/15">
+              <Compass className="w-5 h-5 text-[#A07850] flex-shrink-0" />
               <div>
-                <span className="text-xs text-slate-400 block">Student Life Course</span>
-                <strong className="text-white font-semibold">{s2Life || "None Selected"}</strong>
+                <span className="text-xs text-[#D6C7A1] block">Student Life Course</span>
+                <strong className="text-[#F5EBE0] font-semibold">{s2Life || "None Selected"}</strong>
               </div>
             </div>
           </div>
@@ -266,12 +263,12 @@ export default function ReviewPage() {
       </div>
 
       {/* FINAL ACTION BAR / REGISTER BUTTON */}
-      <footer className="glass-panel p-6 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-6 shadow-2xl z-30 border-emerald-500/30">
+      <footer className="glass-panel p-6 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-6 shadow-2xl z-30 border-[#7ECEB7]/30">
         <div>
-          <h3 className="font-semibold text-white">
+          <h3 className="font-semibold text-[#F5EBE0]">
             {isCompleted ? "Registration Confirmed" : "Final Step"}
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#D6C7A1]">
             {isCompleted
               ? "Your course choices have been saved permanently."
               : "Once registered, your course selections will become read-only."}
@@ -281,7 +278,7 @@ export default function ReviewPage() {
         {isCompleted ? (
           <button
             onClick={() => router.push("/dashboard")}
-            className="btn-primary w-full sm:w-auto px-8 py-3 flex items-center justify-center gap-2 text-base font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500"
+            className="btn-primary w-full sm:w-auto px-8 py-3 flex items-center justify-center gap-2 text-base font-bold text-[#F5EBE0]"
           >
             <span>Return to Dashboard</span>
           </button>
@@ -289,16 +286,16 @@ export default function ReviewPage() {
           <button
             onClick={handleRegisterSubmit}
             disabled={submitting || !isAllSelected}
-            className="btn-primary w-full sm:w-auto px-8 py-3 flex items-center justify-center gap-2 text-base font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-600/30"
+            className="btn-primary w-full sm:w-auto px-8 py-3 flex items-center justify-center gap-2 text-base font-bold disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-[#037A74]/30 text-[#F5EBE0]"
           >
             {submitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin text-[#F5EBE0]" />
                 <span>Saving Registration...</span>
               </>
             ) : (
               <>
-                <ShieldCheck className="w-5 h-5" />
+                <ShieldCheck className="w-5 h-5 text-[#F5EBE0]" />
                 <span>Confirm & Submit Registration</span>
               </>
             )}

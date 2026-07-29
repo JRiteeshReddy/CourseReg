@@ -81,8 +81,8 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      <div className="flex-1 flex items-center justify-center bg-[#041C19]">
+        <Loader2 className="w-8 h-8 text-[#7ECEB7] animate-spin" />
       </div>
     );
   }
@@ -96,32 +96,32 @@ export default function StudentDashboard() {
   ];
 
   return (
-    <div className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in">
+    <div className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in bg-[#041C19] text-[#F5EBE0]">
       {/* HEADER / WELCOME BANNER */}
-      <header className="glass-panel p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <header className="glass-panel p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden border border-[#7ECEB7]/20">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#037A74]/15 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="flex items-center gap-5 z-10">
-          <div className="w-16 h-16 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/10">
-            <UserCheck className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-gradient-to-tr from-[#037A74] to-[#7ECEB7] rounded-2xl flex items-center justify-center shadow-lg shadow-[#037A74]/30 border border-[#7ECEB7]/40">
+            <UserCheck className="w-8 h-8 text-[#F5EBE0]" />
           </div>
           <div>
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#F5EBE0]">
                 Welcome, {student?.name || "Student"}
               </h1>
               {isAlreadyRegistered ? (
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
-                  <CheckCircle2 className="w-4 h-4" /> Registration Completed
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#7ECEB7]/20 text-[#7ECEB7] border border-[#7ECEB7]/30 flex items-center gap-1.5 shadow-sm">
+                  <CheckCircle2 className="w-4 h-4 text-[#7ECEB7]" /> Registration Completed
                 </span>
               ) : (
-                <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
+                <Sparkles className="w-5 h-5 text-[#A07850] animate-pulse" />
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400 mt-1">
-              <span>Reg No: <strong className="text-slate-200 font-mono">{student?.regNo || "N/A"}</strong></span>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-[#D6C7A1] mt-1">
+              <span>Reg No: <strong className="text-[#F5EBE0] font-mono">{student?.regNo || "N/A"}</strong></span>
               <span>•</span>
-              <span>Email: <strong className="text-slate-200">{student?.email}</strong></span>
+              <span>Email: <strong className="text-[#F5EBE0]">{student?.email}</strong></span>
             </div>
           </div>
         </div>
@@ -130,15 +130,15 @@ export default function StudentDashboard() {
           {isAlreadyRegistered && (
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#072C28] hover:bg-[#037A74]/40 text-[#F5EBE0] text-xs font-medium border border-[#7ECEB7]/20 transition-all"
             >
-              <Printer className="w-4 h-4" /> Print Confirmation
+              <Printer className="w-4 h-4 text-[#7ECEB7]" /> Print Confirmation
             </button>
           )}
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 text-sm font-medium transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-500/10 text-red-300 hover:bg-red-500/20 border border-red-500/20 text-sm font-medium transition-all"
           >
             <LogOut className="w-4 h-4" /> Log Out
           </button>
@@ -147,12 +147,12 @@ export default function StudentDashboard() {
 
       {/* PERMANENTLY LOCKED NOTIFICATION BANNER IF REGISTERED */}
       {isAlreadyRegistered && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-6 rounded-2xl flex items-center justify-between gap-4 animate-fade-in">
+        <div className="bg-[#7ECEB7]/10 border border-[#7ECEB7]/30 text-[#7ECEB7] p-6 rounded-2xl flex items-center justify-between gap-4 animate-fade-in">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="w-8 h-8 text-emerald-400 flex-shrink-0" />
+            <ShieldCheck className="w-8 h-8 text-[#7ECEB7] flex-shrink-0" />
             <div>
-              <h3 className="text-lg font-bold text-white">Course Registration Complete & Locked</h3>
-              <p className="text-xs text-emerald-300">
+              <h3 className="text-lg font-bold text-[#F5EBE0]">Course Registration Complete & Locked</h3>
+              <p className="text-xs text-[#7ECEB7]">
                 Your course choices have been saved permanently. Modifications can only be performed by a portal administrator.
               </p>
             </div>
@@ -160,8 +160,8 @@ export default function StudentDashboard() {
 
           {registration?.timestamp && (
             <div className="text-right hidden sm:block">
-              <span className="text-[10px] uppercase tracking-wider text-emerald-400/70 block">Submitted On</span>
-              <span className="text-xs font-mono text-white font-medium">
+              <span className="text-[10px] uppercase tracking-wider text-[#D6C7A1] block">Submitted On</span>
+              <span className="text-xs font-mono text-[#F5EBE0] font-medium">
                 {new Date(registration.timestamp).toLocaleString()}
               </span>
             </div>
@@ -170,11 +170,11 @@ export default function StudentDashboard() {
       )}
 
       {/* PROGRESS TRACKER */}
-      <section className="glass-panel p-6 md:p-8 space-y-4">
-        <h2 className="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2">Registration Progress</h2>
+      <section className="glass-panel p-6 md:p-8 space-y-4 border border-[#7ECEB7]/20">
+        <h2 className="text-xs uppercase tracking-wider font-semibold text-[#D6C7A1] mb-2">Registration Progress</h2>
         
         <div className="flex items-center justify-between relative">
-          <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-800 -translate-y-1/2 z-0"></div>
+          <div className="absolute top-1/2 left-0 right-0 h-1 bg-[#072C28] -translate-y-1/2 z-0"></div>
 
           {steps.map((step, idx) => {
             const isDone = step.status === "completed";
@@ -185,10 +185,10 @@ export default function StudentDashboard() {
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
                     isDone
-                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 border-2 border-emerald-400"
+                      ? "bg-[#7ECEB7] text-[#041C19] shadow-lg shadow-[#7ECEB7]/30 border-2 border-[#7ECEB7]"
                       : isActive
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/40 ring-4 ring-blue-500/20 border-2 border-blue-400 scale-110"
-                      : "bg-slate-900 text-slate-500 border border-slate-700"
+                      ? "bg-[#037A74] text-[#F5EBE0] shadow-lg shadow-[#037A74]/40 ring-4 ring-[#037A74]/30 border-2 border-[#7ECEB7] scale-110"
+                      : "bg-[#072C28] text-[#D6C7A1]/50 border border-[#7ECEB7]/20"
                   }`}
                 >
                   {isDone ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
@@ -196,10 +196,10 @@ export default function StudentDashboard() {
                 <span
                   className={`text-xs font-medium ${
                     isDone
-                      ? "text-emerald-400 font-semibold"
+                      ? "text-[#7ECEB7] font-semibold"
                       : isActive
-                      ? "text-blue-400 font-semibold"
-                      : "text-slate-500"
+                      ? "text-[#D6C7A1] font-semibold"
+                      : "text-[#D6C7A1]/50"
                   }`}
                 >
                   {step.label} {isDone && "✓"}
@@ -214,43 +214,43 @@ export default function StudentDashboard() {
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* CARD 1: SESSION 1 */}
-        <div className="glass-panel p-8 space-y-6 relative overflow-hidden flex flex-col justify-between border-blue-500/30">
+        <div className="glass-panel p-8 space-y-6 relative overflow-hidden flex flex-col justify-between border-[#037A74]/40">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="px-3 py-1 rounded-full text-xs font-bold font-mono tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" /> Session 1 Selections
+              <span className="px-3 py-1 rounded-full text-xs font-bold font-mono tracking-wider bg-[#037A74]/20 text-[#7ECEB7] border border-[#037A74]/40 uppercase flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#7ECEB7]" /> Session 1 Selections
               </span>
 
-              <span className="flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+              <span className="flex items-center gap-1 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/10 border border-[#7ECEB7]/20 px-3 py-1 rounded-full">
                 <CheckCircle2 className="w-3.5 h-3.5" /> Confirmed
               </span>
             </div>
 
             <div>
-              <h3 className="text-2xl font-bold text-white mb-2">Session 1 Courses</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
+              <h3 className="text-2xl font-bold text-[#F5EBE0] mb-2">Session 1 Courses</h3>
+              <p className="text-[#D6C7A1] text-sm leading-relaxed">
                 Registered sports activity and student life course for Session 1.
               </p>
             </div>
 
             {/* Course Summary Preview */}
             <div className="space-y-3 pt-2">
-              <div className="glass-card p-4 flex items-center justify-between border-slate-800">
+              <div className="glass-card p-4 flex items-center justify-between border-[#7ECEB7]/15">
                 <div className="flex items-center gap-3">
-                  <Trophy className="w-5 h-5 text-blue-400" />
-                  <span className="text-sm font-medium">Sports Activity</span>
+                  <Trophy className="w-5 h-5 text-[#7ECEB7]" />
+                  <span className="text-sm font-medium text-[#F5EBE0]">Sports Activity</span>
                 </div>
-                <span className="text-xs font-mono text-white font-bold bg-blue-500/20 text-blue-300 px-3 py-1 rounded-md border border-blue-500/30">
+                <span className="text-xs font-mono text-[#F5EBE0] font-bold bg-[#037A74]/30 text-[#7ECEB7] px-3 py-1 rounded-md border border-[#037A74]/50">
                   {s1Sports || "Not Selected"}
                 </span>
               </div>
 
-              <div className="glass-card p-4 flex items-center justify-between border-slate-800">
+              <div className="glass-card p-4 flex items-center justify-between border-[#7ECEB7]/15">
                 <div className="flex items-center gap-3">
-                  <Compass className="w-5 h-5 text-purple-400" />
-                  <span className="text-sm font-medium">Student Life Course</span>
+                  <Compass className="w-5 h-5 text-[#A07850]" />
+                  <span className="text-sm font-medium text-[#F5EBE0]">Student Life Course</span>
                 </div>
-                <span className="text-xs font-mono text-white font-bold bg-purple-500/20 text-purple-300 px-3 py-1 rounded-md border border-purple-500/30">
+                <span className="text-xs font-mono text-[#F5EBE0] font-bold bg-[#A07850]/30 text-[#D6C7A1] px-3 py-1 rounded-md border border-[#A07850]/50">
                   {s1Life || "Not Selected"}
                 </span>
               </div>
@@ -267,51 +267,51 @@ export default function StudentDashboard() {
               <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
-            <div className="mt-4 p-3 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-center gap-2 text-slate-500 text-xs font-medium">
-              <Lock className="w-3.5 h-3.5 text-amber-400" />
+            <div className="mt-4 p-3 bg-[#072C28]/80 border border-[#7ECEB7]/20 rounded-xl flex items-center justify-center gap-2 text-[#D6C7A1] text-xs font-medium">
+              <Lock className="w-3.5 h-3.5 text-[#A07850]" />
               <span>Selection Locked (Read-Only)</span>
             </div>
           )}
         </div>
 
         {/* CARD 2: SESSION 2 */}
-        <div className="glass-panel p-8 space-y-6 relative overflow-hidden flex flex-col justify-between border-purple-500/30">
+        <div className="glass-panel p-8 space-y-6 relative overflow-hidden flex flex-col justify-between border-[#A07850]/40">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="px-3 py-1 rounded-full text-xs font-bold font-mono tracking-wider bg-purple-500/20 text-purple-400 border border-purple-500/30 uppercase flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" /> Session 2 Selections
+              <span className="px-3 py-1 rounded-full text-xs font-bold font-mono tracking-wider bg-[#A07850]/20 text-[#D6C7A1] border border-[#A07850]/40 uppercase flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#A07850]" /> Session 2 Selections
               </span>
 
-              <span className="flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+              <span className="flex items-center gap-1 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/10 border border-[#7ECEB7]/20 px-3 py-1 rounded-full">
                 <CheckCircle2 className="w-3.5 h-3.5" /> Confirmed
               </span>
             </div>
 
             <div>
-              <h3 className="text-2xl font-bold text-white mb-2">Session 2 Courses</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">
+              <h3 className="text-2xl font-bold text-[#F5EBE0] mb-2">Session 2 Courses</h3>
+              <p className="text-[#D6C7A1] text-sm leading-relaxed">
                 Registered sports activity and student life course for Session 2.
               </p>
             </div>
 
             {/* Course Summary Preview */}
             <div className="space-y-3 pt-2">
-              <div className="glass-card p-4 flex items-center justify-between border-slate-800">
+              <div className="glass-card p-4 flex items-center justify-between border-[#7ECEB7]/15">
                 <div className="flex items-center gap-3">
-                  <Trophy className="w-5 h-5 text-blue-400" />
-                  <span className="text-sm font-medium">Sports Activity</span>
+                  <Trophy className="w-5 h-5 text-[#7ECEB7]" />
+                  <span className="text-sm font-medium text-[#F5EBE0]">Sports Activity</span>
                 </div>
-                <span className="text-xs font-mono text-white font-bold bg-blue-500/20 text-blue-300 px-3 py-1 rounded-md border border-blue-500/30">
+                <span className="text-xs font-mono text-[#F5EBE0] font-bold bg-[#037A74]/30 text-[#7ECEB7] px-3 py-1 rounded-md border border-[#037A74]/50">
                   {s2Sports || "Not Selected"}
                 </span>
               </div>
 
-              <div className="glass-card p-4 flex items-center justify-between border-slate-800">
+              <div className="glass-card p-4 flex items-center justify-between border-[#7ECEB7]/15">
                 <div className="flex items-center gap-3">
-                  <Compass className="w-5 h-5 text-purple-400" />
-                  <span className="text-sm font-medium">Student Life Course</span>
+                  <Compass className="w-5 h-5 text-[#A07850]" />
+                  <span className="text-sm font-medium text-[#F5EBE0]">Student Life Course</span>
                 </div>
-                <span className="text-xs font-mono text-white font-bold bg-purple-500/20 text-purple-300 px-3 py-1 rounded-md border border-purple-500/30">
+                <span className="text-xs font-mono text-[#F5EBE0] font-bold bg-[#A07850]/30 text-[#D6C7A1] px-3 py-1 rounded-md border border-[#A07850]/50">
                   {s2Life || "Not Selected"}
                 </span>
               </div>
@@ -322,14 +322,14 @@ export default function StudentDashboard() {
           {!isAlreadyRegistered ? (
             <button
               onClick={() => router.push("/session-2")}
-              className="btn-primary w-full mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
+              className="btn-bronze w-full mt-4 flex items-center justify-center gap-2"
             >
               {isSession2Complete ? "Edit Session 2 Choices" : "Select Session 2 Courses"}
               <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
-            <div className="mt-4 p-3 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-center gap-2 text-slate-500 text-xs font-medium">
-              <Lock className="w-3.5 h-3.5 text-amber-400" />
+            <div className="mt-4 p-3 bg-[#072C28]/80 border border-[#7ECEB7]/20 rounded-xl flex items-center justify-center gap-2 text-[#D6C7A1] text-xs font-medium">
+              <Lock className="w-3.5 h-3.5 text-[#A07850]" />
               <span>Selection Locked (Read-Only)</span>
             </div>
           )}

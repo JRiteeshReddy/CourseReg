@@ -111,20 +111,20 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+      <div className="flex-1 flex items-center justify-center bg-[#041C19]">
+        <Loader2 className="w-8 h-8 text-[#7ECEB7] animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="glass-panel max-w-md w-full p-8 text-center space-y-4">
+      <div className="flex-1 flex items-center justify-center p-4 bg-[#041C19]">
+        <div className="glass-panel max-w-md w-full p-8 text-center space-y-4 border border-red-500/30">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
           <h2 className="text-xl font-bold text-red-400">Access Restricted</h2>
-          <p className="text-sm text-slate-400">{error}</p>
-          <button onClick={() => router.push("/")} className="btn-primary w-full">
+          <p className="text-sm text-[#D6C7A1]">{error}</p>
+          <button onClick={() => router.push("/")} className="btn-primary w-full text-[#F5EBE0]">
             Back to Portal
           </button>
         </div>
@@ -133,17 +133,17 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in">
+    <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in bg-[#041C19] text-[#F5EBE0]">
       {/* Admin Header */}
-      <header className="glass-panel p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <header className="glass-panel p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-[#7ECEB7]/20">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center border border-indigo-500/20">
-            <ShieldCheck className="w-6 h-6 text-indigo-400" />
+          <div className="w-12 h-12 bg-[#037A74]/20 rounded-full flex items-center justify-center border border-[#7ECEB7]/30">
+            <ShieldCheck className="w-6 h-6 text-[#7ECEB7]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Admin Portal</h1>
-            <p className="text-sm text-slate-400">
-              Authenticated Admin: <span className="text-indigo-400 font-mono font-medium">{adminEmail}</span>
+            <h1 className="text-2xl font-bold text-[#F5EBE0]">Admin Portal</h1>
+            <p className="text-sm text-[#D6C7A1]">
+              Authenticated Admin: <span className="text-[#7ECEB7] font-mono font-medium">{adminEmail}</span>
             </p>
           </div>
         </div>
@@ -151,14 +151,14 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
             onClick={exportAllToExcel}
-            className="btn-primary flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500"
+            className="btn-primary flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm text-[#F5EBE0]"
           >
-            <Download className="w-4 h-4" /> Export All Registrations (.xlsx)
+            <Download className="w-4 h-4 text-[#F5EBE0]" /> Export All Registrations (.xlsx)
           </button>
 
           <button
             onClick={handleLogout}
-            className="p-2.5 rounded-lg glass-card hover:bg-red-500/10 text-slate-400 hover:text-red-400 border border-slate-800 transition-all"
+            className="p-2.5 rounded-lg glass-card hover:bg-red-500/10 text-[#D6C7A1] hover:text-red-400 border border-[#7ECEB7]/15 transition-all"
             title="Log Out"
           >
             <LogOut className="w-4 h-4" />
@@ -168,40 +168,40 @@ export default function AdminDashboard() {
 
       {/* Analytics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="glass-panel p-6 space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="glass-panel p-6 space-y-2 border border-[#7ECEB7]/20">
+          <div className="flex items-center justify-between text-[#D6C7A1]">
             <span className="text-sm font-medium">Master Roster</span>
-            <Users className="w-5 h-5 text-blue-400" />
+            <Users className="w-5 h-5 text-[#7ECEB7]" />
           </div>
-          <div className="text-3xl font-bold">{totalMaster}</div>
-          <p className="text-xs text-slate-500">Pre-approved students in Google Sheet</p>
+          <div className="text-3xl font-bold text-[#F5EBE0]">{totalMaster}</div>
+          <p className="text-xs text-[#D6C7A1]/70">Pre-approved students in Google Sheet</p>
         </div>
 
-        <div className="glass-panel p-6 space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="glass-panel p-6 space-y-2 border border-[#7ECEB7]/20">
+          <div className="flex items-center justify-between text-[#D6C7A1]">
             <span className="text-sm font-medium">Registered Students</span>
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <ShieldCheck className="w-5 h-5 text-[#7ECEB7]" />
           </div>
-          <div className="text-3xl font-bold">{totalReg}</div>
-          <p className="text-xs text-slate-500">Confirmed course selections</p>
+          <div className="text-3xl font-bold text-[#F5EBE0]">{totalReg}</div>
+          <p className="text-xs text-[#D6C7A1]/70">Confirmed course selections</p>
         </div>
 
-        <div className="glass-panel p-6 space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="glass-panel p-6 space-y-2 border border-[#7ECEB7]/20">
+          <div className="flex items-center justify-between text-[#D6C7A1]">
             <span className="text-sm font-medium">Total Offerings</span>
-            <BookOpen className="w-5 h-5 text-indigo-400" />
+            <BookOpen className="w-5 h-5 text-[#A07850]" />
           </div>
-          <div className="text-3xl font-bold">{courses.length}</div>
-          <p className="text-xs text-slate-500">8 Sports + 11 Student Life courses</p>
+          <div className="text-3xl font-bold text-[#F5EBE0]">{courses.length}</div>
+          <p className="text-xs text-[#D6C7A1]/70">8 Sports + 11 Student Life courses</p>
         </div>
       </div>
 
       {/* Course-Specific Dynamic Export Cards */}
-      <section className="glass-panel p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      <section className="glass-panel p-6 space-y-6 border border-[#7ECEB7]/20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#7ECEB7]/15 pb-3">
           <div>
-            <h2 className="text-lg font-bold">Course-Specific Excel Export & Occupancy</h2>
-            <p className="text-xs text-slate-400">Download registration roster for individual courses by session.</p>
+            <h2 className="text-lg font-bold text-[#F5EBE0]">Course-Specific Excel Export & Occupancy</h2>
+            <p className="text-xs text-[#D6C7A1]">Download registration roster for individual courses by session.</p>
           </div>
         </div>
 
@@ -211,24 +211,24 @@ export default function AdminDashboard() {
             const s2Percentage = Math.round((course.s2SeatsOccupied / course.maxSeats) * 100);
 
             return (
-              <div key={course.id} className="glass-card p-5 space-y-4 flex flex-col justify-between border-slate-800">
+              <div key={course.id} className="glass-card p-5 space-y-4 flex flex-col justify-between border-[#7ECEB7]/15">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-base text-white">{course.name}</h3>
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-mono">
+                    <h3 className="font-semibold text-base text-[#F5EBE0]">{course.name}</h3>
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-[#072C28] border border-[#7ECEB7]/20 text-[#D6C7A1] font-mono">
                       {course.category} ({course.id})
                     </span>
                   </div>
 
                   {/* Session 1 Fill Bar */}
                   <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-medium text-slate-400">
+                    <div className="flex justify-between text-xs font-medium text-[#D6C7A1]">
                       <span>Session 1 Occupancy</span>
                       <span>{course.s1SeatsOccupied} / {course.maxSeats} seats</span>
                     </div>
-                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-[#072C28] rounded-full overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-500 ${s1Percentage >= 100 ? "bg-red-500" : "bg-blue-500"}`}
+                        className={`h-full transition-all duration-500 ${s1Percentage >= 100 ? "bg-red-500" : "bg-[#037A74]"}`}
                         style={{ width: `${s1Percentage}%` }}
                       ></div>
                     </div>
@@ -236,13 +236,13 @@ export default function AdminDashboard() {
 
                   {/* Session 2 Fill Bar */}
                   <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-medium text-slate-400">
+                    <div className="flex justify-between text-xs font-medium text-[#D6C7A1]">
                       <span>Session 2 Occupancy</span>
                       <span>{course.s2SeatsOccupied} / {course.maxSeats} seats</span>
                     </div>
-                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-[#072C28] rounded-full overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-500 ${s2Percentage >= 100 ? "bg-red-500" : "bg-purple-500"}`}
+                        className={`h-full transition-all duration-500 ${s2Percentage >= 100 ? "bg-red-500" : "bg-[#A07850]"}`}
                         style={{ width: `${s2Percentage}%` }}
                       ></div>
                     </div>
@@ -250,17 +250,17 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* COURSE SPECIFIC EXPORT BUTTONS */}
-                <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-800/80">
+                <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-[#7ECEB7]/15">
                   <button
                     onClick={() => exportCourseExcel(course.id, course.name, 1)}
-                    className="flex-1 px-3 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                    className="flex-1 px-3 py-2 rounded-lg bg-[#037A74]/20 hover:bg-[#037A74]/30 text-[#7ECEB7] border border-[#037A74]/40 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
                   >
                     <FileSpreadsheet className="w-3.5 h-3.5" /> Export Session 1 Excel
                   </button>
 
                   <button
                     onClick={() => exportCourseExcel(course.id, course.name, 2)}
-                    className="flex-1 px-3 py-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                    className="flex-1 px-3 py-2 rounded-lg bg-[#A07850]/20 hover:bg-[#A07850]/30 text-[#D6C7A1] border border-[#A07850]/40 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
                   >
                     <FileSpreadsheet className="w-3.5 h-3.5" /> Export Session 2 Excel
                   </button>
@@ -272,12 +272,12 @@ export default function AdminDashboard() {
       </section>
 
       {/* Student Registration Roster Table */}
-      <section className="glass-panel p-6 space-y-4 overflow-hidden">
-        <h2 className="text-lg font-bold border-b border-slate-800 pb-3">Registered Student Roster ({registrations.length})</h2>
+      <section className="glass-panel p-6 space-y-4 overflow-hidden border border-[#7ECEB7]/20">
+        <h2 className="text-lg font-bold border-b border-[#7ECEB7]/15 pb-3 text-[#F5EBE0]">Registered Student Roster ({registrations.length})</h2>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-300">
-            <thead className="bg-slate-800/50 text-slate-400 uppercase text-xs">
+          <table className="w-full text-left text-sm text-[#F5EBE0]">
+            <thead className="bg-[#072C28] text-[#D6C7A1] uppercase text-xs">
               <tr>
                 <th className="p-3">Registration No</th>
                 <th className="p-3">Student Name</th>
@@ -289,18 +289,18 @@ export default function AdminDashboard() {
                 <th className="p-3">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-[#7ECEB7]/15">
               {registrations.map((r, i) => (
-                <tr key={i} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="p-3 font-mono text-slate-400">{r.regNo}</td>
-                  <td className="p-3 font-medium text-white">{r.name}</td>
-                  <td className="p-3 font-mono text-slate-400">{r.email}</td>
+                <tr key={i} className="hover:bg-[#037A74]/15 transition-colors">
+                  <td className="p-3 font-mono text-[#D6C7A1]">{r.regNo}</td>
+                  <td className="p-3 font-medium text-[#F5EBE0]">{r.name}</td>
+                  <td className="p-3 font-mono text-[#D6C7A1]">{r.email}</td>
                   <td className="p-3">{r.s1Sports}</td>
                   <td className="p-3">{r.s1StudentLife}</td>
                   <td className="p-3">{r.s2Sports}</td>
                   <td className="p-3">{r.s2StudentLife}</td>
                   <td className="p-3">
-                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full text-xs font-mono">
+                    <span className="bg-[#7ECEB7]/20 text-[#7ECEB7] border border-[#7ECEB7]/30 px-2.5 py-0.5 rounded-full text-xs font-mono">
                       {r.status}
                     </span>
                   </td>
@@ -309,7 +309,7 @@ export default function AdminDashboard() {
 
               {registrations.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-500">
+                  <td colSpan={8} className="p-8 text-center text-[#D6C7A1]/50">
                     No registered students found yet.
                   </td>
                 </tr>
