@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { RegistrationRow } from "@/lib/courses";
-import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut } from "lucide-react";
+import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet } from "lucide-react";
 import * as XLSX from "xlsx";
 
 export default function AdminDashboard() {
@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [registrations, setRegistrations] = useState<RegistrationRow[]>([]);
   const [totalMaster, setTotalMaster] = useState(0);
   const [totalReg, setTotalReg] = useState(0);
+  const [adminEmail, setAdminEmail] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -21,7 +22,7 @@ export default function AdminDashboard() {
     try {
       const res = await fetch("/api/admin/stats");
       if (res.status === 403) {
-        setError("Access Denied. Only authorized admins (jriteeshreddy@gmail.com) can access this page.");
+        setError("Access Denied. You are not authorized to view the admin dashboard.");
         setLoading(false);
         return;
       }
@@ -35,6 +36,7 @@ export default function AdminDashboard() {
       setRegistrations(data.registrations || []);
       setTotalMaster(data.totalMasterStudents || 0);
       setTotalReg(data.totalRegisteredStudents || 0);
+      setAdminEmail(data.adminEmail || "");
     } catch (err) {
       setError("Failed to fetch admin dashboard statistics");
     } finally {
@@ -46,7 +48,8 @@ export default function AdminDashboard() {
     loadAdminData();
   }, []);
 
-  const exportToExcel = () => {
+  // Full Master Export
+  const exportAllToExcel = () => {
     if (registrations.length === 0) {
       alert("No registration data available to export.");
       return;
@@ -66,8 +69,39 @@ export default function AdminDashboard() {
 
     const worksheet = XLSX.utils.json_to_sheet(exportRows);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Course Registrations");
-    XLSX.writeFile(workbook, `University_Course_Registrations_${new Date().toISOString().split("T")[0]}.xlsx`);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "All Registrations");
+    XLSX.writeFile(workbook, `Master_University_Course_Registrations_${new Date().toISOString().split("T")[0]}.xlsx`);
+  };
+
+  // Course-Specific Dynamic Export for Session 1 or Session 2
+  const exportCourseExcel = (courseId: string, courseName: string, sessionNum: 1 | 2) => {
+    const filteredStudents = registrations.filter((r) => {
+      if (r.status?.toUpperCase() !== "CONFIRMED") return false;
+      if (sessionNum === 1) {
+        return r.s1Sports === courseId || r.s1Sports === courseName || r.s1StudentLife === courseId || r.s1StudentLife === courseName;
+      } else {
+        return r.s2Sports === courseId || r.s2Sports === courseName || r.s2StudentLife === courseId || r.s2StudentLife === courseName;
+      }
+    });
+
+    if (filteredStudents.length === 0) {
+      alert(`No students are currently registered for ${courseName} in Session ${sessionNum}.`);
+      return;
+    }
+
+    const exportData = filteredStudents.map((r) => ({
+      "Registration Number": r.regNo,
+      "Student Name": r.name,
+      "Email": r.email,
+      "Timestamp": r.timestamp,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, `${courseName} S${sessionNum}`);
+    
+    const safeFileName = courseName.replace(/[^a-zA-Z0-9]/g, "_");
+    XLSX.writeFile(workbook, `${safeFileName}_Session_${sessionNum}_Students.xlsx`);
   };
 
   const handleLogout = async () => {
@@ -108,16 +142,18 @@ export default function AdminDashboard() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Admin Portal</h1>
-            <p className="text-sm text-slate-400">Live Course Registration Analytics & Reporting</p>
+            <p className="text-sm text-slate-400">
+              Authenticated Admin: <span className="text-indigo-400 font-mono font-medium">{adminEmail}</span>
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
-            onClick={exportToExcel}
+            onClick={exportAllToExcel}
             className="btn-primary flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500"
           >
-            <Download className="w-4 h-4" /> Export Excel (.xlsx)
+            <Download className="w-4 h-4" /> Export All Registrations (.xlsx)
           </button>
 
           <button
@@ -152,17 +188,22 @@ export default function AdminDashboard() {
 
         <div className="glass-panel p-6 space-y-2">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-sm font-medium">Total Courses</span>
+            <span className="text-sm font-medium">Total Offerings</span>
             <BookOpen className="w-5 h-5 text-indigo-400" />
           </div>
           <div className="text-3xl font-bold">{courses.length}</div>
-          <p className="text-xs text-slate-500">Sports & Student Life offerings</p>
+          <p className="text-xs text-slate-500">8 Sports + 11 Student Life courses</p>
         </div>
       </div>
 
-      {/* Live Seat Occupancy Gauges */}
+      {/* Course-Specific Dynamic Export Cards */}
       <section className="glass-panel p-6 space-y-6">
-        <h2 className="text-lg font-bold border-b border-slate-800 pb-3">Course Seat Capacity Monitor</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <div>
+            <h2 className="text-lg font-bold">Course-Specific Excel Export & Occupancy</h2>
+            <p className="text-xs text-slate-400">Download registration roster for individual courses by session.</p>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {courses.map((course) => {
@@ -170,40 +211,59 @@ export default function AdminDashboard() {
             const s2Percentage = Math.round((course.s2SeatsOccupied / course.maxSeats) * 100);
 
             return (
-              <div key={course.id} className="glass-card p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-base">{course.name}</h3>
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-mono">
-                    {course.category} ({course.id})
-                  </span>
+              <div key={course.id} className="glass-card p-5 space-y-4 flex flex-col justify-between border-slate-800">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-base text-white">{course.name}</h3>
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-mono">
+                      {course.category} ({course.id})
+                    </span>
+                  </div>
+
+                  {/* Session 1 Fill Bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs font-medium text-slate-400">
+                      <span>Session 1 Occupancy</span>
+                      <span>{course.s1SeatsOccupied} / {course.maxSeats} seats</span>
+                    </div>
+                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-500 ${s1Percentage >= 100 ? "bg-red-500" : "bg-blue-500"}`}
+                        style={{ width: `${s1Percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Session 2 Fill Bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs font-medium text-slate-400">
+                      <span>Session 2 Occupancy</span>
+                      <span>{course.s2SeatsOccupied} / {course.maxSeats} seats</span>
+                    </div>
+                    <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-500 ${s2Percentage >= 100 ? "bg-red-500" : "bg-purple-500"}`}
+                        style={{ width: `${s2Percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Session 1 Fill Bar */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-medium text-slate-400">
-                    <span>Session 1 Occupancy</span>
-                    <span>{course.s1SeatsOccupied} / {course.maxSeats} seats</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-500 ${s1Percentage >= 100 ? "bg-red-500" : "bg-blue-500"}`}
-                      style={{ width: `${s1Percentage}%` }}
-                    ></div>
-                  </div>
-                </div>
+                {/* COURSE SPECIFIC EXPORT BUTTONS */}
+                <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-800/80">
+                  <button
+                    onClick={() => exportCourseExcel(course.id, course.name, 1)}
+                    className="flex-1 px-3 py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5" /> Export Session 1 Excel
+                  </button>
 
-                {/* Session 2 Fill Bar */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-medium text-slate-400">
-                    <span>Session 2 Occupancy</span>
-                    <span>{course.s2SeatsOccupied} / {course.maxSeats} seats</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-500 ${s2Percentage >= 100 ? "bg-red-500" : "bg-purple-500"}`}
-                      style={{ width: `${s2Percentage}%` }}
-                    ></div>
-                  </div>
+                  <button
+                    onClick={() => exportCourseExcel(course.id, course.name, 2)}
+                    className="flex-1 px-3 py-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5" /> Export Session 2 Excel
+                  </button>
                 </div>
               </div>
             );
@@ -219,6 +279,7 @@ export default function AdminDashboard() {
           <table className="w-full text-left text-sm text-slate-300">
             <thead className="bg-slate-800/50 text-slate-400 uppercase text-xs">
               <tr>
+                <th className="p-3">Registration No</th>
                 <th className="p-3">Student Name</th>
                 <th className="p-3">Email</th>
                 <th className="p-3">Session 1 Sports</th>
@@ -231,6 +292,7 @@ export default function AdminDashboard() {
             <tbody className="divide-y divide-slate-800">
               {registrations.map((r, i) => (
                 <tr key={i} className="hover:bg-slate-800/30 transition-colors">
+                  <td className="p-3 font-mono text-slate-400">{r.regNo}</td>
                   <td className="p-3 font-medium text-white">{r.name}</td>
                   <td className="p-3 font-mono text-slate-400">{r.email}</td>
                   <td className="p-3">{r.s1Sports}</td>
@@ -247,7 +309,7 @@ export default function AdminDashboard() {
 
               {registrations.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-500">
+                  <td colSpan={8} className="p-8 text-center text-slate-500">
                     No registered students found yet.
                   </td>
                 </tr>
