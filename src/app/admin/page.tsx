@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { RegistrationRow } from "@/lib/courses";
-import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, RefreshCw } from "lucide-react";
+import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, KeyRound } from "lucide-react";
 import * as XLSX from "xlsx";
 
 export default function AdminDashboard() {
@@ -17,6 +17,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [resetPasswordInput, setResetPasswordInput] = useState("");
+  const [resetError, setResetError] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
 
@@ -50,18 +52,28 @@ export default function AdminDashboard() {
     loadAdminData();
   }, []);
 
-  const handleClearAllRegistrations = async () => {
+  const handleClearAllRegistrations = async (e: React.FormEvent) => {
+    e.preventDefault();
     setResetting(true);
+    setResetError("");
+
     try {
-      const res = await fetch("/api/admin/reset", { method: "POST" });
+      const res = await fetch("/api/admin/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmPassword: resetPasswordInput }),
+      });
+      const data = await res.json();
+
       if (!res.ok) {
-        alert("Failed to reset registrations.");
+        setResetError(data.error || "Incorrect security password.");
       } else {
         await loadAdminData();
         setShowResetModal(false);
+        setResetPasswordInput("");
       }
     } catch (err) {
-      alert("Error resetting registrations.");
+      setResetError("Error resetting registrations.");
     } finally {
       setResetting(false);
     }
@@ -163,25 +175,48 @@ export default function AdminDashboard() {
             <div className="text-center space-y-2">
               <h3 className="text-xl font-bold text-[#F5EBE0]">Clear All Test Registrations?</h3>
               <p className="text-xs text-[#D6C7A1] leading-relaxed">
-                This will permanently delete all student course registrations from the database and reset seat occupancies back to zero. This action cannot be undone.
+                Enter the security password to confirm wiping all registration test records from the database.
               </p>
             </div>
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                onClick={() => setShowResetModal(false)}
-                className="flex-1 py-2.5 rounded-lg bg-[#072C28] hover:bg-[#037A74]/30 text-[#D6C7A1] text-xs font-semibold border border-[#7ECEB7]/20 transition-all"
-                disabled={resetting}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleClearAllRegistrations}
-                disabled={resetting}
-                className="flex-1 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-500/30"
-              >
-                {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Wipe All"}
-              </button>
-            </div>
+
+            {resetError && (
+              <div className="bg-red-500/10 border border-red-500/30 text-red-300 p-3 rounded-lg text-xs font-medium text-center">
+                {resetError}
+              </div>
+            )}
+
+            <form onSubmit={handleClearAllRegistrations} className="space-y-4">
+              <div className="relative">
+                <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7ECEB7]/70" />
+                <input
+                  type="password"
+                  required
+                  value={resetPasswordInput}
+                  onChange={(e) => setResetPasswordInput(e.target.value)}
+                  placeholder="Enter Security Password"
+                  className="input-glass pl-10 text-sm"
+                  disabled={resetting}
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowResetModal(false); setResetError(""); setResetPasswordInput(""); }}
+                  className="flex-1 py-2.5 rounded-lg bg-[#072C28] hover:bg-[#037A74]/30 text-[#D6C7A1] text-xs font-semibold border border-[#7ECEB7]/20 transition-all"
+                  disabled={resetting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetting || !resetPasswordInput}
+                  className="flex-1 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-500/30 disabled:opacity-50"
+                >
+                  {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Wipe"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -202,7 +237,7 @@ export default function AdminDashboard() {
 
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <button
-            onClick={() => setShowResetModal(true)}
+            onClick={() => { setShowResetModal(true); setResetError(""); setResetPasswordInput(""); }}
             className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
             title="Clear all test registrations"
           >
