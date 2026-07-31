@@ -11,7 +11,7 @@ export default function HeaderBranding() {
           <img 
             src="/images/1.png" 
             alt="Side Logo Left" 
-            className="h-10 md:h-14 w-auto object-contain transition-transform hover:scale-105" 
+            className="h-14 md:h-20 max-h-24 w-auto object-contain transition-transform hover:scale-105" 
           />
         </div>
 
@@ -29,7 +29,7 @@ export default function HeaderBranding() {
           <img 
             src="/images/3.png" 
             alt="Side Logo Right" 
-            className="h-10 md:h-14 w-auto object-contain transition-transform hover:scale-105" 
+            className="h-7 md:h-9 max-h-10 w-auto object-contain transition-transform hover:scale-105" 
           />
         </div>
       </div>
