@@ -10,13 +10,13 @@ export interface Course {
 export const COURSES: Course[] = [
   // 8 Sports Courses
   { id: "SP01", name: "Basketball", category: "Sports", maxSeats: 25, faculty: "Nagarjun Talawar", docUrl: "https://docs.google.com/document/d/1rgfw08lLhqR6a0hbKbm2bTPGgdq4h_2u/edit?usp=sharing&rtpof=true&sd=true" },
-  { id: "SP02", name: "Cricket", category: "Sports", maxSeats: 25, faculty: "SAINATH C", docUrl: "https://docs.google.com/document/d/19KLq-7IdriQj08nn7CQWxA-lGkuvC5p6/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
+  { id: "SP02", name: "Cricket", category: "Sports", maxSeats: 25, faculty: "Sainath C", docUrl: "https://docs.google.com/document/d/19KLq-7IdriQj08nn7CQWxA-lGkuvC5p6/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
   { id: "SP03", name: "Fitness and Nutrition", category: "Sports", maxSeats: 25, faculty: "Bharath K G", docUrl: "https://docs.google.com/document/d/1ljZ2-zCs0Kp_AWOCxZAl68uyRdV-fSe2/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
-  { id: "SP04", name: "Football", category: "Sports", maxSeats: 25, faculty: "PAGUTHARIVALAN A", docUrl: "https://docs.google.com/document/d/1LfDwz4-Y2ecTt3RZTwKREN5g21ot0z2o/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
+  { id: "SP04", name: "Football", category: "Sports", maxSeats: 25, faculty: "Pagutharivalan A", docUrl: "https://docs.google.com/document/d/1LfDwz4-Y2ecTt3RZTwKREN5g21ot0z2o/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
   { id: "SP05", name: "Kabaddi", category: "Sports", maxSeats: 25, faculty: "Mota Chandranna", docUrl: "https://docs.google.com/document/d/1pNszp6GA707bsFNCiuyni4vjgS6uZZ0X/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
   { id: "SP06", name: "Holistic Wellbeing and Yoga Therapy", category: "Sports", maxSeats: 25, faculty: "Dr. Prajwala H V", docUrl: "https://docs.google.com/document/d/1d9j62RwwNzfibMjCflUG-JPQX1Q2Ca0y/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
-  { id: "SP07", name: "Throwball", category: "Sports", maxSeats: 25, faculty: "PRASHANTH V", docUrl: "https://docs.google.com/document/d/1HHMJxQ1wvQLgojdWuIUVCcrF2Kea0Zbm/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
-  { id: "SP08", name: "Volleyball", category: "Sports", maxSeats: 25, faculty: "KIRAN J", docUrl: "https://docs.google.com/document/d/1X1QRA-YhAA-T9QxL9YzLcTQjslrnJjX6/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
+  { id: "SP07", name: "Throwball", category: "Sports", maxSeats: 25, faculty: "Prashanth V", docUrl: "https://docs.google.com/document/d/1HHMJxQ1wvQLgojdWuIUVCcrF2Kea0Zbm/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
+  { id: "SP08", name: "Volleyball", category: "Sports", maxSeats: 25, faculty: "Kiran J", docUrl: "https://docs.google.com/document/d/1X1QRA-YhAA-T9QxL9YzLcTQjslrnJjX6/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
 
   // 11 Student Life Courses
   { id: "SL01", name: "Basics of Theatre Acting", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
