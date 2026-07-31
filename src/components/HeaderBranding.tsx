@@ -11,7 +11,7 @@ export default function HeaderBranding() {
           <img 
             src="/images/1.png" 
             alt="Side Logo Left" 
-            className="h-14 md:h-20 max-h-24 w-auto object-contain transition-transform hover:scale-105" 
+            className="h-28 md:h-36 max-h-40 w-auto object-contain transition-transform hover:scale-105" 
           />
         </div>
 
