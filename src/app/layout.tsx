@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import HeaderBranding from "@/components/HeaderBranding";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -21,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${jakarta.variable}`}>
       <body className="antialiased min-h-screen flex flex-col selection:bg-[#7ECEB7] selection:text-[#041C19]">
+        <HeaderBranding />
         {children}
       </body>
     </html>

@@ -52,9 +52,11 @@ export default function AuthPage() {
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#A07850] via-[#7ECEB7] to-[#037A74]"></div>
 
         <div className="text-center mb-8 mt-2">
-          <div className="w-16 h-16 bg-[#037A74]/15 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-[#7ECEB7]/30 shadow-inner">
-            <ShieldCheck className="w-8 h-8 text-[#7ECEB7]" />
-          </div>
+          <img 
+            src="/images/2.png" 
+            alt="Campus Life Logo" 
+            className="h-16 w-auto object-contain mx-auto mb-4 drop-shadow-[0_4px_12px_rgba(126,206,183,0.3)]" 
+          />
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-[#F5EBE0]">Student Portal</h1>
           <p className="text-[#D6C7A1] text-sm">
             University Campus Life Course Registration System
