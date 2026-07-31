@@ -16,7 +16,7 @@ export const COURSES: Course[] = [
   { id: "SP07", name: "Throwball", category: "Sports", maxSeats: 25 },
   { id: "SP08", name: "Volleyball", category: "Sports", maxSeats: 25 },
 
-  // 10 Student Life Courses
+  // 11 Student Life Courses
   { id: "SL01", name: "Basics of Theatre Acting", category: "Student Life", maxSeats: 25 },
   { id: "SL02", name: "Communication, Life skills and Soft skills", category: "Student Life", maxSeats: 25 },
   { id: "SL03", name: "Contemporary Dance, Hip Hop and Freestyle", category: "Student Life", maxSeats: 25 },
@@ -27,6 +27,7 @@ export const COURSES: Course[] = [
   { id: "SL08", name: "Rhythm Appreciation", category: "Student Life", maxSeats: 25 },
   { id: "SL09", name: "Creative Design, Innovation and Sustainability", category: "Student Life", maxSeats: 25 },
   { id: "SL10", name: "Social media and digital content creation", category: "Student Life", maxSeats: 25 },
+  { id: "SL11", name: "Invocatory Dances", category: "Student Life", maxSeats: 25 },
 ];
 
 export interface RegistrationRow {
