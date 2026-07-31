@@ -10,7 +10,7 @@ export interface Course {
 export const COURSES: Course[] = [
   // 8 Sports Courses
   { id: "SP01", name: "Basketball", category: "Sports", maxSeats: 25, faculty: "Nagarjun Talawar", docUrl: "https://docs.google.com/document/d/1rgfw08lLhqR6a0hbKbm2bTPGgdq4h_2u/edit?usp=sharing&rtpof=true&sd=true" },
-  { id: "SP02", name: "Cricket", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SP02", name: "Cricket", category: "Sports", maxSeats: 25, faculty: "SAINATH C", docUrl: "https://docs.google.com/document/d/19KLq-7IdriQj08nn7CQWxA-lGkuvC5p6/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
   { id: "SP03", name: "Fitness and Nutrition", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
   { id: "SP04", name: "Football", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
   { id: "SP05", name: "Kabaddi", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
