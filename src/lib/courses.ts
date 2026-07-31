@@ -16,7 +16,7 @@ export const COURSES: Course[] = [
   { id: "SP05", name: "Kabaddi", category: "Sports", maxSeats: 25, faculty: "Mota Chandranna", docUrl: "https://docs.google.com/document/d/1pNszp6GA707bsFNCiuyni4vjgS6uZZ0X/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
   { id: "SP06", name: "Holistic Wellbeing and Yoga Therapy", category: "Sports", maxSeats: 25, faculty: "Dr. Prajwala H V", docUrl: "https://docs.google.com/document/d/1d9j62RwwNzfibMjCflUG-JPQX1Q2Ca0y/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
   { id: "SP07", name: "Throwball", category: "Sports", maxSeats: 25, faculty: "PRASHANTH V", docUrl: "https://docs.google.com/document/d/1HHMJxQ1wvQLgojdWuIUVCcrF2Kea0Zbm/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
-  { id: "SP08", name: "Volleyball", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SP08", name: "Volleyball", category: "Sports", maxSeats: 25, faculty: "KIRAN J", docUrl: "https://docs.google.com/document/d/1X1QRA-YhAA-T9QxL9YzLcTQjslrnJjX6/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
 
   // 11 Student Life Courses
   { id: "SL01", name: "Basics of Theatre Acting", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
