@@ -3,31 +3,33 @@ export interface Course {
   name: string;
   category: "Sports" | "Student Life";
   maxSeats: number;
+  faculty?: string;
+  docUrl?: string;
 }
 
 export const COURSES: Course[] = [
   // 8 Sports Courses
-  { id: "SP01", name: "Basketball", category: "Sports", maxSeats: 25 },
-  { id: "SP02", name: "Cricket", category: "Sports", maxSeats: 25 },
-  { id: "SP03", name: "Fitness and Nutrition", category: "Sports", maxSeats: 25 },
-  { id: "SP04", name: "Football", category: "Sports", maxSeats: 25 },
-  { id: "SP05", name: "Kabaddi", category: "Sports", maxSeats: 25 },
-  { id: "SP06", name: "Holistic Wellbeing and Yoga Therapy", category: "Sports", maxSeats: 25 },
-  { id: "SP07", name: "Throwball", category: "Sports", maxSeats: 25 },
-  { id: "SP08", name: "Volleyball", category: "Sports", maxSeats: 25 },
+  { id: "SP01", name: "Basketball", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SP02", name: "Cricket", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SP03", name: "Fitness and Nutrition", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SP04", name: "Football", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SP05", name: "Kabaddi", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SP06", name: "Holistic Wellbeing and Yoga Therapy", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SP07", name: "Throwball", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SP08", name: "Volleyball", category: "Sports", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
 
   // 11 Student Life Courses
-  { id: "SL01", name: "Basics of Theatre Acting", category: "Student Life", maxSeats: 25 },
-  { id: "SL02", name: "Communication, Life skills and Soft skills", category: "Student Life", maxSeats: 25 },
-  { id: "SL03", name: "Contemporary Dance, Hip Hop and Freestyle", category: "Student Life", maxSeats: 25 },
-  { id: "SL04", name: "Folk Dance", category: "Student Life", maxSeats: 25 },
-  { id: "SL05", name: "Mental Wellbeing and Peer Support", category: "Student Life", maxSeats: 25 },
-  { id: "SL06", name: "Introduction to traditional music", category: "Student Life", maxSeats: 25 },
-  { id: "SL07", name: "Music Band- Contemporary and Light", category: "Student Life", maxSeats: 25 },
-  { id: "SL08", name: "Rhythm Appreciation", category: "Student Life", maxSeats: 25 },
-  { id: "SL09", name: "Creative Design, Innovation and Sustainability", category: "Student Life", maxSeats: 25 },
-  { id: "SL10", name: "Social media and digital content creation", category: "Student Life", maxSeats: 25 },
-  { id: "SL11", name: "Invocatory Dances", category: "Student Life", maxSeats: 25 },
+  { id: "SL01", name: "Basics of Theatre Acting", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL02", name: "Communication, Life skills and Soft skills", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL03", name: "Contemporary Dance, Hip Hop and Freestyle", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL04", name: "Folk Dance", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL05", name: "Mental Wellbeing and Peer Support", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL06", name: "Introduction to traditional music", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL07", name: "Music Band- Contemporary and Light", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL08", name: "Rhythm Appreciation", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL09", name: "Creative Design, Innovation and Sustainability", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL10", name: "Social media and digital content creation", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL11", name: "Invocatory Dances", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
 ];
 
 export interface RegistrationRow {

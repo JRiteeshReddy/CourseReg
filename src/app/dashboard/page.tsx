@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MasterStudent } from "@/lib/google-sheets";
-import { RegistrationRow, COURSES } from "@/lib/courses";
+import { CalculatedCourse, COURSES, RegistrationRow } from "@/lib/courses";
 import { 
   CheckCircle2, 
   Lock, 
@@ -18,7 +18,9 @@ import {
   ShieldCheck,
   Printer,
   AlertTriangle,
-  Clock
+  Clock,
+  Info,
+  BookOpen
 } from "lucide-react";
 
 export default function StudentDashboard() {
@@ -26,6 +28,8 @@ export default function StudentDashboard() {
   const [registration, setRegistration] = useState<RegistrationRow | null>(null);
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [coursesList, setCoursesList] = useState<CalculatedCourse[]>([]);
+  const [catalogFilter, setCatalogFilter] = useState<"all" | "Sports" | "Student Life">("all");
 
   // Track session completion state for unlocking
   const [isSession1Complete, setIsSession1Complete] = useState(false);
@@ -57,6 +61,9 @@ export default function StudentDashboard() {
         const data = await res.json();
         setStudent(data.student);
         setRegistration(data.registration);
+        if (data.courses) {
+          setCoursesList(data.courses);
+        }
         if (typeof data.isRegistrationOpen === "boolean") {
           setIsRegistrationOpen(data.isRegistrationOpen);
         }
@@ -451,6 +458,104 @@ export default function StudentDashboard() {
           </button>
         </div>
       )}
+
+      {/* AVAILABLE COURSES & FACULTY DIRECTORY */}
+      <section className="glass-panel p-6 md:p-8 space-y-6 border border-[#7ECEB7]/20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#7ECEB7]/20 pb-4">
+          <div>
+            <div className="flex items-center gap-2 text-[#7ECEB7]">
+              <BookOpen className="w-5 h-5" />
+              <h2 className="text-xl font-bold text-[#F5EBE0]">Course & Faculty Directory</h2>
+            </div>
+            <p className="text-xs text-[#D6C7A1] mt-1">
+              Explore all offered Sports & Student Life subjects, assigned faculty, and syllabus documents.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setCatalogFilter("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                catalogFilter === "all"
+                  ? "bg-[#037A74] text-[#F5EBE0] border border-[#7ECEB7]/40"
+                  : "bg-[#072C28] text-[#D6C7A1] hover:text-[#F5EBE0]"
+              }`}
+            >
+              All Subjects ({(coursesList.length > 0 ? coursesList : COURSES).length})
+            </button>
+            <button
+              onClick={() => setCatalogFilter("Sports")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                catalogFilter === "Sports"
+                  ? "bg-[#037A74] text-[#F5EBE0] border border-[#7ECEB7]/40"
+                  : "bg-[#072C28] text-[#D6C7A1] hover:text-[#F5EBE0]"
+              }`}
+            >
+              Sports ({(coursesList.length > 0 ? coursesList : COURSES).filter(c => c.category === "Sports").length})
+            </button>
+            <button
+              onClick={() => setCatalogFilter("Student Life")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                catalogFilter === "Student Life"
+                  ? "bg-[#A07850] text-[#F5EBE0] border border-[#A07850]/40"
+                  : "bg-[#072C28] text-[#D6C7A1] hover:text-[#F5EBE0]"
+              }`}
+            >
+              Student Life ({(coursesList.length > 0 ? coursesList : COURSES).filter(c => c.category === "Student Life").length})
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {(catalogFilter === "all"
+            ? (coursesList.length > 0 ? coursesList : COURSES)
+            : (coursesList.length > 0 ? coursesList : COURSES).filter(c => c.category === catalogFilter)
+          ).map((course) => (
+            <div
+              key={course.id}
+              className="glass-card p-5 flex flex-col justify-between space-y-3 border-[#7ECEB7]/15 hover:border-[#7ECEB7]/40 transition-all"
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono text-[#D6C7A1]">{course.id}</span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      course.category === "Sports"
+                        ? "bg-[#037A74]/20 text-[#7ECEB7] border-[#037A74]/40"
+                        : "bg-[#A07850]/20 text-[#D6C7A1] border-[#A07850]/40"
+                    }`}
+                  >
+                    {course.category}
+                  </span>
+                </div>
+                <h3 className="font-bold text-base text-[#F5EBE0]">{course.name}</h3>
+
+                <div className="flex items-center gap-1.5 text-xs text-[#D6C7A1] pt-1">
+                  <span>Faculty: <strong className="text-[#F5EBE0] font-normal">{course.faculty || "<faculty name>"}</strong></span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (course.docUrl) {
+                        window.open(course.docUrl, "_blank", "noopener,noreferrer");
+                      } else {
+                        alert(`Syllabus/Docs for ${course.name} will be available soon.`);
+                      }
+                    }}
+                    className="p-1 text-[#7ECEB7] hover:text-[#F5EBE0] hover:bg-[#7ECEB7]/20 rounded-full transition-colors inline-flex items-center justify-center"
+                    title="View Course Google Doc"
+                  >
+                    <Info className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-[#7ECEB7]/15 flex items-center justify-between text-xs font-mono text-[#D6C7A1]">
+                <span>Capacity:</span>
+                <span className="text-[#F5EBE0] font-medium">{course.maxSeats} Seats</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

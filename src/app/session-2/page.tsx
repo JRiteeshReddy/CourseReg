@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { MasterStudent } from "@/lib/google-sheets";
-import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Ban } from "lucide-react";
+import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Ban, Info } from "lucide-react";
 
 export default function Session2Page() {
   const [student, setStudent] = useState<MasterStudent | null>(null);
@@ -211,6 +211,24 @@ export default function Session2Page() {
                     ) : null}
                   </div>
                   <h3 className="font-bold text-base text-[#F5EBE0]">{course.name}</h3>
+                  <div className="flex items-center gap-1.5 text-xs text-[#D6C7A1] pt-1">
+                    <span>Faculty: <strong className="text-[#F5EBE0] font-normal">{course.faculty || "<faculty name>"}</strong></span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (course.docUrl) {
+                          window.open(course.docUrl, "_blank", "noopener,noreferrer");
+                        } else {
+                          alert(`Syllabus/Docs for ${course.name} will be available soon.`);
+                        }
+                      }}
+                      className="p-1 text-[#7ECEB7] hover:text-[#F5EBE0] hover:bg-[#7ECEB7]/20 rounded-full transition-colors inline-flex items-center justify-center"
+                      title="View Course Google Doc"
+                    >
+                      <Info className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="pt-2 border-t border-[#7ECEB7]/15 flex items-center justify-between text-xs font-mono">
@@ -286,6 +304,24 @@ export default function Session2Page() {
                     ) : null}
                   </div>
                   <h3 className="font-bold text-base text-[#F5EBE0]">{course.name}</h3>
+                  <div className="flex items-center gap-1.5 text-xs text-[#D6C7A1] pt-1">
+                    <span>Faculty: <strong className="text-[#F5EBE0] font-normal">{course.faculty || "<faculty name>"}</strong></span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (course.docUrl) {
+                          window.open(course.docUrl, "_blank", "noopener,noreferrer");
+                        } else {
+                          alert(`Syllabus/Docs for ${course.name} will be available soon.`);
+                        }
+                      }}
+                      className="p-1 text-[#7ECEB7] hover:text-[#F5EBE0] hover:bg-[#7ECEB7]/20 rounded-full transition-colors inline-flex items-center justify-center"
+                      title="View Course Google Doc"
+                    >
+                      <Info className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="pt-2 border-t border-[#7ECEB7]/15 flex items-center justify-between text-xs font-mono">
