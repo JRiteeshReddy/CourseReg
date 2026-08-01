@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { setSession, isAdminEmail } from '@/lib/auth';
 import { checkStudentAuthorized } from '@/lib/google-sheets';
+import { supabase } from '@/lib/supabase';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
@@ -17,14 +19,33 @@ export async function POST(request: Request) {
     const normalizedEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
 
-    // Compute expected password: <prefix>@reg_pass
+    // Compute default expected password: <prefix>@reg_pass
     const prefix = normalizedEmail.split('@')[0];
     const expectedPassword = `${prefix}@reg_pass`;
 
-    // 1. Verify password
-    if (cleanPassword !== expectedPassword) {
+    // 1. Check if user has a custom password set in student_passwords
+    let isValidPassword = false;
+    try {
+      const { data, error } = await supabase
+        .from('student_passwords')
+        .select('password_hash')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+
+      if (!error && data && data.password_hash) {
+        isValidPassword = await bcrypt.compare(cleanPassword, data.password_hash);
+      } else {
+        // Fall back to default password verification
+        isValidPassword = cleanPassword === expectedPassword;
+      }
+    } catch (dbErr) {
+      console.error("Error querying student_passwords table:", dbErr);
+      isValidPassword = cleanPassword === expectedPassword;
+    }
+
+    if (!isValidPassword) {
       return NextResponse.json({
-        error: `Invalid password. Your password is your email prefix followed by @reg_pass (e.g. ${prefix || 'username'}@reg_pass)`
+        error: `Invalid password. If you haven't changed your password, your default password is ${prefix || 'username'}@reg_pass`
       }, { status: 401 });
     }
 

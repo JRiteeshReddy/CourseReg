@@ -23,6 +23,12 @@ export default function AdminDashboard() {
   const [resetPasswordInput, setResetPasswordInput] = useState("");
   const [resetError, setResetError] = useState("");
   const [error, setError] = useState("");
+
+  // Student Password Reset State
+  const [targetStudentEmail, setTargetStudentEmail] = useState("");
+  const [resetStudentMsg, setResetStudentMsg] = useState("");
+  const [resetStudentMsgType, setResetStudentMsgType] = useState<"success" | "error" | "">("");
+  const [resettingStudentPassword, setResettingStudentPassword] = useState(false);
   const router = useRouter();
 
   const loadAdminData = async () => {
@@ -103,6 +109,43 @@ export default function AdminDashboard() {
       setResetError("Error resetting registrations.");
     } finally {
       setResetting(false);
+    }
+  };
+
+  const handleResetStudentPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetStudentMsg("");
+    setResetStudentMsgType("");
+
+    if (!targetStudentEmail.trim()) {
+      setResetStudentMsg("Please enter a valid student email address.");
+      setResetStudentMsgType("error");
+      return;
+    }
+
+    setResettingStudentPassword(true);
+    try {
+      const res = await fetch("/api/admin/reset-student-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentEmail: targetStudentEmail }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setResetStudentMsg(data.error || "Failed to reset student password.");
+        setResetStudentMsgType("error");
+      } else {
+        setResetStudentMsg(data.message || "Student password reset to default successfully!");
+        setResetStudentMsgType("success");
+        setTargetStudentEmail("");
+      }
+    } catch (err) {
+      console.error(err);
+      setResetStudentMsg("An error occurred while resetting student password.");
+      setResetStudentMsgType("error");
+    } finally {
+      setResettingStudentPassword(false);
     }
   };
 
@@ -395,6 +438,61 @@ export default function AdminDashboard() {
             )}
           </button>
         </div>
+      </section>
+
+      {/* STUDENT PASSWORD RESET PANEL */}
+      <section className="glass-panel p-6 border border-[#7ECEB7]/20 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#037A74]/20 border border-[#7ECEB7]/30 flex items-center justify-center text-[#7ECEB7]">
+            <KeyRound className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-[#F5EBE0]">Reset Student Password</h2>
+            <p className="text-xs text-[#D6C7A1]">
+              Enter a student&apos;s email address to revert their login password back to the default (<span className="font-mono text-[#7ECEB7]">&lt;prefix&gt;@reg_pass</span>).
+            </p>
+          </div>
+        </div>
+
+        {resetStudentMsg && (
+          <div
+            className={`p-3.5 rounded-xl text-xs flex items-center gap-2 border ${
+              resetStudentMsgType === "success"
+                ? "bg-[#7ECEB7]/15 border-[#7ECEB7]/30 text-[#7ECEB7]"
+                : "bg-red-500/15 border-red-500/30 text-red-300"
+            }`}
+          >
+            <span>{resetStudentMsg}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleResetStudentPassword} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <input
+            type="email"
+            required
+            placeholder="student@domain.com"
+            value={targetStudentEmail}
+            onChange={(e) => setTargetStudentEmail(e.target.value)}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
+          />
+          <button
+            type="submit"
+            disabled={resettingStudentPassword || !targetStudentEmail.trim()}
+            className="btn-primary px-6 py-2.5 text-xs font-bold text-[#F5EBE0] flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
+          >
+            {resettingStudentPassword ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-[#F5EBE0]" />
+                <span>Resetting...</span>
+              </>
+            ) : (
+              <>
+                <KeyRound className="w-4 h-4" />
+                <span>Reset Password to Default</span>
+              </>
+            )}
+          </button>
+        </form>
       </section>
 
       {/* Analytics Cards */}
