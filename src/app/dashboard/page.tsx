@@ -547,8 +547,15 @@ export default function StudentDashboard() {
                   </button>
                 </div>
                 {course.schedule && (
-                  <div className="text-[11px] text-[#7ECEB7] font-medium pt-1">
-                    Days: <span className="text-[#F5EBE0]">{course.schedule}</span>
+                  <div className="pt-1.5 flex flex-wrap items-center gap-1">
+                    {course.schedule.split(" | ").map((day, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-[#7ECEB7]/15 text-[#7ECEB7] border border-[#7ECEB7]/30"
+                      >
+                        {day}
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>

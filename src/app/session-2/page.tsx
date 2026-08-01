@@ -230,8 +230,15 @@ export default function Session2Page() {
                     </button>
                   </div>
                   {course.schedule && (
-                    <div className="text-[11px] text-[#7ECEB7] font-medium pt-1">
-                      Days: <span className="text-[#F5EBE0]">{course.schedule}</span>
+                    <div className="pt-1.5 flex flex-wrap items-center gap-1">
+                      {course.schedule.split(" | ").map((day, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-[#037A74]/30 text-[#7ECEB7] border border-[#7ECEB7]/30"
+                        >
+                          {day}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -328,8 +335,15 @@ export default function Session2Page() {
                     </button>
                   </div>
                   {course.schedule && (
-                    <div className="text-[11px] text-[#A07850] font-medium pt-1">
-                      Days: <span className="text-[#F5EBE0]">{course.schedule}</span>
+                    <div className="pt-1.5 flex flex-wrap items-center gap-1">
+                      {course.schedule.split(" | ").map((day, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-[#A07850]/20 text-[#D6C7A1] border border-[#A07850]/40"
+                        >
+                          {day}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
