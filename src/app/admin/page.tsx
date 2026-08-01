@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { RegistrationRow } from "@/lib/courses";
-import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, KeyRound, Lock, Unlock, ChevronDown, ChevronUp } from "lucide-react";
+import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, KeyRound, Lock, Unlock, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
 import * as XLSX from "xlsx";
 
 export default function AdminDashboard() {
@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [togglingReg, setTogglingReg] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showAdminResetPassword, setShowAdminResetPassword] = useState(false);
   const [resetPasswordInput, setResetPasswordInput] = useState("");
   const [resetError, setResetError] = useState("");
   const [error, setError] = useState("");
@@ -312,14 +313,23 @@ export default function AdminDashboard() {
               <div className="relative">
                 <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7ECEB7]/70" />
                 <input
-                  type="password"
+                  type={showAdminResetPassword ? "text" : "password"}
                   required
                   value={resetPasswordInput}
                   onChange={(e) => setResetPasswordInput(e.target.value)}
                   placeholder="Enter Security Password"
-                  className="input-glass input-glass-icon-left text-sm"
+                  className="input-glass input-glass-icon-left input-glass-icon-right text-sm"
                   disabled={resetting}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowAdminResetPassword(!showAdminResetPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
+                  title={showAdminResetPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  {showAdminResetPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
 
               <div className="flex items-center gap-3 pt-2">
