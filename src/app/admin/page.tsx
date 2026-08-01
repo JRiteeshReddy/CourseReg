@@ -287,8 +287,8 @@ export default function AdminDashboard() {
     <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in bg-[#041C19] text-[#F5EBE0]">
       {/* Reset Confirmation Modal */}
       {showResetModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="glass-panel max-w-md w-full p-6 space-y-5 border border-red-500/30">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-backdrop-fade">
+          <div className="glass-panel max-w-md w-full p-6 space-y-5 border border-red-500/30 bg-[#041C19] shadow-2xl animate-modal-pop">
             <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto border border-red-500/20 text-red-400">
               <Trash2 className="w-6 h-6" />
             </div>
