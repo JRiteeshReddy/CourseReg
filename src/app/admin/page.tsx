@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { RegistrationRow } from "@/lib/courses";
-import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, KeyRound, Lock, Unlock, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
+import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, KeyRound, Lock, Unlock, ChevronDown, ChevronUp, Eye, EyeOff, X, CheckCircle2, AlertTriangle } from "lucide-react";
 import * as XLSX from "xlsx";
 
 export default function AdminDashboard() {
@@ -32,6 +32,18 @@ export default function AdminDashboard() {
   const [resetStudentMsg, setResetStudentMsg] = useState("");
   const [resetStudentMsgType, setResetStudentMsgType] = useState<"success" | "error" | "">("");
   const [resettingStudentPassword, setResettingStudentPassword] = useState(false);
+
+  // Admin Own Password Change State
+  const [showAdminPasswordModal, setShowAdminPasswordModal] = useState(false);
+  const [adminCurrentPassword, setAdminCurrentPassword] = useState("");
+  const [adminNewPassword, setAdminNewPassword] = useState("");
+  const [adminConfirmPassword, setAdminConfirmPassword] = useState("");
+  const [adminPasswordMsg, setAdminPasswordMsg] = useState("");
+  const [adminPasswordMsgType, setAdminPasswordMsgType] = useState<"success" | "error" | "">("");
+  const [adminChangingPassword, setAdminChangingPassword] = useState(false);
+  const [showAdminCurrentPw, setShowAdminCurrentPw] = useState(false);
+  const [showAdminNewPw, setShowAdminNewPw] = useState(false);
+  const [showAdminConfirmPw, setShowAdminConfirmPw] = useState(false);
   const router = useRouter();
 
   const loadAdminData = async () => {
@@ -150,6 +162,59 @@ export default function AdminDashboard() {
       setResetStudentMsgType("error");
     } finally {
       setResettingStudentPassword(false);
+    }
+  };
+
+  const handleAdminChangePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminPasswordMsg("");
+    setAdminPasswordMsgType("");
+
+    if (adminNewPassword !== adminConfirmPassword) {
+      setAdminPasswordMsg("New password and confirm password do not match.");
+      setAdminPasswordMsgType("error");
+      return;
+    }
+
+    if (adminNewPassword.length < 6) {
+      setAdminPasswordMsg("New password must be at least 6 characters.");
+      setAdminPasswordMsgType("error");
+      return;
+    }
+
+    setAdminChangingPassword(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: adminCurrentPassword,
+          newPassword: adminNewPassword
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setAdminPasswordMsg(data.error || "Failed to update admin password.");
+        setAdminPasswordMsgType("error");
+      } else {
+        setAdminPasswordMsg("Admin password updated successfully!");
+        setAdminPasswordMsgType("success");
+        setAdminCurrentPassword("");
+        setAdminNewPassword("");
+        setAdminConfirmPassword("");
+        setTimeout(() => {
+          setShowAdminPasswordModal(false);
+          setAdminPasswordMsg("");
+          setAdminPasswordMsgType("");
+        }, 2000);
+      }
+    } catch (err) {
+      console.error(err);
+      setAdminPasswordMsg("An error occurred while changing admin password.");
+      setAdminPasswordMsgType("error");
+    } finally {
+      setAdminChangingPassword(false);
     }
   };
 
@@ -355,6 +420,156 @@ export default function AdminDashboard() {
         document.body
       )}
 
+      {/* ADMIN CHANGE PASSWORD MODAL */}
+      {showAdminPasswordModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-backdrop-fade">
+          <div className="glass-panel p-6 md:p-8 max-w-md w-full border border-[#7ECEB7]/30 shadow-2xl relative space-y-5 bg-[#041C19] animate-modal-pop">
+            <div className="flex items-center justify-between border-b border-[#7ECEB7]/20 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#037A74]/30 border border-[#7ECEB7]/40 flex items-center justify-center text-[#7ECEB7]">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#F5EBE0]">Change Admin Password</h3>
+                  <p className="text-xs text-[#D6C7A1]">Update your admin account password</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAdminPasswordModal(false)}
+                className="text-[#D6C7A1] hover:text-[#F5EBE0] p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {adminPasswordMsg && (
+              <div
+                className={`p-3.5 rounded-xl text-xs flex items-center gap-2 border ${
+                  adminPasswordMsgType === "success"
+                    ? "bg-[#7ECEB7]/15 border-[#7ECEB7]/30 text-[#7ECEB7]"
+                    : "bg-red-500/15 border-red-500/30 text-red-300"
+                }`}
+              >
+                {adminPasswordMsgType === "success" ? (
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                )}
+                <span>{adminPasswordMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAdminChangePasswordSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#D6C7A1] mb-1.5">
+                  Current Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showAdminCurrentPw ? "text" : "password"}
+                    required
+                    placeholder="Enter current password"
+                    value={adminCurrentPassword}
+                    onChange={(e) => setAdminCurrentPassword(e.target.value)}
+                    className="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminCurrentPw(!showAdminCurrentPw)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
+                    title={showAdminCurrentPw ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showAdminCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#D6C7A1] mb-1.5">
+                  New Password (min 6 characters)
+                </label>
+                <div className="relative">
+                  <input
+                    type={showAdminNewPw ? "text" : "password"}
+                    required
+                    minLength={6}
+                    placeholder="Enter new password"
+                    value={adminNewPassword}
+                    onChange={(e) => setAdminNewPassword(e.target.value)}
+                    className="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminNewPw(!showAdminNewPw)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
+                    title={showAdminNewPw ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showAdminNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#D6C7A1] mb-1.5">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showAdminConfirmPw ? "text" : "password"}
+                    required
+                    minLength={6}
+                    placeholder="Re-enter new password"
+                    value={adminConfirmPassword}
+                    onChange={(e) => setAdminConfirmPassword(e.target.value)}
+                    className="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminConfirmPw(!showAdminConfirmPw)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
+                    title={showAdminConfirmPw ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showAdminConfirmPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#7ECEB7]/15">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminPasswordModal(false)}
+                  className="px-4 py-2.5 rounded-xl bg-[#072C28] text-[#D6C7A1] hover:text-[#F5EBE0] text-xs font-semibold border border-[#7ECEB7]/15 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={adminChangingPassword}
+                  className="btn-primary px-5 py-2.5 text-xs font-bold text-[#F5EBE0] flex items-center gap-2 disabled:opacity-50"
+                >
+                  {adminChangingPassword ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-[#F5EBE0]" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <KeyRound className="w-4 h-4" />
+                      <span>Save New Password</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* Admin Header */}
       <header className="glass-panel p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-[#7ECEB7]/20">
         <div className="flex items-center gap-4">
@@ -370,6 +585,17 @@ export default function AdminDashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <button
+            onClick={() => {
+              setAdminPasswordMsg("");
+              setAdminPasswordMsgType("");
+              setShowAdminPasswordModal(true);
+            }}
+            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-[#072C28] hover:bg-[#037A74]/40 text-[#F5EBE0] text-xs font-semibold border border-[#7ECEB7]/20 transition-all flex items-center justify-center gap-1.5 shadow-sm"
+          >
+            <KeyRound className="w-4 h-4 text-[#7ECEB7]" /> Change Password
+          </button>
+
           <button
             onClick={() => { setShowResetModal(true); setResetError(""); setResetPasswordInput(""); }}
             className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
