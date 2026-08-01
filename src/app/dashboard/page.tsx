@@ -546,6 +546,11 @@ export default function StudentDashboard() {
                     <Info className="w-3.5 h-3.5" />
                   </button>
                 </div>
+                {course.schedule && (
+                  <div className="text-[11px] text-[#7ECEB7] font-medium pt-1">
+                    Days: <span className="text-[#F5EBE0]">{course.schedule}</span>
+                  </div>
+                )}
               </div>
 
               <div className="pt-2 border-t border-[#7ECEB7]/15 flex items-center justify-between text-xs font-mono text-[#D6C7A1]">
