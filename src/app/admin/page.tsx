@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { RegistrationRow } from "@/lib/courses";
@@ -8,6 +9,7 @@ import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, F
 import * as XLSX from "xlsx";
 
 export default function AdminDashboard() {
+  const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<CalculatedCourse[]>([]);
   const [registrations, setRegistrations] = useState<RegistrationRow[]>([]);
   const [totalMaster, setTotalMaster] = useState(0);
@@ -61,6 +63,7 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    setMounted(true);
     loadAdminData();
   }, []);
 
@@ -286,8 +289,8 @@ export default function AdminDashboard() {
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in bg-[#041C19] text-[#F5EBE0]">
       {/* Reset Confirmation Modal */}
-      {showResetModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-backdrop-fade">
+      {showResetModal && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-backdrop-fade">
           <div className="glass-panel max-w-md w-full p-6 space-y-5 border border-red-500/30 bg-[#041C19] shadow-2xl animate-modal-pop">
             <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto border border-red-500/20 text-red-400">
               <Trash2 className="w-6 h-6" />
@@ -338,7 +341,8 @@ export default function AdminDashboard() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Admin Header */}

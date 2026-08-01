@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { MasterStudent } from "@/lib/google-sheets";
 import { CalculatedCourse, COURSES, RegistrationRow } from "@/lib/courses";
@@ -26,6 +27,7 @@ import {
 } from "lucide-react";
 
 export default function StudentDashboard() {
+  const [mounted, setMounted] = useState(false);
   const [student, setStudent] = useState<MasterStudent | null>(null);
   const [registration, setRegistration] = useState<RegistrationRow | null>(null);
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
@@ -62,6 +64,7 @@ export default function StudentDashboard() {
   };
 
   useEffect(() => {
+    setMounted(true);
     async function loadStudent() {
       try {
         const res = await fetch("/api/courses");
@@ -642,8 +645,8 @@ export default function StudentDashboard() {
       </section>
 
       {/* CHANGE PASSWORD MODAL */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-backdrop-fade">
+      {showPasswordModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-backdrop-fade">
           <div className="glass-panel p-6 md:p-8 max-w-md w-full border border-[#7ECEB7]/30 shadow-2xl relative space-y-5 bg-[#041C19] animate-modal-pop">
             <div className="flex items-center justify-between border-b border-[#7ECEB7]/20 pb-4">
               <div className="flex items-center gap-3">
@@ -754,7 +757,8 @@ export default function StudentDashboard() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
