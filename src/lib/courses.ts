@@ -19,15 +19,15 @@ export const COURSES: Course[] = [
   { id: "SP08", name: "Volleyball", category: "Sports", maxSeats: 25, faculty: "Kiran J", docUrl: "https://docs.google.com/document/d/1X1QRA-YhAA-T9QxL9YzLcTQjslrnJjX6/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
 
   // 11 Student Life Courses
-  { id: "SL01", name: "Basics of Theatre Acting", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
-  { id: "SL02", name: "Communication, Life skills and Soft skills", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
-  { id: "SL03", name: "Contemporary Dance, Hip Hop and Freestyle", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
-  { id: "SL04", name: "Folk Dance", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL01", name: "Basics of Theatre Acting", category: "Student Life", maxSeats: 25, faculty: "Dr. Charu Agaru", docUrl: "https://docs.google.com/document/d/1LQibgzRR2cnitJRCYjO14zJzPxgZ0ZLf/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
+  { id: "SL02", name: "Communication, Life skills and Soft skills", category: "Student Life", maxSeats: 25, faculty: "Mehul Shah", docUrl: "https://docs.google.com/document/d/1tMWN5atlY2ELa5Sh1GFW_kJAKfg1WaY5/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
+  { id: "SL03", name: "Contemporary Dance, Hip Hop and Freestyle", category: "Student Life", maxSeats: 25, faculty: "Rajesh Kumar", docUrl: "https://docs.google.com/document/d/18XTPM8tqzjbo_rHfhn_m0ogFZUryNVVl/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
+  { id: "SL04", name: "Folk Dance", category: "Student Life", maxSeats: 25, faculty: "Dr. Anitha U S", docUrl: "https://docs.google.com/document/d/1as5vc9dTD5GvXKVtRE0zyL8LEx8eHuxB/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
   { id: "SL05", name: "Mental Wellbeing and Peer Support", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
   { id: "SL06", name: "Introduction to traditional music", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
   { id: "SL07", name: "Music Band- Contemporary and Light", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
   { id: "SL08", name: "Rhythm Appreciation", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
-  { id: "SL09", name: "Creative Design, Innovation and Sustainability", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
+  { id: "SL09", name: "Creative Design, Innovation and Sustainability", category: "Student Life", maxSeats: 25, faculty: "Moses Kotikela", docUrl: "https://docs.google.com/document/d/1Orvu3IoWyK1uQAFORd1NeJ5vCgY6FPhk/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true" },
   { id: "SL10", name: "Social media and digital content creation", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
   { id: "SL11", name: "Invocatory Dances", category: "Student Life", maxSeats: 25, faculty: "<faculty name>", docUrl: "" },
 ];
