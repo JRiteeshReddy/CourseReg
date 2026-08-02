@@ -12,11 +12,11 @@ export default function FooterSupport() {
           <span>In case of any issues, please contact:</span>
         </div>
         <a
-          href="mailto:directorcampuslife_blr@gitam.edu"
+          href="mailto:doslevents@gitam.edu"
           className="inline-flex items-center gap-1.5 font-semibold text-[#7ECEB7] hover:text-[#F5EBE0] hover:underline transition-colors bg-[#7ECEB7]/10 hover:bg-[#7ECEB7]/20 px-2.5 py-1 rounded-full border border-[#7ECEB7]/30"
         >
           <Mail className="w-3.5 h-3.5" />
-          <span>directorcampuslife_blr@gitam.edu</span>
+          <span>doslevents@gitam.edu</span>
         </a>
       </div>
     </footer>
