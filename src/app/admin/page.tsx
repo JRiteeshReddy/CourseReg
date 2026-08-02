@@ -251,6 +251,7 @@ export default function AdminDashboard() {
       if (id === 'SL04' && (val === 'Folk Dance' || val === 'Folk Dance - FIPA')) return true;
       if (id === 'SL05' && (val === 'Yoga Therapy & Wellness Consultant' || val.includes('Mental Wellbeing') || val.includes('Mental Well-being'))) return true;
       if (id === 'SL06' && (val === 'Traditional Music - Invocatory Song' || val === 'Introduction to Traditional Music')) return true;
+      if (id === 'SL07' && (val === 'Introduction to Folk and Light Music' || val.includes('Music Band'))) return true;
       if (id === 'SL11' && (val === 'Traditional Dance' || val === 'Invocatory_Dances' || val === 'Invocatory Dances')) return true;
       return false;
     };
@@ -796,6 +797,7 @@ export default function AdminDashboard() {
               if (id === 'SL04' && (val === 'Folk Dance' || val === 'Folk Dance - FIPA')) return true;
               if (id === 'SL05' && (val === 'Yoga Therapy & Wellness Consultant' || val.includes('Mental Wellbeing') || val.includes('Mental Well-being'))) return true;
               if (id === 'SL06' && (val === 'Traditional Music - Invocatory Song' || val === 'Introduction to Traditional Music')) return true;
+              if (id === 'SL07' && (val === 'Introduction to Folk and Light Music' || val.includes('Music Band'))) return true;
               if (id === 'SL11' && (val === 'Traditional Dance' || val === 'Invocatory_Dances' || val === 'Invocatory Dances')) return true;
               return false;
             };
