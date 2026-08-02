@@ -37,12 +37,17 @@ export async function POST(request: Request) {
 
     const student = await checkStudentAuthorized(sessionUser.email) || sessionUser;
 
-    // Resolve course full names
-    const getCourseName = (idOrName: string) => COURSES.find(c => c.id === idOrName || c.name === idOrName)?.name || idOrName;
-    const s1SportsName = getCourseName(s1Sports);
-    const s1LifeName = getCourseName(s1StudentLife);
-    const s2SportsName = getCourseName(s2Sports);
-    const s2LifeName = getCourseName(s2StudentLife);
+    // Resolve course objects and full names
+    const getCourseObj = (idOrName: string) => COURSES.find(c => c.id === idOrName || c.name === idOrName);
+    const s1SportsObj = getCourseObj(s1Sports);
+    const s1LifeObj = getCourseObj(s1StudentLife);
+    const s2SportsObj = getCourseObj(s2Sports);
+    const s2LifeObj = getCourseObj(s2StudentLife);
+
+    const s1SportsName = s1SportsObj?.name || s1Sports;
+    const s1LifeName = s1LifeObj?.name || s1StudentLife;
+    const s2SportsName = s2SportsObj?.name || s2Sports;
+    const s2LifeName = s2LifeObj?.name || s2StudentLife;
 
     // 3. Attempt Atomic Database Seat Reservation in Supabase Postgres RPC (locks natively across all serverless instances)
     try {
@@ -54,7 +59,10 @@ export async function POST(request: Request) {
         p_s1_life: s1LifeName,
         p_s2_sports: s2SportsName,
         p_s2_life: s2LifeName,
-        p_max_seats: 25,
+        p_s1_sports_max: s1SportsObj?.maxSeats || 80,
+        p_s1_life_max: s1LifeObj?.maxSeats || 50,
+        p_s2_sports_max: s2SportsObj?.maxSeats || 80,
+        p_s2_life_max: s2LifeObj?.maxSeats || 50,
       });
 
       if (!rpcError && rpcData) {
