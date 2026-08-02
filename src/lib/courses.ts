@@ -23,14 +23,14 @@ export const COURSES: Course[] = [
   { id: "SL01", name: "Basics of Theatre Acting", category: "Student Life", maxSeats: 50, faculty: "Dr. Charu Agaru", docUrl: "https://docs.google.com/document/d/1LQibgzRR2cnitJRCYjO14zJzPxgZ0ZLf/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
   { id: "SL02", name: "Communication, Life skills and Soft skills", category: "Student Life", maxSeats: 50, faculty: "Mehul Shah", docUrl: "https://docs.google.com/document/d/1tMWN5atlY2ELa5Sh1GFW_kJAKfg1WaY5/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
   { id: "SL03", name: "Contemporary Dance, Hip Hop and Freestyle", category: "Student Life", maxSeats: 25, faculty: "Rajesh Kumar", docUrl: "https://docs.google.com/document/d/18XTPM8tqzjbo_rHfhn_m0ogFZUryNVVl/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Friday" },
-  { id: "SL04", name: "Folk Dance", category: "Student Life", maxSeats: 50, faculty: "Dr. Anitha U S", docUrl: "https://docs.google.com/document/d/1as5vc9dTD5GvXKVtRE0zyL8LEx8eHuxB/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { id: "SL04", name: "Folk Dance - FIPA", category: "Student Life", maxSeats: 50, faculty: "Dr. Anitha U S", docUrl: "https://docs.google.com/document/d/1as5vc9dTD5GvXKVtRE0zyL8LEx8eHuxB/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
   { id: "SL05", name: "Yoga Therapy & Wellness Consultant", category: "Student Life", maxSeats: 50, faculty: "Dr. Prajwala H V", docUrl: "https://docs.google.com/document/d/1DCankpA0EbQ4Rl8pEr3gcVgNnKwwXQrG/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
-  { id: "SL06", name: "Traditional Music - Invocatory Song", category: "Student Life", maxSeats: 25, faculty: "Seetha M I", docUrl: "https://docs.google.com/document/d/1Bneug18xXjnGbD85FmSOYRSRcdOHJhag/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Friday" },
+  { id: "SL06", name: "Introduction to Traditional Music", category: "Student Life", maxSeats: 25, faculty: "Seetha M I", docUrl: "https://docs.google.com/document/d/1Bneug18xXjnGbD85FmSOYRSRcdOHJhag/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Friday" },
   { id: "SL07", name: "Introduction to Folk and Light Music", category: "Student Life", maxSeats: 50, faculty: "Sunil Kumar M P", docUrl: "https://docs.google.com/document/d/1KR3-ozpFjnGK3G54Tg6-MmjmSrHRunii/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
   { id: "SL08", name: "Rhythm Appreciation", category: "Student Life", maxSeats: 50, faculty: "Sreekanth P V", docUrl: "https://docs.google.com/document/d/1ho8DU4CurHwYnGKnteO8hkrmPCawYRF_/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
   { id: "SL09", name: "Creative Design, Innovation and Sustainability", category: "Student Life", maxSeats: 50, faculty: "Moses Kotikela", docUrl: "https://docs.google.com/document/d/1Orvu3IoWyK1uQAFORd1NeJ5vCgY6FPhk/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
   { id: "SL10", name: "Social Media and Digital Content Creation", category: "Student Life", maxSeats: 50, faculty: "Meghna Ganguly", docUrl: "https://docs.google.com/document/d/1Q6qN97uzBwNMtZ5tVHYqV55V6x_SHe4r/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
-  { id: "SL11", name: "Traditional Dance", category: "Student Life", maxSeats: 50, faculty: "Dr. Divya Nedungadi", docUrl: "https://docs.google.com/document/d/17n0M-zWAIMtn7Chcqw8ds35I5xe7Q6f1/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { id: "SL11", name: "Invocatory_Dances", category: "Student Life", maxSeats: 50, faculty: "Dr. Divya Nedungadi", docUrl: "https://docs.google.com/document/d/17n0M-zWAIMtn7Chcqw8ds35I5xe7Q6f1/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
 ];
 
 export interface RegistrationRow {
@@ -62,6 +62,13 @@ export interface CalculatedCourse extends Course {
 }
 
 const DRAFT_HOLD_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes temporary seat hold
+
+// Legacy alias mapping to maintain backwards compatibility with existing registered data
+const COURSE_ALIASES: Record<string, string[]> = {
+  "SL04": ["Folk Dance", "Folk Dance - FIPA"],
+  "SL06": ["Traditional Music - Invocatory Song", "Introduction to Traditional Music"],
+  "SL11": ["Traditional Dance", "Invocatory_Dances", "Invocatory Dances"],
+};
 
 /**
  * Calculates dynamic seat counts over confirmed registrations and active draft seat holds.
@@ -97,8 +104,16 @@ export function calculateDynamicSeats(
   }
 
   return COURSES.map(course => {
-    const s1Occupied = (s1Counts[course.id] || 0) + (s1Counts[course.name] || 0);
-    const s2Occupied = (s2Counts[course.id] || 0) + (s2Counts[course.name] || 0);
+    const aliases = COURSE_ALIASES[course.id] || [];
+    const validKeys = [course.id, course.name, ...aliases];
+    
+    let s1Occupied = 0;
+    let s2Occupied = 0;
+
+    for (const key of validKeys) {
+      s1Occupied += (s1Counts[key] || 0);
+      s2Occupied += (s2Counts[key] || 0);
+    }
 
     return {
       ...course,

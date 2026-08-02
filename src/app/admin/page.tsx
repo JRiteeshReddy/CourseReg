@@ -245,14 +245,23 @@ export default function AdminDashboard() {
 
   // Course-Specific Dynamic Combined Excel Export (Session 1 + Session 2 in 1 File)
   const exportCourseExcel = (courseId: string, courseName: string, category: string) => {
+    const matchCourse = (val: string, id: string, name: string) => {
+      if (!val) return false;
+      if (val === id || val === name) return true;
+      if (id === 'SL04' && (val === 'Folk Dance' || val === 'Folk Dance - FIPA')) return true;
+      if (id === 'SL06' && (val === 'Traditional Music - Invocatory Song' || val === 'Introduction to Traditional Music')) return true;
+      if (id === 'SL11' && (val === 'Traditional Dance' || val === 'Invocatory_Dances' || val === 'Invocatory Dances')) return true;
+      return false;
+    };
+
     const s1Students = registrations.filter((r) => {
       if (r.status?.toUpperCase() !== "CONFIRMED") return false;
-      return r.s1Sports === courseId || r.s1Sports === courseName || r.s1StudentLife === courseId || r.s1StudentLife === courseName;
+      return matchCourse(r.s1Sports, courseId, courseName) || matchCourse(r.s1StudentLife, courseId, courseName);
     });
 
     const s2Students = registrations.filter((r) => {
       if (r.status?.toUpperCase() !== "CONFIRMED") return false;
-      return r.s2Sports === courseId || r.s2Sports === courseName || r.s2StudentLife === courseId || r.s2StudentLife === courseName;
+      return matchCourse(r.s2Sports, courseId, courseName) || matchCourse(r.s2StudentLife, courseId, courseName);
     });
 
     if (s1Students.length === 0 && s2Students.length === 0) {
@@ -780,14 +789,23 @@ export default function AdminDashboard() {
             const s2Percentage = Math.round((course.s2SeatsOccupied / course.maxSeats) * 100);
             const isExpanded = expandedCourseId === course.id;
 
+            const matchCourseCard = (val: string, id: string, name: string) => {
+              if (!val) return false;
+              if (val === id || val === name) return true;
+              if (id === 'SL04' && (val === 'Folk Dance' || val === 'Folk Dance - FIPA')) return true;
+              if (id === 'SL06' && (val === 'Traditional Music - Invocatory Song' || val === 'Introduction to Traditional Music')) return true;
+              if (id === 'SL11' && (val === 'Traditional Dance' || val === 'Invocatory_Dances' || val === 'Invocatory Dances')) return true;
+              return false;
+            };
+
             const s1Students = registrations.filter((r) => {
               if (r.status?.toUpperCase() !== "CONFIRMED") return false;
-              return r.s1Sports === course.id || r.s1Sports === course.name || r.s1StudentLife === course.id || r.s1StudentLife === course.name;
+              return matchCourseCard(r.s1Sports, course.id, course.name) || matchCourseCard(r.s1StudentLife, course.id, course.name);
             });
 
             const s2Students = registrations.filter((r) => {
               if (r.status?.toUpperCase() !== "CONFIRMED") return false;
-              return r.s2Sports === course.id || r.s2Sports === course.name || r.s2StudentLife === course.id || r.s2StudentLife === course.name;
+              return matchCourseCard(r.s2Sports, course.id, course.name) || matchCourseCard(r.s2StudentLife, course.id, course.name);
             });
 
             return (
