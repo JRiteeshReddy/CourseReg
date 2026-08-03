@@ -3,9 +3,35 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { CalculatedCourse } from "@/lib/courses";
-import { RegistrationRow } from "@/lib/courses";
-import { ShieldCheck, Download, Users, BookOpen, AlertCircle, Loader2, LogOut, FileSpreadsheet, Trash2, KeyRound, Lock, Unlock, ChevronDown, ChevronUp, Eye, EyeOff, X, CheckCircle2, AlertTriangle } from "lucide-react";
+import { CalculatedCourse, RegistrationRow } from "@/lib/courses";
+import {
+  ShieldCheck,
+  Download,
+  Users,
+  BookOpen,
+  AlertCircle,
+  Loader2,
+  LogOut,
+  FileSpreadsheet,
+  Trash2,
+  KeyRound,
+  Lock,
+  Unlock,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  EyeOff,
+  X,
+  CheckCircle2,
+  AlertTriangle,
+  Search,
+  Filter,
+  Dumbbell,
+  GraduationCap,
+  Layers,
+  RefreshCw,
+  UserCheck,
+} from "lucide-react";
 import * as XLSX from "xlsx";
 
 export default function AdminDashboard() {
@@ -17,6 +43,17 @@ export default function AdminDashboard() {
   const [adminEmail, setAdminEmail] = useState("");
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
+
+  // Filtering States for Course Cards Section
+  const [courseCategoryTab, setCourseCategoryTab] = useState<"ALL" | "Sports" | "Student Life">("ALL");
+  const [courseSearchQuery, setCourseSearchQuery] = useState("");
+  const [inCardSearchQuery, setInCardSearchQuery] = useState<Record<string, string>>({});
+
+  // Filtering States for Student Roster Table Section
+  const [rosterSearchQuery, setRosterSearchQuery] = useState("");
+  const [rosterCategoryFilter, setRosterCategoryFilter] = useState<"ALL" | "Sports" | "Student Life">("ALL");
+  const [rosterCourseFilter, setRosterCourseFilter] = useState("ALL");
+  const [rosterSessionFilter, setRosterSessionFilter] = useState<"ALL" | "S1" | "S2">("ALL");
 
   const [loading, setLoading] = useState(true);
   const [togglingReg, setTogglingReg] = useState(false);
@@ -189,7 +226,7 @@ export default function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           currentPassword: adminCurrentPassword,
-          newPassword: adminNewPassword
+          newPassword: adminNewPassword,
         }),
       });
       const data = await res.json();
@@ -218,7 +255,37 @@ export default function AdminDashboard() {
     }
   };
 
-  // Full Master Export
+  // Matching helper function for legacy strings & aliases
+  const matchCourse = (val: string, id: string, name: string) => {
+    if (!val) return false;
+    if (val === id || val === name) return true;
+    if (id === "SL04" && (val === "Folk Dance" || val === "Folk Dance - FIPA")) return true;
+    if (
+      id === "SL05" &&
+      (val === "Yoga Therapy & Wellness Consultant" ||
+        val.includes("Mental Wellbeing") ||
+        val.includes("Mental Well-being"))
+    )
+      return true;
+    if (
+      id === "SL06" &&
+      (val === "Traditional Music - Invocatory Song" || val === "Introduction to Traditional Music")
+    )
+      return true;
+    if (
+      id === "SL07" &&
+      (val === "Introduction to Folk and Light Music" || val.includes("Music Band"))
+    )
+      return true;
+    if (
+      id === "SL11" &&
+      (val === "Traditional Dance" || val === "Invocatory_Dances" || val === "Invocatory Dances")
+    )
+      return true;
+    return false;
+  };
+
+  // Master Export
   const exportAllToExcel = () => {
     if (registrations.length === 0) {
       alert("No registration data available to export.");
@@ -234,35 +301,63 @@ export default function AdminDashboard() {
       "Session 2 Sports": r.s2Sports,
       "Session 2 Student Life": r.s2StudentLife,
       "Registration Timestamp": r.timestamp,
-      "Status": r.status,
+      Status: r.status,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportRows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "All Registrations");
-    XLSX.writeFile(workbook, `Master_University_Course_Registrations_${new Date().toISOString().split("T")[0]}.xlsx`);
+    XLSX.writeFile(
+      workbook,
+      `Master_University_Course_Registrations_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
+  };
+
+  // Category specific export
+  const exportCategoryToExcel = (category: "Sports" | "Student Life") => {
+    const categoryCourses = courses.filter((c) => c.category === category);
+    const categoryCourseIds = new Set(categoryCourses.map((c) => c.id));
+
+    const exportRows = registrations
+      .filter((r) => {
+        if (category === "Sports") return Boolean(r.s1Sports || r.s2Sports);
+        return Boolean(r.s1StudentLife || r.s2StudentLife);
+      })
+      .map((r) => ({
+        "Registration Number": r.regNo,
+        "Student Name": r.name,
+        "Student Email": r.email,
+        "Session 1 Sports": r.s1Sports,
+        "Session 1 Student Life": r.s1StudentLife,
+        "Session 2 Sports": r.s2Sports,
+        "Session 2 Student Life": r.s2StudentLife,
+        "Registration Timestamp": r.timestamp,
+        Status: r.status,
+      }));
+
+    if (exportRows.length === 0) {
+      alert(`No registrations found for category: ${category}`);
+      return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, `${category} Registrations`);
+    XLSX.writeFile(
+      workbook,
+      `${category}_Course_Registrations_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
   };
 
   // Course-Specific Dynamic Combined Excel Export (Session 1 + Session 2 in 1 File)
   const exportCourseExcel = (courseId: string, courseName: string, category: string) => {
-    const matchCourse = (val: string, id: string, name: string) => {
-      if (!val) return false;
-      if (val === id || val === name) return true;
-      if (id === 'SL04' && (val === 'Folk Dance' || val === 'Folk Dance - FIPA')) return true;
-      if (id === 'SL05' && (val === 'Yoga Therapy & Wellness Consultant' || val.includes('Mental Wellbeing') || val.includes('Mental Well-being'))) return true;
-      if (id === 'SL06' && (val === 'Traditional Music - Invocatory Song' || val === 'Introduction to Traditional Music')) return true;
-      if (id === 'SL07' && (val === 'Introduction to Folk and Light Music' || val.includes('Music Band'))) return true;
-      if (id === 'SL11' && (val === 'Traditional Dance' || val === 'Invocatory_Dances' || val === 'Invocatory Dances')) return true;
-      return false;
-    };
-
     const s1Students = registrations.filter((r) => {
-      if (r.status?.toUpperCase() !== "CONFIRMED") return false;
+      if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
       return matchCourse(r.s1Sports, courseId, courseName) || matchCourse(r.s1StudentLife, courseId, courseName);
     });
 
     const s2Students = registrations.filter((r) => {
-      if (r.status?.toUpperCase() !== "CONFIRMED") return false;
+      if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
       return matchCourse(r.s2Sports, courseId, courseName) || matchCourse(r.s2StudentLife, courseId, courseName);
     });
 
@@ -290,7 +385,7 @@ export default function AdminDashboard() {
           r.regNo,
           r.name,
           r.email,
-          r.timestamp ? new Date(r.timestamp).toLocaleString() : "N/A"
+          r.timestamp ? new Date(r.timestamp).toLocaleString() : "N/A",
         ]);
       });
     } else {
@@ -311,7 +406,7 @@ export default function AdminDashboard() {
           r.regNo,
           r.name,
           r.email,
-          r.timestamp ? new Date(r.timestamp).toLocaleString() : "N/A"
+          r.timestamp ? new Date(r.timestamp).toLocaleString() : "N/A",
         ]);
       });
     } else {
@@ -319,11 +414,9 @@ export default function AdminDashboard() {
     }
 
     const workbook = XLSX.utils.book_new();
-
-    // Main Sheet containing both sessions clearly titled
     const mainWorksheet = XLSX.utils.aoa_to_sheet(aoaData);
-    mainWorksheet['!cols'] = [
-      { wch: 8 },  // S.No
+    mainWorksheet["!cols"] = [
+      { wch: 8 }, // S.No
       { wch: 22 }, // Reg No
       { wch: 28 }, // Name
       { wch: 35 }, // Email
@@ -340,9 +433,69 @@ export default function AdminDashboard() {
     router.push("/");
   };
 
+  // Filtered courses for Course Occupancy Grid
+  const filteredCourses = courses.filter((course) => {
+    const matchesCategory =
+      courseCategoryTab === "ALL" || course.category === courseCategoryTab;
+    const matchesSearch =
+      !courseSearchQuery ||
+      course.name.toLowerCase().includes(courseSearchQuery.toLowerCase()) ||
+      course.id.toLowerCase().includes(courseSearchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // Filtered registrations for Master Roster Table
+  const filteredRegistrations = registrations.filter((r) => {
+    const q = rosterSearchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      r.name?.toLowerCase().includes(q) ||
+      r.regNo?.toLowerCase().includes(q) ||
+      r.email?.toLowerCase().includes(q);
+
+    if (!matchesSearch) return false;
+
+    // Category filter
+    if (rosterCategoryFilter === "Sports") {
+      if (!r.s1Sports && !r.s2Sports) return false;
+    } else if (rosterCategoryFilter === "Student Life") {
+      if (!r.s1StudentLife && !r.s2StudentLife) return false;
+    }
+
+    // Specific Course filter
+    if (rosterCourseFilter !== "ALL") {
+      const selectedCourseObj = courses.find((c) => c.id === rosterCourseFilter);
+      const cId = rosterCourseFilter;
+      const cName = selectedCourseObj ? selectedCourseObj.name : "";
+      const inS1 =
+        matchCourse(r.s1Sports, cId, cName) || matchCourse(r.s1StudentLife, cId, cName);
+      const inS2 =
+        matchCourse(r.s2Sports, cId, cName) || matchCourse(r.s2StudentLife, cId, cName);
+      if (!inS1 && !inS2) return false;
+    }
+
+    // Session filter
+    if (rosterSessionFilter === "S1") {
+      if (!r.s1Sports && !r.s1StudentLife) return false;
+    } else if (rosterSessionFilter === "S2") {
+      if (!r.s2Sports && !r.s2StudentLife) return false;
+    }
+
+    return true;
+  });
+
+  // Sports & Student Life Stats Calculation
+  const sportsCourses = courses.filter((c) => c.category === "Sports");
+  const sportsS1Total = sportsCourses.reduce((acc, c) => acc + c.s1SeatsOccupied, 0);
+  const sportsS2Total = sportsCourses.reduce((acc, c) => acc + c.s2SeatsOccupied, 0);
+
+  const studentLifeCourses = courses.filter((c) => c.category === "Student Life");
+  const studentLifeS1Total = studentLifeCourses.reduce((acc, c) => acc + c.s1SeatsOccupied, 0);
+  const studentLifeS2Total = studentLifeCourses.reduce((acc, c) => acc + c.s2SeatsOccupied, 0);
+
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#041C19]">
+      <div className="flex-1 flex items-center justify-center bg-[#041C19] min-h-screen">
         <Loader2 className="w-8 h-8 text-[#7ECEB7] animate-spin" />
       </div>
     );
@@ -350,7 +503,7 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 bg-[#041C19]">
+      <div className="flex-1 flex items-center justify-center p-4 bg-[#041C19] min-h-screen">
         <div className="glass-panel max-w-md w-full p-8 text-center space-y-4 border border-red-500/30">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
           <h2 className="text-xl font-bold text-red-400">Access Restricted</h2>
@@ -366,220 +519,228 @@ export default function AdminDashboard() {
   return (
     <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in bg-[#041C19] text-[#F5EBE0]">
       {/* Reset Confirmation Modal */}
-      {showResetModal && mounted && createPortal(
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-backdrop-fade">
-          <div className="glass-panel max-w-md w-full p-6 space-y-5 border border-red-500/30 bg-[#041C19] shadow-2xl animate-modal-pop">
-            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto border border-red-500/20 text-red-400">
-              <Trash2 className="w-6 h-6" />
+      {showResetModal &&
+        mounted &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-center justify-center p-4 animate-backdrop-fade">
+            <div className="glass-panel max-w-md w-full p-6 space-y-5 border border-red-500/30 bg-[#041C19] shadow-2xl animate-modal-pop">
+              <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto border border-red-500/20 text-red-400">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="text-center space-y-2">
+                <h3 className="text-xl font-bold text-[#F5EBE0]">Clear All Test Registrations?</h3>
+                <p className="text-xs text-[#D6C7A1] leading-relaxed">
+                  Enter the security password to confirm wiping all test records. Live registration data will be cleared.
+                </p>
+              </div>
+
+              {resetError && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-300 p-3 rounded-lg text-xs font-medium text-center">
+                  {resetError}
+                </div>
+              )}
+
+              <form onSubmit={handleClearAllRegistrations} className="space-y-4">
+                <div className="relative">
+                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7ECEB7]/70" />
+                  <input
+                    type={showAdminResetPassword ? "text" : "password"}
+                    required
+                    value={resetPasswordInput}
+                    onChange={(e) => setResetPasswordInput(e.target.value)}
+                    placeholder="Enter Security Password"
+                    className="input-glass input-glass-icon-left input-glass-icon-right text-sm"
+                    disabled={resetting}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminResetPassword(!showAdminResetPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
+                    title={showAdminResetPassword ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showAdminResetPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowResetModal(false);
+                      setResetError("");
+                      setResetPasswordInput("");
+                    }}
+                    className="flex-1 py-2.5 rounded-lg bg-[#072C28] hover:bg-[#037A74]/30 text-[#D6C7A1] text-xs font-semibold border border-[#7ECEB7]/20 transition-all"
+                    disabled={resetting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resetting || !resetPasswordInput}
+                    className="flex-1 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-500/30 disabled:opacity-50"
+                  >
+                    {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Wipe"}
+                  </button>
+                </div>
+              </form>
             </div>
-            <div className="text-center space-y-2">
-              <h3 className="text-xl font-bold text-[#F5EBE0]">Clear All Test Registrations?</h3>
-              <p className="text-xs text-[#D6C7A1] leading-relaxed">
-                Enter the security password to confirm wiping all registration test records from the database.
-              </p>
-            </div>
-
-            {resetError && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-300 p-3 rounded-lg text-xs font-medium text-center">
-                {resetError}
-              </div>
-            )}
-
-            <form onSubmit={handleClearAllRegistrations} className="space-y-4">
-              <div className="relative">
-                <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7ECEB7]/70" />
-                <input
-                  type={showAdminResetPassword ? "text" : "password"}
-                  required
-                  value={resetPasswordInput}
-                  onChange={(e) => setResetPasswordInput(e.target.value)}
-                  placeholder="Enter Security Password"
-                  className="input-glass input-glass-icon-left input-glass-icon-right text-sm"
-                  disabled={resetting}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowAdminResetPassword(!showAdminResetPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
-                  title={showAdminResetPassword ? "Hide password" : "Show password"}
-                  tabIndex={-1}
-                >
-                  {showAdminResetPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => { setShowResetModal(false); setResetError(""); setResetPasswordInput(""); }}
-                  className="flex-1 py-2.5 rounded-lg bg-[#072C28] hover:bg-[#037A74]/30 text-[#D6C7A1] text-xs font-semibold border border-[#7ECEB7]/20 transition-all"
-                  disabled={resetting}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={resetting || !resetPasswordInput}
-                  className="flex-1 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-red-500/30 disabled:opacity-50"
-                >
-                  {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Wipe"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
 
       {/* ADMIN CHANGE PASSWORD MODAL */}
-      {showAdminPasswordModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-backdrop-fade">
-          <div className="glass-panel p-6 md:p-8 max-w-md w-full border border-[#7ECEB7]/30 shadow-2xl relative space-y-5 bg-[#041C19] animate-modal-pop">
-            <div className="flex items-center justify-between border-b border-[#7ECEB7]/20 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#037A74]/30 border border-[#7ECEB7]/40 flex items-center justify-center text-[#7ECEB7]">
-                  <KeyRound className="w-5 h-5" />
+      {showAdminPasswordModal &&
+        mounted &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-backdrop-fade">
+            <div className="glass-panel p-6 md:p-8 max-w-md w-full border border-[#7ECEB7]/30 shadow-2xl relative space-y-5 bg-[#041C19] animate-modal-pop">
+              <div className="flex items-center justify-between border-b border-[#7ECEB7]/20 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#037A74]/30 border border-[#7ECEB7]/40 flex items-center justify-center text-[#7ECEB7]">
+                    <KeyRound className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#F5EBE0]">Change Admin Password</h3>
+                    <p className="text-xs text-[#D6C7A1]">Update your admin account password</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#F5EBE0]">Change Admin Password</h3>
-                  <p className="text-xs text-[#D6C7A1]">Update your admin account password</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAdminPasswordModal(false)}
-                className="text-[#D6C7A1] hover:text-[#F5EBE0] p-1.5 rounded-lg hover:bg-white/5 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {adminPasswordMsg && (
-              <div
-                className={`p-3.5 rounded-xl text-xs flex items-center gap-2 border ${
-                  adminPasswordMsgType === "success"
-                    ? "bg-[#7ECEB7]/15 border-[#7ECEB7]/30 text-[#7ECEB7]"
-                    : "bg-red-500/15 border-red-500/30 text-red-300"
-                }`}
-              >
-                {adminPasswordMsgType === "success" ? (
-                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                )}
-                <span>{adminPasswordMsg}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleAdminChangePasswordSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-[#D6C7A1] mb-1.5">
-                  Current Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showAdminCurrentPw ? "text" : "password"}
-                    required
-                    placeholder="Enter current password"
-                    value={adminCurrentPassword}
-                    onChange={(e) => setAdminCurrentPassword(e.target.value)}
-                    className="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowAdminCurrentPw(!showAdminCurrentPw)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
-                    title={showAdminCurrentPw ? "Hide password" : "Show password"}
-                    tabIndex={-1}
-                  >
-                    {showAdminCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#D6C7A1] mb-1.5">
-                  New Password (min 6 characters)
-                </label>
-                <div className="relative">
-                  <input
-                    type={showAdminNewPw ? "text" : "password"}
-                    required
-                    minLength={6}
-                    placeholder="Enter new password"
-                    value={adminNewPassword}
-                    onChange={(e) => setAdminNewPassword(e.target.value)}
-                    className="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowAdminNewPw(!showAdminNewPw)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
-                    title={showAdminNewPw ? "Hide password" : "Show password"}
-                    tabIndex={-1}
-                  >
-                    {showAdminNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#D6C7A1] mb-1.5">
-                  Confirm New Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showAdminConfirmPw ? "text" : "password"}
-                    required
-                    minLength={6}
-                    placeholder="Re-enter new password"
-                    value={adminConfirmPassword}
-                    onChange={(e) => setAdminConfirmPassword(e.target.value)}
-                    className="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowAdminConfirmPw(!showAdminConfirmPw)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
-                    title={showAdminConfirmPw ? "Hide password" : "Show password"}
-                    tabIndex={-1}
-                  >
-                    {showAdminConfirmPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#7ECEB7]/15">
                 <button
                   type="button"
                   onClick={() => setShowAdminPasswordModal(false)}
-                  className="px-4 py-2.5 rounded-xl bg-[#072C28] text-[#D6C7A1] hover:text-[#F5EBE0] text-xs font-semibold border border-[#7ECEB7]/15 transition-all"
+                  className="text-[#D6C7A1] hover:text-[#F5EBE0] p-1.5 rounded-lg hover:bg-white/5 transition-colors"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={adminChangingPassword}
-                  className="btn-primary px-5 py-2.5 text-xs font-bold text-[#F5EBE0] flex items-center gap-2 disabled:opacity-50"
-                >
-                  {adminChangingPassword ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin text-[#F5EBE0]" />
-                      <span>Updating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <KeyRound className="w-4 h-4" />
-                      <span>Save New Password</span>
-                    </>
-                  )}
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
+
+              {adminPasswordMsg && (
+                <div
+                  className={`p-3.5 rounded-xl text-xs flex items-center gap-2 border ${
+                    adminPasswordMsgType === "success"
+                      ? "bg-[#7ECEB7]/15 border-[#7ECEB7]/30 text-[#7ECEB7]"
+                      : "bg-red-500/15 border-red-500/30 text-red-300"
+                  }`}
+                >
+                  {adminPasswordMsgType === "success" ? (
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  )}
+                  <span>{adminPasswordMsg}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleAdminChangePasswordSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#D6C7A1] mb-1.5">
+                    Current Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showAdminCurrentPw ? "text" : "password"}
+                      required
+                      placeholder="Enter current password"
+                      value={adminCurrentPassword}
+                      onChange={(e) => setAdminCurrentPassword(e.target.value)}
+                      className="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAdminCurrentPw(!showAdminCurrentPw)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
+                      title={showAdminCurrentPw ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showAdminCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#D6C7A1] mb-1.5">
+                    New Password (min 6 characters)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showAdminNewPw ? "text" : "password"}
+                      required
+                      minLength={6}
+                      placeholder="Enter new password"
+                      value={adminNewPassword}
+                      onChange={(e) => setAdminNewPassword(e.target.value)}
+                      className="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAdminNewPw(!showAdminNewPw)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
+                      title={showAdminNewPw ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showAdminNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#D6C7A1] mb-1.5">
+                    Confirm New Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showAdminConfirmPw ? "text" : "password"}
+                      required
+                      minLength={6}
+                      placeholder="Re-enter new password"
+                      value={adminConfirmPassword}
+                      onChange={(e) => setAdminConfirmPassword(e.target.value)}
+                      className="w-full pl-4 pr-11 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAdminConfirmPw(!showAdminConfirmPw)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#7ECEB7]/70 hover:text-[#F5EBE0] p-1 transition-colors"
+                      title={showAdminConfirmPw ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showAdminConfirmPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#7ECEB7]/15">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPasswordModal(false)}
+                    className="px-4 py-2.5 rounded-xl bg-[#072C28] text-[#D6C7A1] hover:text-[#F5EBE0] text-xs font-semibold border border-[#7ECEB7]/15 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={adminChangingPassword}
+                    className="btn-primary px-5 py-2.5 text-xs font-bold text-[#F5EBE0] flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {adminChangingPassword ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-[#F5EBE0]" />
+                        <span>Updating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <KeyRound className="w-4 h-4" />
+                        <span>Save New Password</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Admin Header */}
       <header className="glass-panel p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-[#7ECEB7]/20">
@@ -590,7 +751,8 @@ export default function AdminDashboard() {
           <div>
             <h1 className="text-2xl font-bold text-[#F5EBE0]">Admin Portal</h1>
             <p className="text-sm text-[#D6C7A1]">
-              Authenticated Admin: <span className="text-[#7ECEB7] font-mono font-medium">{adminEmail}</span>
+              Authenticated Admin:{" "}
+              <span className="text-[#7ECEB7] font-mono font-medium">{adminEmail}</span>
             </p>
           </div>
         </div>
@@ -608,7 +770,11 @@ export default function AdminDashboard() {
           </button>
 
           <button
-            onClick={() => { setShowResetModal(true); setResetError(""); setResetPasswordInput(""); }}
+            onClick={() => {
+              setShowResetModal(true);
+              setResetError("");
+              setResetPasswordInput("");
+            }}
             className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
             title="Clear all test registrations"
           >
@@ -617,7 +783,7 @@ export default function AdminDashboard() {
 
           <button
             onClick={exportAllToExcel}
-            className="btn-primary flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm text-[#F5EBE0]"
+            className="btn-primary flex-1 sm:flex-none flex items-center justify-center gap-2 text-xs font-bold text-[#F5EBE0] py-2.5 px-4"
           >
             <Download className="w-4 h-4 text-[#F5EBE0]" /> Export All (.xlsx)
           </button>
@@ -633,27 +799,39 @@ export default function AdminDashboard() {
       </header>
 
       {/* REGISTRATION OPEN / CLOSE CONTROL PANEL */}
-      <section className={`glass-panel p-6 border transition-all ${
-        isRegistrationOpen ? "border-emerald-500/30 bg-emerald-950/10" : "border-red-500/30 bg-red-950/10"
-      }`}>
+      <section
+        className={`glass-panel p-6 border transition-all ${
+          isRegistrationOpen
+            ? "border-emerald-500/30 bg-emerald-950/10"
+            : "border-red-500/30 bg-red-950/10"
+        }`}
+      >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-lg ${
-              isRegistrationOpen
-                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
-                : "bg-red-500/20 text-red-400 border-red-500/40"
-            }`}>
+            <div
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-lg ${
+                isRegistrationOpen
+                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+                  : "bg-red-500/20 text-red-400 border-red-500/40"
+              }`}
+            >
               {isRegistrationOpen ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
             </div>
             <div>
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-[#F5EBE0]">Course Registration Control</h2>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold font-mono border flex items-center gap-1.5 ${
-                  isRegistrationOpen
-                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                    : "bg-red-500/20 text-red-300 border-red-500/40"
-                }`}>
-                  <span className={`w-2 h-2 rounded-full animate-ping ${isRegistrationOpen ? "bg-emerald-400" : "bg-red-400"}`}></span>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold font-mono border flex items-center gap-1.5 ${
+                    isRegistrationOpen
+                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                      : "bg-red-500/20 text-red-300 border-red-500/40"
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full animate-ping ${
+                      isRegistrationOpen ? "bg-emerald-400" : "bg-red-400"
+                    }`}
+                  ></span>
                   REGISTRATION {isRegistrationOpen ? "OPEN" : "CLOSED"}
                 </span>
               </div>
@@ -679,12 +857,12 @@ export default function AdminDashboard() {
             ) : isRegistrationOpen ? (
               <>
                 <Lock className="w-4 h-4 text-red-400" />
-                <span>Close Course Registration</span>
+                <span>Close Registration</span>
               </>
             ) : (
               <>
                 <Unlock className="w-4 h-4 text-emerald-400" />
-                <span>Open Course Registration</span>
+                <span>Open Registration</span>
               </>
             )}
           </button>
@@ -700,7 +878,8 @@ export default function AdminDashboard() {
           <div>
             <h2 className="text-lg font-bold text-[#F5EBE0]">Reset Student Password</h2>
             <p className="text-xs text-[#D6C7A1]">
-              Enter a student&apos;s email address to revert their login password back to the default (<span className="font-mono text-[#7ECEB7]">&lt;prefix&gt;@reg_pass</span>).
+              Enter a student&apos;s email address to revert their password back to default (
+              <span className="font-mono text-[#7ECEB7]">&lt;prefix&gt;@reg_pass</span>).
             </p>
           </div>
         </div>
@@ -717,7 +896,10 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <form onSubmit={handleResetStudentPassword} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <form
+          onSubmit={handleResetStudentPassword}
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+        >
           <input
             type="email"
             required
@@ -746,159 +928,376 @@ export default function AdminDashboard() {
         </form>
       </section>
 
-      {/* Analytics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="glass-panel p-6 space-y-2 border border-[#7ECEB7]/20">
+      {/* OVERVIEW STATS & CATEGORY BREAKDOWN CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Total Master Roster */}
+        <div className="glass-panel p-5 space-y-2 border border-[#7ECEB7]/20 relative overflow-hidden">
           <div className="flex items-center justify-between text-[#D6C7A1]">
-            <span className="text-sm font-medium">Master Roster</span>
+            <span className="text-xs uppercase tracking-wider font-semibold">Master Roster</span>
             <Users className="w-5 h-5 text-[#7ECEB7]" />
           </div>
           <div className="text-3xl font-bold text-[#F5EBE0]">{totalMaster}</div>
-          <p className="text-xs text-[#D6C7A1]/70">Pre-approved students in Google Sheet</p>
+          <p className="text-xs text-[#D6C7A1]/70">Eligible students in sheet</p>
         </div>
 
-        <div className="glass-panel p-6 space-y-2 border border-[#7ECEB7]/20">
+        {/* Total Registered */}
+        <div className="glass-panel p-5 space-y-2 border border-[#7ECEB7]/20 relative overflow-hidden">
           <div className="flex items-center justify-between text-[#D6C7A1]">
-            <span className="text-sm font-medium">Registered Students</span>
-            <ShieldCheck className="w-5 h-5 text-[#7ECEB7]" />
+            <span className="text-xs uppercase tracking-wider font-semibold">Registered Students</span>
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
           </div>
           <div className="text-3xl font-bold text-[#F5EBE0]">{totalReg}</div>
-          <p className="text-xs text-[#D6C7A1]/70">Confirmed course selections</p>
+          <p className="text-xs text-[#D6C7A1]/70">Confirmed course submissions</p>
         </div>
 
-        <div className="glass-panel p-6 space-y-2 border border-[#7ECEB7]/20">
-          <div className="flex items-center justify-between text-[#D6C7A1]">
-            <span className="text-sm font-medium">Total Offerings</span>
-            <BookOpen className="w-5 h-5 text-[#A07850]" />
+        {/* Sports Category Summary Card */}
+        <div
+          onClick={() => setCourseCategoryTab("Sports")}
+          className={`glass-panel p-5 space-y-2 border transition-all cursor-pointer hover:border-[#7ECEB7]/50 ${
+            courseCategoryTab === "Sports"
+              ? "border-[#7ECEB7] bg-[#037A74]/20 shadow-lg shadow-[#037A74]/20"
+              : "border-[#7ECEB7]/20"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs uppercase tracking-wider font-semibold text-[#7ECEB7] flex items-center gap-1.5">
+              <Dumbbell className="w-4 h-4" /> Sports (8)
+            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                exportCategoryToExcel("Sports");
+              }}
+              title="Export Sports Excel"
+              className="text-[#7ECEB7] hover:text-white p-1 rounded hover:bg-white/10"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <div className="text-3xl font-bold text-[#F5EBE0]">{courses.length}</div>
-          <p className="text-xs text-[#D6C7A1]/70">8 Sports + 10 Student Life courses</p>
+          <div className="flex items-baseline justify-between">
+            <div className="text-2xl font-bold text-[#F5EBE0]">
+              {sportsS1Total + sportsS2Total} <span className="text-xs font-normal text-[#D6C7A1]">seats</span>
+            </div>
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#072C28] text-[#7ECEB7]">
+              S1: {sportsS1Total} | S2: {sportsS2Total}
+            </span>
+          </div>
+          <p className="text-xs text-[#D6C7A1]/70">Click to filter Sports courses below</p>
+        </div>
+
+        {/* Student Life Category Summary Card */}
+        <div
+          onClick={() => setCourseCategoryTab("Student Life")}
+          className={`glass-panel p-5 space-y-2 border transition-all cursor-pointer hover:border-[#A07850]/50 ${
+            courseCategoryTab === "Student Life"
+              ? "border-[#A07850] bg-[#A07850]/20 shadow-lg shadow-[#A07850]/20"
+              : "border-[#7ECEB7]/20"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs uppercase tracking-wider font-semibold text-[#A07850] flex items-center gap-1.5">
+              <GraduationCap className="w-4 h-4" /> Student Life (11)
+            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                exportCategoryToExcel("Student Life");
+              }}
+              title="Export Student Life Excel"
+              className="text-[#A07850] hover:text-white p-1 rounded hover:bg-white/10"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <div className="text-2xl font-bold text-[#F5EBE0]">
+              {studentLifeS1Total + studentLifeS2Total} <span className="text-xs font-normal text-[#D6C7A1]">seats</span>
+            </div>
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#072C28] text-[#A07850]">
+              S1: {studentLifeS1Total} | S2: {studentLifeS2Total}
+            </span>
+          </div>
+          <p className="text-xs text-[#D6C7A1]/70">Click to filter Student Life courses</p>
         </div>
       </div>
 
-      {/* Course-Specific Dynamic Export Cards */}
+      {/* COURSE-SPECIFIC OCCUPANCY & ENROLLED STUDENT QUERY SECTION */}
       <section className="glass-panel p-6 space-y-6 border border-[#7ECEB7]/20">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#7ECEB7]/15 pb-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#7ECEB7]/15 pb-4">
           <div>
-            <h2 className="text-lg font-bold text-[#F5EBE0]">Course-Specific Excel Export & Occupancy</h2>
-            <p className="text-xs text-[#D6C7A1]">Download registration roster for individual courses by session.</p>
+            <h2 className="text-xl font-bold text-[#F5EBE0] flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-[#7ECEB7]" />
+              Subject Offerings & Session Occupancy
+            </h2>
+            <p className="text-xs text-[#D6C7A1] mt-0.5">
+              Inspect student enrollments by subject and session, or export detailed Excel rosters.
+            </p>
+          </div>
+
+          {/* Category Tabs & Search Bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Category Filter Tabs */}
+            <div className="flex items-center bg-[#072C28] p-1 rounded-xl border border-[#7ECEB7]/20 text-xs font-semibold">
+              <button
+                onClick={() => setCourseCategoryTab("ALL")}
+                className={`px-3 py-1.5 rounded-lg transition-all ${
+                  courseCategoryTab === "ALL"
+                    ? "bg-[#037A74] text-white shadow-sm"
+                    : "text-[#D6C7A1] hover:text-white"
+                }`}
+              >
+                All ({courses.length})
+              </button>
+              <button
+                onClick={() => setCourseCategoryTab("Sports")}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+                  courseCategoryTab === "Sports"
+                    ? "bg-[#037A74] text-white shadow-sm"
+                    : "text-[#D6C7A1] hover:text-white"
+                }`}
+              >
+                <Dumbbell className="w-3.5 h-3.5" /> Sports ({sportsCourses.length})
+              </button>
+              <button
+                onClick={() => setCourseCategoryTab("Student Life")}
+                className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+                  courseCategoryTab === "Student Life"
+                    ? "bg-[#A07850] text-white shadow-sm"
+                    : "text-[#D6C7A1] hover:text-white"
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" /> Student Life ({studentLifeCourses.length})
+              </button>
+            </div>
+
+            {/* Course Search */}
+            <div className="relative min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7ECEB7]/70" />
+              <input
+                type="text"
+                placeholder="Search subject..."
+                value={courseSearchQuery}
+                onChange={(e) => setCourseSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-xs text-[#F5EBE0] placeholder-[#D6C7A1]/40 focus:outline-none focus:border-[#7ECEB7]"
+              />
+              {courseSearchQuery && (
+                <button
+                  onClick={() => setCourseSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#D6C7A1] hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
+        {/* COURSES GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {courses.map((course) => {
+          {filteredCourses.map((course) => {
             const s1Percentage = Math.round((course.s1SeatsOccupied / course.maxSeats) * 100);
             const s2Percentage = Math.round((course.s2SeatsOccupied / course.maxSeats) * 100);
             const isExpanded = expandedCourseId === course.id;
 
-            const matchCourseCard = (val: string, id: string, name: string) => {
-              if (!val) return false;
-              if (val === id || val === name) return true;
-              if (id === 'SL04' && (val === 'Folk Dance' || val === 'Folk Dance - FIPA')) return true;
-              if (id === 'SL05' && (val === 'Yoga Therapy & Wellness Consultant' || val.includes('Mental Wellbeing') || val.includes('Mental Well-being'))) return true;
-              if (id === 'SL06' && (val === 'Traditional Music - Invocatory Song' || val === 'Introduction to Traditional Music')) return true;
-              if (id === 'SL07' && (val === 'Introduction to Folk and Light Music' || val.includes('Music Band'))) return true;
-              if (id === 'SL11' && (val === 'Traditional Dance' || val === 'Invocatory_Dances' || val === 'Invocatory Dances')) return true;
-              return false;
-            };
-
             const s1Students = registrations.filter((r) => {
-              if (r.status?.toUpperCase() !== "CONFIRMED") return false;
-              return matchCourseCard(r.s1Sports, course.id, course.name) || matchCourseCard(r.s1StudentLife, course.id, course.name);
+              if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+              return matchCourse(r.s1Sports, course.id, course.name) || matchCourse(r.s1StudentLife, course.id, course.name);
             });
 
             const s2Students = registrations.filter((r) => {
-              if (r.status?.toUpperCase() !== "CONFIRMED") return false;
-              return matchCourseCard(r.s2Sports, course.id, course.name) || matchCourseCard(r.s2StudentLife, course.id, course.name);
+              if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+              return matchCourse(r.s2Sports, course.id, course.name) || matchCourse(r.s2StudentLife, course.id, course.name);
             });
 
+            const cardQuery = (inCardSearchQuery[course.id] || "").toLowerCase().trim();
+
+            const s1Filtered = s1Students.filter((s) => {
+              if (!cardQuery) return true;
+              return (
+                s.name?.toLowerCase().includes(cardQuery) ||
+                s.regNo?.toLowerCase().includes(cardQuery) ||
+                s.email?.toLowerCase().includes(cardQuery)
+              );
+            });
+
+            const s2Filtered = s2Students.filter((s) => {
+              if (!cardQuery) return true;
+              return (
+                s.name?.toLowerCase().includes(cardQuery) ||
+                s.regNo?.toLowerCase().includes(cardQuery) ||
+                s.email?.toLowerCase().includes(cardQuery)
+              );
+            });
+
+            const isSports = course.category === "Sports";
+
             return (
-              <div key={course.id} className="glass-card p-5 space-y-4 flex flex-col justify-between border-[#7ECEB7]/15">
+              <div
+                key={course.id}
+                className={`glass-card p-5 space-y-4 flex flex-col justify-between border transition-all ${
+                  isSports ? "border-[#7ECEB7]/25 hover:border-[#7ECEB7]/40" : "border-[#A07850]/25 hover:border-[#A07850]/40"
+                }`}
+              >
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-base text-[#F5EBE0]">{course.name}</h3>
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-[#072C28] border border-[#7ECEB7]/20 text-[#D6C7A1] font-mono">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-base text-[#F5EBE0]">{course.name}</h3>
+                      </div>
+                      {course.faculty && (
+                        <p className="text-xs text-[#D6C7A1]/80 mt-0.5">Faculty: {course.faculty}</p>
+                      )}
+                    </div>
+
+                    <span
+                      className={`text-xs px-2.5 py-1 rounded-full border font-mono whitespace-nowrap flex items-center gap-1 ${
+                        isSports
+                          ? "bg-[#037A74]/20 border-[#7ECEB7]/30 text-[#7ECEB7]"
+                          : "bg-[#A07850]/20 border-[#A07850]/30 text-[#A07850]"
+                      }`}
+                    >
+                      {isSports ? <Dumbbell className="w-3 h-3" /> : <GraduationCap className="w-3 h-3" />}
                       {course.category} ({course.id})
                     </span>
                   </div>
 
                   {/* Session 1 Fill Bar */}
-                  <div className="space-y-1">
+                  <div className="space-y-1 bg-[#072C28]/60 p-2.5 rounded-xl border border-[#7ECEB7]/10">
                     <div className="flex justify-between text-xs font-medium text-[#D6C7A1]">
-                      <span>Session 1 Occupancy</span>
-                      <span>{course.s1SeatsOccupied} / {course.maxSeats} seats</span>
+                      <span className="flex items-center gap-1 text-[#7ECEB7] font-semibold">
+                        Session 1 Occupancy
+                      </span>
+                      <span>
+                        <strong className="text-white">{course.s1SeatsOccupied}</strong> / {course.maxSeats} seats
+                      </span>
                     </div>
-                    <div className="w-full h-2 bg-[#072C28] rounded-full overflow-hidden">
+                    <div className="w-full h-2.5 bg-[#041C19] rounded-full overflow-hidden border border-[#7ECEB7]/10">
                       <div
-                        className={`h-full transition-all duration-500 ${s1Percentage >= 100 ? "bg-red-500" : "bg-[#037A74]"}`}
-                        style={{ width: `${s1Percentage}%` }}
+                        className={`h-full transition-all duration-500 ${
+                          s1Percentage >= 100 ? "bg-red-500" : "bg-[#037A74]"
+                        }`}
+                        style={{ width: `${Math.min(100, s1Percentage)}%` }}
                       ></div>
                     </div>
                   </div>
 
                   {/* Session 2 Fill Bar */}
-                  <div className="space-y-1">
+                  <div className="space-y-1 bg-[#072C28]/60 p-2.5 rounded-xl border border-[#7ECEB7]/10">
                     <div className="flex justify-between text-xs font-medium text-[#D6C7A1]">
-                      <span>Session 2 Occupancy</span>
-                      <span>{course.s2SeatsOccupied} / {course.maxSeats} seats</span>
+                      <span className="flex items-center gap-1 text-[#A07850] font-semibold">
+                        Session 2 Occupancy
+                      </span>
+                      <span>
+                        <strong className="text-white">{course.s2SeatsOccupied}</strong> / {course.maxSeats} seats
+                      </span>
                     </div>
-                    <div className="w-full h-2 bg-[#072C28] rounded-full overflow-hidden">
+                    <div className="w-full h-2.5 bg-[#041C19] rounded-full overflow-hidden border border-[#7ECEB7]/10">
                       <div
-                        className={`h-full transition-all duration-500 ${s2Percentage >= 100 ? "bg-red-500" : "bg-[#A07850]"}`}
-                        style={{ width: `${s2Percentage}%` }}
+                        className={`h-full transition-all duration-500 ${
+                          s2Percentage >= 100 ? "bg-red-500" : "bg-[#A07850]"
+                        }`}
+                        style={{ width: `${Math.min(100, s2Percentage)}%` }}
                       ></div>
                     </div>
                   </div>
                 </div>
 
-                {/* EXPANDABLE INLINE ROSTER VIEW */}
+                {/* EXPANDABLE INLINE ROSTER QUERY VIEW */}
                 {isExpanded && (
-                  <div className="pt-3 border-t border-[#7ECEB7]/15 space-y-4 animate-fade-in text-xs">
+                  <div className="pt-3 border-t border-[#7ECEB7]/15 space-y-4 animate-fade-in text-xs bg-[#041C19]/60 p-3 rounded-xl">
+                    {/* Search inside this course card */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7ECEB7]/70" />
+                      <input
+                        type="text"
+                        placeholder="Search student in this subject..."
+                        value={inCardSearchQuery[course.id] || ""}
+                        onChange={(e) =>
+                          setInCardSearchQuery((prev) => ({
+                            ...prev,
+                            [course.id]: e.target.value,
+                          }))
+                        }
+                        className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#072C28] border border-[#7ECEB7]/20 text-xs text-[#F5EBE0] placeholder-[#D6C7A1]/40 focus:outline-none focus:border-[#7ECEB7]"
+                      />
+                    </div>
+
                     {/* Session 1 List */}
-                    <div className="space-y-1">
-                      <h4 className="font-bold text-[#7ECEB7]">Session 1 Enrolled ({s1Students.length})</h4>
-                      {s1Students.length > 0 ? (
-                        <div className="max-h-36 overflow-y-auto space-y-1 bg-[#072C28] p-2 rounded-lg border border-[#7ECEB7]/15">
-                          {s1Students.map((s, idx) => (
-                            <div key={idx} className="flex items-center justify-between text-[11px] font-mono text-[#F5EBE0] py-0.5 border-b border-[#7ECEB7]/10 last:border-none">
-                              <span className="text-[#D6C7A1]">{s.regNo}</span>
-                              <span className="truncate max-w-[120px] font-sans font-medium">{s.name}</span>
-                              <span className="text-[#D6C7A1]/70 truncate max-w-[120px]">{s.email}</span>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-bold text-[#7ECEB7] flex items-center gap-1.5">
+                          <span>Session 1 Enrolled</span>
+                          <span className="px-2 py-0.5 rounded-full bg-[#037A74]/30 text-white text-[10px] font-mono">
+                            {s1Filtered.length}
+                          </span>
+                        </h4>
+                      </div>
+                      {s1Filtered.length > 0 ? (
+                        <div className="max-h-40 overflow-y-auto space-y-1 bg-[#072C28] p-2 rounded-lg border border-[#7ECEB7]/15">
+                          {s1Filtered.map((s, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between text-[11px] font-mono text-[#F5EBE0] py-1 border-b border-[#7ECEB7]/10 last:border-none px-1 hover:bg-[#037A74]/10 rounded"
+                            >
+                              <span className="text-[#D6C7A1] font-semibold min-w-[70px]">{s.regNo}</span>
+                              <span className="truncate max-w-[130px] font-sans font-medium text-white">
+                                {s.name}
+                              </span>
+                              <span className="text-[#D6C7A1]/70 truncate max-w-[130px]">{s.email}</span>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-[11px] text-[#D6C7A1]/50 italic">No students registered for Session 1 yet.</p>
+                        <p className="text-[11px] text-[#D6C7A1]/50 italic p-1">
+                          No matching students for Session 1.
+                        </p>
                       )}
                     </div>
 
                     {/* Session 2 List */}
-                    <div className="space-y-1">
-                      <h4 className="font-bold text-[#A07850]">Session 2 Enrolled ({s2Students.length})</h4>
-                      {s2Students.length > 0 ? (
-                        <div className="max-h-36 overflow-y-auto space-y-1 bg-[#072C28] p-2 rounded-lg border border-[#7ECEB7]/15">
-                          {s2Students.map((s, idx) => (
-                            <div key={idx} className="flex items-center justify-between text-[11px] font-mono text-[#F5EBE0] py-0.5 border-b border-[#7ECEB7]/10 last:border-none">
-                              <span className="text-[#D6C7A1]">{s.regNo}</span>
-                              <span className="truncate max-w-[120px] font-sans font-medium">{s.name}</span>
-                              <span className="text-[#D6C7A1]/70 truncate max-w-[120px]">{s.email}</span>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-bold text-[#A07850] flex items-center gap-1.5">
+                          <span>Session 2 Enrolled</span>
+                          <span className="px-2 py-0.5 rounded-full bg-[#A07850]/30 text-white text-[10px] font-mono">
+                            {s2Filtered.length}
+                          </span>
+                        </h4>
+                      </div>
+                      {s2Filtered.length > 0 ? (
+                        <div className="max-h-40 overflow-y-auto space-y-1 bg-[#072C28] p-2 rounded-lg border border-[#7ECEB7]/15">
+                          {s2Filtered.map((s, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between text-[11px] font-mono text-[#F5EBE0] py-1 border-b border-[#7ECEB7]/10 last:border-none px-1 hover:bg-[#A07850]/10 rounded"
+                            >
+                              <span className="text-[#D6C7A1] font-semibold min-w-[70px]">{s.regNo}</span>
+                              <span className="truncate max-w-[130px] font-sans font-medium text-white">
+                                {s.name}
+                              </span>
+                              <span className="text-[#D6C7A1]/70 truncate max-w-[130px]">{s.email}</span>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-[11px] text-[#D6C7A1]/50 italic">No students registered for Session 2 yet.</p>
+                        <p className="text-[11px] text-[#D6C7A1]/50 italic p-1">
+                          No matching students for Session 2.
+                        </p>
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* ACTION BUTTONS: VIEW ENROLLED & EXPORT COMBINED EXCEL */}
+                {/* ACTION BUTTONS */}
                 <div className="pt-3 border-t border-[#7ECEB7]/15 grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <button
                     onClick={() => setExpandedCourseId(isExpanded ? null : course.id)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#072C28] hover:bg-[#037A74]/20 text-[#D6C7A1] border border-[#7ECEB7]/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#072C28] hover:bg-[#037A74]/20 text-[#D6C7A1] hover:text-white border border-[#7ECEB7]/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
                   >
-                    <span>{isExpanded ? "Hide List" : `View Students (${s1Students.length + s2Students.length})`}</span>
+                    <UserCheck className="w-3.5 h-3.5 text-[#7ECEB7]" />
+                    <span>
+                      {isExpanded ? "Hide Roster" : `View Students (${s1Students.length + s2Students.length})`}
+                    </span>
                     {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   </button>
 
@@ -913,49 +1312,165 @@ export default function AdminDashboard() {
               </div>
             );
           })}
+
+          {filteredCourses.length === 0 && (
+            <div className="col-span-full p-8 text-center glass-panel border border-[#7ECEB7]/15 text-[#D6C7A1]/60">
+              No subjects found matching current category & search criteria.
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Student Registration Roster Table */}
-      <section className="glass-panel p-6 space-y-4 overflow-hidden border border-[#7ECEB7]/20">
-        <h2 className="text-lg font-bold border-b border-[#7ECEB7]/15 pb-3 text-[#F5EBE0]">Registered Student Roster ({registrations.length})</h2>
+      {/* MASTER REGISTERED STUDENT ROSTER TABLE WITH ADVANCED MULTI-FILTERING */}
+      <section className="glass-panel p-6 space-y-6 overflow-hidden border border-[#7ECEB7]/20">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#7ECEB7]/15 pb-4">
+          <div>
+            <h2 className="text-xl font-bold text-[#F5EBE0] flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#7ECEB7]" />
+              Master Student Registration Roster
+            </h2>
+            <p className="text-xs text-[#D6C7A1] mt-0.5">
+              Query registered students by search term, category, subject, or session.
+            </p>
+          </div>
 
-        <div className="overflow-x-auto">
+          <div className="flex items-center gap-2 text-xs font-mono text-[#7ECEB7] bg-[#072C28] px-3 py-1.5 rounded-xl border border-[#7ECEB7]/20">
+            <span>Showing {filteredRegistrations.length} of {registrations.length} registrations</span>
+          </div>
+        </div>
+
+        {/* MULTI-FILTER BAR */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-[#072C28]/60 p-4 rounded-xl border border-[#7ECEB7]/15">
+          {/* Search Input */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-[#D6C7A1] uppercase tracking-wider flex items-center gap-1">
+              <Search className="w-3 h-3 text-[#7ECEB7]" /> Search Student
+            </label>
+            <input
+              type="text"
+              placeholder="Name, Reg No, or Email..."
+              value={rosterSearchQuery}
+              onChange={(e) => setRosterSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-[#041C19] border border-[#7ECEB7]/20 text-xs text-[#F5EBE0] placeholder-[#D6C7A1]/40 focus:outline-none focus:border-[#7ECEB7]"
+            />
+          </div>
+
+          {/* Category Dropdown Filter */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-[#D6C7A1] uppercase tracking-wider flex items-center gap-1">
+              <Layers className="w-3 h-3 text-[#7ECEB7]" /> Category
+            </label>
+            <select
+              value={rosterCategoryFilter}
+              onChange={(e) => setRosterCategoryFilter(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-xl bg-[#041C19] border border-[#7ECEB7]/20 text-xs text-[#F5EBE0] focus:outline-none focus:border-[#7ECEB7]"
+            >
+              <option value="ALL">All Categories</option>
+              <option value="Sports">Sports Only</option>
+              <option value="Student Life">Student Life Only</option>
+            </select>
+          </div>
+
+          {/* Specific Course Dropdown Filter */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-[#D6C7A1] uppercase tracking-wider flex items-center gap-1">
+              <BookOpen className="w-3 h-3 text-[#7ECEB7]" /> Filter Subject
+            </label>
+            <select
+              value={rosterCourseFilter}
+              onChange={(e) => setRosterCourseFilter(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-[#041C19] border border-[#7ECEB7]/20 text-xs text-[#F5EBE0] focus:outline-none focus:border-[#7ECEB7]"
+            >
+              <option value="ALL">All Subjects (19)</option>
+              <optgroup label="Sports Courses">
+                {sportsCourses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.id})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Student Life Courses">
+                {studentLifeCourses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.id})
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+          </div>
+
+          {/* Session Dropdown Filter */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-[#D6C7A1] uppercase tracking-wider flex items-center gap-1">
+              <Filter className="w-3 h-3 text-[#7ECEB7]" /> Session Filter
+            </label>
+            <select
+              value={rosterSessionFilter}
+              onChange={(e) => setRosterSessionFilter(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-xl bg-[#041C19] border border-[#7ECEB7]/20 text-xs text-[#F5EBE0] focus:outline-none focus:border-[#7ECEB7]"
+            >
+              <option value="ALL">All Sessions (S1 & S2)</option>
+              <option value="S1">Registered in Session 1</option>
+              <option value="S2">Registered in Session 2</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Reset Filter Button */}
+        {(rosterSearchQuery || rosterCategoryFilter !== "ALL" || rosterCourseFilter !== "ALL" || rosterSessionFilter !== "ALL") && (
+          <div className="flex items-center justify-between text-xs pt-1">
+            <span className="text-[#D6C7A1]/80">Active filters applied</span>
+            <button
+              onClick={() => {
+                setRosterSearchQuery("");
+                setRosterCategoryFilter("ALL");
+                setRosterCourseFilter("ALL");
+                setRosterSessionFilter("ALL");
+              }}
+              className="text-[#7ECEB7] hover:text-white flex items-center gap-1 underline"
+            >
+              <RefreshCw className="w-3 h-3" /> Clear All Filters
+            </button>
+          </div>
+        )}
+
+        {/* ROSTER TABLE */}
+        <div className="overflow-x-auto rounded-xl border border-[#7ECEB7]/15">
           <table className="w-full text-left text-sm text-[#F5EBE0]">
-            <thead className="bg-[#072C28] text-[#D6C7A1] uppercase text-xs">
+            <thead className="bg-[#072C28] text-[#D6C7A1] uppercase text-[11px] tracking-wider font-semibold">
               <tr>
-                <th className="p-3">Registration No</th>
-                <th className="p-3">Student Name</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Session 1 Sports</th>
-                <th className="p-3">Session 1 Life</th>
-                <th className="p-3">Session 2 Sports</th>
-                <th className="p-3">Session 2 Life</th>
-                <th className="p-3">Status</th>
+                <th className="p-3.5">Reg No</th>
+                <th className="p-3.5">Student Name</th>
+                <th className="p-3.5">Email</th>
+                <th className="p-3.5 text-[#7ECEB7]">S1 Sports</th>
+                <th className="p-3.5 text-[#A07850]">S1 Student Life</th>
+                <th className="p-3.5 text-[#7ECEB7]">S2 Sports</th>
+                <th className="p-3.5 text-[#A07850]">S2 Student Life</th>
+                <th className="p-3.5">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#7ECEB7]/15">
-              {registrations.map((r, i) => (
+            <tbody className="divide-y divide-[#7ECEB7]/15 bg-[#041C19]/40">
+              {filteredRegistrations.map((r, i) => (
                 <tr key={i} className="hover:bg-[#037A74]/15 transition-colors">
-                  <td className="p-3 font-mono text-[#D6C7A1]">{r.regNo}</td>
-                  <td className="p-3 font-medium text-[#F5EBE0]">{r.name}</td>
-                  <td className="p-3 font-mono text-[#D6C7A1]">{r.email}</td>
-                  <td className="p-3">{r.s1Sports}</td>
-                  <td className="p-3">{r.s1StudentLife}</td>
-                  <td className="p-3">{r.s2Sports}</td>
-                  <td className="p-3">{r.s2StudentLife}</td>
-                  <td className="p-3">
-                    <span className="bg-[#7ECEB7]/20 text-[#7ECEB7] border border-[#7ECEB7]/30 px-2.5 py-0.5 rounded-full text-xs font-mono">
-                      {r.status}
+                  <td className="p-3.5 font-mono text-[#D6C7A1] font-semibold">{r.regNo}</td>
+                  <td className="p-3.5 font-medium text-white">{r.name}</td>
+                  <td className="p-3.5 font-mono text-xs text-[#D6C7A1]/80">{r.email}</td>
+                  <td className="p-3.5 font-medium text-xs text-[#7ECEB7]">{r.s1Sports || <span className="text-gray-600">-</span>}</td>
+                  <td className="p-3.5 font-medium text-xs text-[#A07850]">{r.s1StudentLife || <span className="text-gray-600">-</span>}</td>
+                  <td className="p-3.5 font-medium text-xs text-[#7ECEB7]">{r.s2Sports || <span className="text-gray-600">-</span>}</td>
+                  <td className="p-3.5 font-medium text-xs text-[#A07850]">{r.s2StudentLife || <span className="text-gray-600">-</span>}</td>
+                  <td className="p-3.5">
+                    <span className="bg-[#7ECEB7]/20 text-[#7ECEB7] border border-[#7ECEB7]/30 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold">
+                      {r.status || "CONFIRMED"}
                     </span>
                   </td>
                 </tr>
               ))}
 
-              {registrations.length === 0 && (
+              {filteredRegistrations.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-[#D6C7A1]/50">
-                    No registered students found yet.
+                  <td colSpan={8} className="p-12 text-center text-[#D6C7A1]/50 italic">
+                    No student registrations found matching your query.
                   </td>
                 </tr>
               )}
