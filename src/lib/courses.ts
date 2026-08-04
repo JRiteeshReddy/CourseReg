@@ -46,6 +46,13 @@ export interface RegistrationRow {
   facultyName?: string;
 }
 
+export interface MasterStudent {
+  regNo: string;
+  name: string;
+  email: string;
+  facultyName?: string;
+}
+
 export interface SeatHold {
   email: string;
   s1Sports?: string;

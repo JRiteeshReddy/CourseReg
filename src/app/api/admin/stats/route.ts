@@ -38,6 +38,7 @@ export async function GET() {
       totalRegisteredStudents: enrichedRegistrations.length,
       courses: coursesWithSeats,
       registrations: enrichedRegistrations,
+      masterStudents,
       isRegistrationOpen,
     });
   } catch (error: any) {

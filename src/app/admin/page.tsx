@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { CalculatedCourse, RegistrationRow } from "@/lib/courses";
+import { CalculatedCourse, RegistrationRow, MasterStudent } from "@/lib/courses";
 import {
   ShieldCheck,
   Download,
@@ -40,6 +40,7 @@ export default function AdminDashboard() {
   const [mounted, setMounted] = useState(false);
   const [courses, setCourses] = useState<CalculatedCourse[]>([]);
   const [registrations, setRegistrations] = useState<RegistrationRow[]>([]);
+  const [masterStudents, setMasterStudents] = useState<MasterStudent[]>([]);
   const [totalMaster, setTotalMaster] = useState(0);
   const [totalReg, setTotalReg] = useState(0);
   const [adminEmail, setAdminEmail] = useState("");
@@ -106,6 +107,7 @@ export default function AdminDashboard() {
       const data = await res.json();
       setCourses(data.courses || []);
       setRegistrations(data.registrations || []);
+      setMasterStudents(data.masterStudents || []);
       setTotalMaster(data.totalMasterStudents || 0);
       setTotalReg(data.totalRegisteredStudents || 0);
       setAdminEmail(data.adminEmail || "");
@@ -437,22 +439,34 @@ export default function AdminDashboard() {
     XLSX.writeFile(workbook, `${safeFileName}_Combined_Course_Roster.xlsx`);
   };
 
-  // Faculty-Specific Attendance Excel Export (based on Student Data Excel facultyName)
+  // Faculty-Specific Attendance Excel Export (based on Master Student Data & Registrations)
   const exportFacultyExcel = (targetFaculty: string) => {
-    const targetStudents = registrations.filter((r) => {
+    const facMaster = masterStudents.filter(
+      (m) => (m.facultyName || "").trim().toLowerCase() === targetFaculty.trim().toLowerCase()
+    );
+
+    const targetRegistered = registrations.filter((r) => {
       if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
       const facName = (r.facultyName || "").trim();
       if (!facName) return targetFaculty === "Unassigned Faculty";
       return facName.toLowerCase() === targetFaculty.trim().toLowerCase();
     });
 
-    if (targetStudents.length === 0) {
-      alert(`No registered students found assigned to faculty: ${targetFaculty}`);
+    const regEmails = new Set(targetRegistered.map((r) => (r.email || "").toLowerCase()));
+    const regNos = new Set(targetRegistered.map((r) => (r.regNo || "").toLowerCase()));
+    const pendingStudents = facMaster.filter(
+      (m) => !regEmails.has((m.email || "").toLowerCase()) && !regNos.has((m.regNo || "").toLowerCase())
+    );
+
+    const totalStudentsCount = Math.max(facMaster.length, targetRegistered.length);
+
+    if (totalStudentsCount === 0) {
+      alert(`No master or registered students found assigned to faculty: ${targetFaculty}`);
       return;
     }
 
     const targetCourses = courses.filter((c) => {
-      return targetStudents.some((r) =>
+      return targetRegistered.some((r) =>
         matchCourse(r.s1Sports, c.id, c.name) ||
         matchCourse(r.s1StudentLife, c.id, c.name) ||
         matchCourse(r.s2Sports, c.id, c.name) ||
@@ -462,16 +476,19 @@ export default function AdminDashboard() {
 
     const aoaData: any[][] = [];
     aoaData.push(["FACULTY MENTOR / NAME:", targetFaculty]);
-    aoaData.push(["TOTAL ASSIGNED STUDENTS:", targetStudents.length]);
+    aoaData.push(["TOTAL MASTER ASSIGNED STUDENTS:", facMaster.length || totalStudentsCount]);
+    aoaData.push(["COMPLETED REGISTRATIONS:", targetRegistered.length]);
+    aoaData.push(["PENDING REGISTRATIONS:", pendingStudents.length]);
     aoaData.push(["REPORT GENERATION DATE:", new Date().toLocaleDateString()]);
     aoaData.push([]); // blank row
 
+    // Group registered students by chosen subjects
     targetCourses.forEach((c) => {
-      const s1Students = targetStudents.filter(
+      const s1Students = targetRegistered.filter(
         (r) => matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name)
       );
 
-      const s2Students = targetStudents.filter(
+      const s2Students = targetRegistered.filter(
         (r) => matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name)
       );
 
@@ -482,7 +499,7 @@ export default function AdminDashboard() {
 
       // Session 1 Table
       aoaData.push([`--- SESSION 1 REGISTERED STUDENTS (${s1Students.length}) ---`]);
-      aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Faculty Attendance Verification"]);
+      aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Attendance Verification"]);
 
       if (s1Students.length > 0) {
         s1Students.forEach((r, idx) => {
@@ -496,7 +513,7 @@ export default function AdminDashboard() {
 
       // Session 2 Table
       aoaData.push([`--- SESSION 2 REGISTERED STUDENTS (${s2Students.length}) ---`]);
-      aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Faculty Attendance Verification"]);
+      aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Attendance Verification"]);
 
       if (s2Students.length > 0) {
         s2Students.forEach((r, idx) => {
@@ -509,6 +526,16 @@ export default function AdminDashboard() {
       aoaData.push([]);
       aoaData.push([]);
     });
+
+    // Section for Pending / Unregistered Students assigned to this faculty
+    if (pendingStudents.length > 0) {
+      aoaData.push([`=== PENDING REGISTRATIONS (${pendingStudents.length} Students Not Yet Registered) ===`]);
+      aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Registration Status"]);
+      pendingStudents.forEach((m, idx) => {
+        aoaData.push([idx + 1, m.regNo, m.name, m.email, "Pending Registration"]);
+      });
+      aoaData.push([]);
+    }
 
     const workbook = XLSX.utils.book_new();
     const mainWorksheet = XLSX.utils.aoa_to_sheet(aoaData);
@@ -528,13 +555,21 @@ export default function AdminDashboard() {
   // Master Export for ALL Faculties into One Workbook
   const exportAllFacultiesExcel = () => {
     const allFacultyNames = (Array.from(
-      new Set(registrations.map((r) => r.facultyName?.trim()).filter(Boolean))
+      new Set([
+        ...masterStudents.map((m) => m.facultyName?.trim()).filter(Boolean),
+        ...registrations.map((r) => r.facultyName?.trim()).filter(Boolean),
+      ])
     ) as string[])
       .filter((fac) => {
-        return registrations.some((r) => {
-          if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
-          return (r.facultyName || "").trim().toLowerCase() === fac.trim().toLowerCase();
-        });
+        const hasMaster = masterStudents.some(
+          (m) => (m.facultyName || "").trim().toLowerCase() === fac.trim().toLowerCase()
+        );
+        const hasReg = registrations.some(
+          (r) =>
+            (r.status?.toUpperCase() === "CONFIRMED" || r.status?.toUpperCase() === "SUBMITTED") &&
+            (r.facultyName || "").trim().toLowerCase() === fac.trim().toLowerCase()
+        );
+        return hasMaster || hasReg;
       })
       .sort();
 
@@ -546,15 +581,24 @@ export default function AdminDashboard() {
     const workbook = XLSX.utils.book_new();
 
     allFacultyNames.forEach((fac) => {
-      const targetStudents = registrations.filter((r) => {
+      const facMaster = masterStudents.filter(
+        (m) => (m.facultyName || "").trim().toLowerCase() === fac.trim().toLowerCase()
+      );
+      const targetRegistered = registrations.filter((r) => {
         if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
         return (r.facultyName || "").trim().toLowerCase() === fac.trim().toLowerCase();
       });
 
-      if (targetStudents.length === 0) return;
+      if (facMaster.length === 0 && targetRegistered.length === 0) return;
+
+      const regEmails = new Set(targetRegistered.map((r) => (r.email || "").toLowerCase()));
+      const regNos = new Set(targetRegistered.map((r) => (r.regNo || "").toLowerCase()));
+      const pendingStudents = facMaster.filter(
+        (m) => !regEmails.has((m.email || "").toLowerCase()) && !regNos.has((m.regNo || "").toLowerCase())
+      );
 
       const targetCourses = courses.filter((c) => {
-        return targetStudents.some((r) =>
+        return targetRegistered.some((r) =>
           matchCourse(r.s1Sports, c.id, c.name) ||
           matchCourse(r.s1StudentLife, c.id, c.name) ||
           matchCourse(r.s2Sports, c.id, c.name) ||
@@ -564,15 +608,17 @@ export default function AdminDashboard() {
 
       const aoaData: any[][] = [];
       aoaData.push(["FACULTY MENTOR / NAME:", fac]);
-      aoaData.push(["TOTAL ASSIGNED STUDENTS:", targetStudents.length]);
+      aoaData.push(["TOTAL MASTER ASSIGNED STUDENTS:", facMaster.length || targetRegistered.length]);
+      aoaData.push(["COMPLETED REGISTRATIONS:", targetRegistered.length]);
+      aoaData.push(["PENDING REGISTRATIONS:", pendingStudents.length]);
       aoaData.push([]);
 
       targetCourses.forEach((c) => {
-        const s1Students = targetStudents.filter(
+        const s1Students = targetRegistered.filter(
           (r) => matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name)
         );
 
-        const s2Students = targetStudents.filter(
+        const s2Students = targetRegistered.filter(
           (r) => matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name)
         );
 
@@ -602,6 +648,15 @@ export default function AdminDashboard() {
 
         aoaData.push([]);
       });
+
+      if (pendingStudents.length > 0) {
+        aoaData.push([`=== PENDING REGISTRATIONS (${pendingStudents.length} Students Not Yet Registered) ===`]);
+        aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Status"]);
+        pendingStudents.forEach((m, idx) => {
+          aoaData.push([idx + 1, m.regNo, m.name, m.email, "Pending Registration"]);
+        });
+        aoaData.push([]);
+      }
 
       const sheet = XLSX.utils.aoa_to_sheet(aoaData);
       sheet["!cols"] = [{ wch: 8 }, { wch: 22 }, { wch: 28 }, { wch: 35 }, { wch: 25 }];
@@ -680,15 +735,23 @@ export default function AdminDashboard() {
   const studentLifeS1Total = studentLifeCourses.reduce((acc, c) => acc + c.s1SeatsOccupied, 0);
   const studentLifeS2Total = studentLifeCourses.reduce((acc, c) => acc + c.s2SeatsOccupied, 0);
 
-  // Unique faculty list derived ONLY from faculties with > 0 registered students
+  // Unique faculty list derived from master student list & registrations
   const allFaculties = (Array.from(
-    new Set(registrations.map((r) => r.facultyName?.trim()).filter(Boolean))
+    new Set([
+      ...masterStudents.map((m) => m.facultyName?.trim()).filter(Boolean),
+      ...registrations.map((r) => r.facultyName?.trim()).filter(Boolean),
+    ])
   ) as string[])
     .filter((facName) => {
-      return registrations.some((r) => {
-        if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
-        return (r.facultyName || "").trim().toLowerCase() === facName.trim().toLowerCase();
-      });
+      const hasMaster = masterStudents.some(
+        (m) => (m.facultyName || "").trim().toLowerCase() === facName.trim().toLowerCase()
+      );
+      const hasReg = registrations.some(
+        (r) =>
+          (r.status?.toUpperCase() === "CONFIRMED" || r.status?.toUpperCase() === "SUBMITTED") &&
+          (r.facultyName || "").trim().toLowerCase() === facName.trim().toLowerCase()
+      );
+      return hasMaster || hasReg;
     })
     .sort();
 
@@ -698,11 +761,10 @@ export default function AdminDashboard() {
     const q = facultySearchQuery.toLowerCase().trim();
     if (fac.toLowerCase().includes(q)) return true;
 
-    // Check if any student assigned to this faculty chose a subject matching query
-    const facStudents = registrations.filter(
+    const facRegs = registrations.filter(
       (r) => (r.facultyName || "").trim().toLowerCase() === fac.toLowerCase()
     );
-    return facStudents.some(
+    return facRegs.some(
       (r) =>
         r.s1Sports?.toLowerCase().includes(q) ||
         r.s1StudentLife?.toLowerCase().includes(q) ||
@@ -714,17 +776,32 @@ export default function AdminDashboard() {
   // Default selected faculty if none selected
   const activeFaculty = selectedFaculty || filteredFaculties[0] || allFaculties[0] || "";
 
-  // Registered students belonging to the active faculty
-  const activeFacultyStudents = registrations.filter((r) => {
+  // Master students assigned to activeFaculty (e.g. 31 for Nagarjun Talawar)
+  const activeFacultyMasterStudents = masterStudents.filter(
+    (m) => (m.facultyName || "").trim().toLowerCase() === activeFaculty.trim().toLowerCase()
+  );
+
+  // Registered students belonging to activeFaculty (e.g. 25 for Nagarjun Talawar)
+  const activeFacultyRegisteredStudents = registrations.filter((r) => {
     if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
     const facName = (r.facultyName || "").trim();
     if (!facName) return activeFaculty === "Unassigned Faculty";
     return facName.toLowerCase() === activeFaculty.trim().toLowerCase();
   });
 
-  // Unique subjects chosen by students assigned to activeFaculty
+  // Pending / Unregistered students assigned to activeFaculty
+  const activeRegisteredEmails = new Set(activeFacultyRegisteredStudents.map((r) => (r.email || "").toLowerCase()));
+  const activeRegisteredRegNos = new Set(activeFacultyRegisteredStudents.map((r) => (r.regNo || "").toLowerCase()));
+  const activeFacultyPendingStudents = activeFacultyMasterStudents.filter(
+    (m) => !activeRegisteredEmails.has((m.email || "").toLowerCase()) && !activeRegisteredRegNos.has((m.regNo || "").toLowerCase())
+  );
+
+  // Total assigned student count for activeFaculty
+  const activeFacultyTotalAssignedCount = Math.max(activeFacultyMasterStudents.length, activeFacultyRegisteredStudents.length);
+
+  // Unique subjects chosen by registered students assigned to activeFaculty
   const activeFacultySubjects = courses.filter((c) => {
-    return activeFacultyStudents.some(
+    return activeFacultyRegisteredStudents.some(
       (r) =>
         matchCourse(r.s1Sports, c.id, c.name) ||
         matchCourse(r.s1StudentLife, c.id, c.name) ||
@@ -1618,11 +1695,16 @@ export default function AdminDashboard() {
             {filteredFaculties.map((fac) => {
               const isSelected = activeFaculty === fac;
               
-              // Total student count assigned to this faculty from registration data
-              const facStudentsCount = registrations.filter((r) => {
+              const masterCount = masterStudents.filter(
+                (m) => (m.facultyName || "").trim().toLowerCase() === fac.trim().toLowerCase()
+              ).length;
+
+              const regCount = registrations.filter((r) => {
                 if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
                 return (r.facultyName || "").trim().toLowerCase() === fac.trim().toLowerCase();
               }).length;
+
+              const totalAssigned = Math.max(masterCount, regCount);
 
               return (
                 <button
@@ -1641,7 +1723,7 @@ export default function AdminDashboard() {
                       isSelected ? "bg-white/20 text-white" : "bg-[#041C19] text-[#7ECEB7]"
                     }`}
                   >
-                    {facStudentsCount} students
+                    {totalAssigned} Assigned ({regCount} Registered)
                   </span>
                 </button>
               );
@@ -1664,11 +1746,11 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-bold text-[#F5EBE0]">{activeFaculty}</h3>
                   <span className="px-2.5 py-0.5 rounded-full bg-[#037A74]/20 border border-[#7ECEB7]/30 text-[#7ECEB7] text-xs font-mono">
-                    {activeFacultyStudents.length} Students Assigned
+                    {activeFacultyTotalAssignedCount} Master Assigned ({activeFacultyRegisteredStudents.length} Registered, {activeFacultyPendingStudents.length} Pending)
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 text-xs text-[#D6C7A1]">
-                  <span>Subjects Chosen by Students:</span>
+                  <span>Subjects Chosen by Registered Students:</span>
                   {activeFacultySubjects.length > 0 ? (
                     activeFacultySubjects.map((c) => (
                       <span key={c.id} className="font-semibold text-white bg-[#072C28] px-2 py-0.5 rounded border border-[#7ECEB7]/15">
@@ -1676,7 +1758,7 @@ export default function AdminDashboard() {
                       </span>
                     ))
                   ) : (
-                    <span className="italic text-[#D6C7A1]/60">No course selections registered yet.</span>
+                    <span className="italic text-[#D6C7A1]/60">No course selections submitted yet.</span>
                   )}
                 </div>
               </div>
@@ -1716,11 +1798,11 @@ export default function AdminDashboard() {
             {/* SUBJECT ROSTER TABLES FOR THIS FACULTY */}
             <div className="space-y-6">
               {activeFacultySubjects.map((c) => {
-                const s1All = activeFacultyStudents.filter(
+                const s1All = activeFacultyRegisteredStudents.filter(
                   (r) => matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name)
                 );
 
-                const s2All = activeFacultyStudents.filter(
+                const s2All = activeFacultyRegisteredStudents.filter(
                   (r) => matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name)
                 );
 
@@ -1743,7 +1825,7 @@ export default function AdminDashboard() {
                         <span className="text-xs text-[#D6C7A1] font-mono">[{c.category}]</span>
                       </div>
                       <span className="text-xs font-mono font-semibold text-[#7ECEB7]">
-                        Enrolled Students: {s1All.length + s2All.length}
+                        Registered Students: {s1All.length + s2All.length}
                       </span>
                     </div>
 
@@ -1818,9 +1900,45 @@ export default function AdminDashboard() {
                 );
               })}
 
-              {activeFacultySubjects.length === 0 && (
-                <div className="p-6 text-center text-[#D6C7A1]/60 italic border border-[#7ECEB7]/15 rounded-xl bg-[#072C28]/20">
-                  No registered students found under this faculty yet.
+              {/* PENDING / UNREGISTERED STUDENTS TABLE */}
+              {activeFacultyPendingStudents.length > 0 && (
+                <div className="space-y-3 bg-yellow-500/5 p-4 rounded-xl border border-yellow-500/20">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-sm text-yellow-300 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                      Pending / Unregistered Students ({activeFacultyPendingStudents.length})
+                    </h4>
+                    <span className="text-xs text-[#D6C7A1]">Assigned in master sheet, course submission pending</span>
+                  </div>
+
+                  <div className="overflow-x-auto rounded-lg border border-yellow-500/20 bg-[#041C19]">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-[#072C28] text-[#D6C7A1]">
+                        <tr>
+                          <th className="p-2">#</th>
+                          <th className="p-2">Reg No</th>
+                          <th className="p-2">Student Name</th>
+                          <th className="p-2">Email</th>
+                          <th className="p-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#7ECEB7]/10 text-[#F5EBE0]">
+                        {activeFacultyPendingStudents.map((pst, idx) => (
+                          <tr key={idx} className="hover:bg-yellow-500/10">
+                            <td className="p-2 text-[#D6C7A1]">{idx + 1}</td>
+                            <td className="p-2 font-mono text-yellow-300 font-semibold">{pst.regNo}</td>
+                            <td className="p-2 font-medium text-white">{pst.name}</td>
+                            <td className="p-2 font-mono text-[11px] text-[#D6C7A1]/80">{pst.email}</td>
+                            <td className="p-2">
+                              <span className="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-300 text-[10px] font-mono border border-yellow-500/30">
+                                Pending Registration
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
