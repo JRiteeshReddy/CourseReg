@@ -527,12 +527,16 @@ export default function AdminDashboard() {
 
   // Master Export for ALL Faculties into One Workbook
   const exportAllFacultiesExcel = () => {
-    const allFacultyNames = Array.from(
-      new Set([
-        ...registrations.map((r) => r.facultyName?.trim()).filter(Boolean),
-        ...courses.map((c) => c.faculty?.trim()).filter(Boolean),
-      ])
-    ).sort() as string[];
+    const allFacultyNames = (Array.from(
+      new Set(registrations.map((r) => r.facultyName?.trim()).filter(Boolean))
+    ) as string[])
+      .filter((fac) => {
+        return registrations.some((r) => {
+          if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+          return (r.facultyName || "").trim().toLowerCase() === fac.trim().toLowerCase();
+        });
+      })
+      .sort();
 
     if (allFacultyNames.length === 0) {
       alert("No faculty data available to export.");
@@ -676,13 +680,17 @@ export default function AdminDashboard() {
   const studentLifeS1Total = studentLifeCourses.reduce((acc, c) => acc + c.s1SeatsOccupied, 0);
   const studentLifeS2Total = studentLifeCourses.reduce((acc, c) => acc + c.s2SeatsOccupied, 0);
 
-  // Unique faculty list derived from student registration excel data & course faculties
-  const allFaculties = Array.from(
-    new Set([
-      ...registrations.map((r) => r.facultyName?.trim()).filter(Boolean),
-      ...courses.map((c) => c.faculty?.trim()).filter(Boolean),
-    ])
-  ).sort() as string[];
+  // Unique faculty list derived ONLY from faculties with > 0 registered students
+  const allFaculties = (Array.from(
+    new Set(registrations.map((r) => r.facultyName?.trim()).filter(Boolean))
+  ) as string[])
+    .filter((facName) => {
+      return registrations.some((r) => {
+        if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+        return (r.facultyName || "").trim().toLowerCase() === facName.trim().toLowerCase();
+      });
+    })
+    .sort();
 
   // Filter faculties by search query (faculty name or subject chosen by their assigned students)
   const filteredFaculties = allFaculties.filter((fac) => {
