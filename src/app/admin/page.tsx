@@ -437,41 +437,52 @@ export default function AdminDashboard() {
     XLSX.writeFile(workbook, `${safeFileName}_Combined_Course_Roster.xlsx`);
   };
 
-  // Faculty-Specific Attendance Excel Export
+  // Faculty-Specific Attendance Excel Export (based on Student Data Excel facultyName)
   const exportFacultyExcel = (targetFaculty: string) => {
-    const facultyCourses = courses.filter((c) => c.faculty === targetFaculty);
-    if (facultyCourses.length === 0) {
-      alert(`No courses found assigned to faculty: ${targetFaculty}`);
+    const targetStudents = registrations.filter((r) => {
+      if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+      const facName = (r.facultyName || "").trim();
+      if (!facName) return targetFaculty === "Unassigned Faculty";
+      return facName.toLowerCase() === targetFaculty.trim().toLowerCase();
+    });
+
+    if (targetStudents.length === 0) {
+      alert(`No registered students found assigned to faculty: ${targetFaculty}`);
       return;
     }
 
+    const targetCourses = courses.filter((c) => {
+      return targetStudents.some((r) =>
+        matchCourse(r.s1Sports, c.id, c.name) ||
+        matchCourse(r.s1StudentLife, c.id, c.name) ||
+        matchCourse(r.s2Sports, c.id, c.name) ||
+        matchCourse(r.s2StudentLife, c.id, c.name)
+      );
+    });
+
     const aoaData: any[][] = [];
-    aoaData.push(["FACULTY NAME:", targetFaculty]);
-    aoaData.push(["ASSIGNED SUBJECTS:", facultyCourses.map((c) => `${c.name} (${c.id})`).join(", ")]);
+    aoaData.push(["FACULTY MENTOR / NAME:", targetFaculty]);
+    aoaData.push(["TOTAL ASSIGNED STUDENTS:", targetStudents.length]);
     aoaData.push(["REPORT GENERATION DATE:", new Date().toLocaleDateString()]);
     aoaData.push([]); // blank row
 
-    let totalEnrolledCount = 0;
+    targetCourses.forEach((c) => {
+      const s1Students = targetStudents.filter(
+        (r) => matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name)
+      );
 
-    facultyCourses.forEach((c) => {
-      const s1Students = registrations.filter((r) => {
-        if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
-        return matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name);
-      });
+      const s2Students = targetStudents.filter(
+        (r) => matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name)
+      );
 
-      const s2Students = registrations.filter((r) => {
-        if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
-        return matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name);
-      });
+      if (s1Students.length === 0 && s2Students.length === 0) return;
 
-      totalEnrolledCount += s1Students.length + s2Students.length;
-
-      aoaData.push([`=== SUBJECT: ${c.name} (${c.id}) | Category: ${c.category} ===`]);
+      aoaData.push([`=== CHOSEN SUBJECT: ${c.name} (${c.id}) | Category: ${c.category} ===`]);
       aoaData.push([]);
 
       // Session 1 Table
       aoaData.push([`--- SESSION 1 REGISTERED STUDENTS (${s1Students.length}) ---`]);
-      aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Attendance Verification"]);
+      aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Faculty Attendance Verification"]);
 
       if (s1Students.length > 0) {
         s1Students.forEach((r, idx) => {
@@ -485,7 +496,7 @@ export default function AdminDashboard() {
 
       // Session 2 Table
       aoaData.push([`--- SESSION 2 REGISTERED STUDENTS (${s2Students.length}) ---`]);
-      aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Attendance Verification"]);
+      aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Faculty Attendance Verification"]);
 
       if (s2Students.length > 0) {
         s2Students.forEach((r, idx) => {
@@ -498,11 +509,6 @@ export default function AdminDashboard() {
       aoaData.push([]);
       aoaData.push([]);
     });
-
-    if (totalEnrolledCount === 0) {
-      alert(`No students are currently registered for any subjects taught by ${targetFaculty}.`);
-      return;
-    }
 
     const workbook = XLSX.utils.book_new();
     const mainWorksheet = XLSX.utils.aoa_to_sheet(aoaData);
@@ -522,8 +528,11 @@ export default function AdminDashboard() {
   // Master Export for ALL Faculties into One Workbook
   const exportAllFacultiesExcel = () => {
     const allFacultyNames = Array.from(
-      new Set(courses.map((c) => c.faculty).filter(Boolean))
-    ) as string[];
+      new Set([
+        ...registrations.map((r) => r.facultyName?.trim()).filter(Boolean),
+        ...courses.map((c) => c.faculty?.trim()).filter(Boolean),
+      ])
+    ).sort() as string[];
 
     if (allFacultyNames.length === 0) {
       alert("No faculty data available to export.");
@@ -533,23 +542,35 @@ export default function AdminDashboard() {
     const workbook = XLSX.utils.book_new();
 
     allFacultyNames.forEach((fac) => {
-      const facultyCourses = courses.filter((c) => c.faculty === fac);
-      const aoaData: any[][] = [];
+      const targetStudents = registrations.filter((r) => {
+        if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+        return (r.facultyName || "").trim().toLowerCase() === fac.trim().toLowerCase();
+      });
 
-      aoaData.push(["FACULTY NAME:", fac]);
-      aoaData.push(["TEACHING SUBJECTS:", facultyCourses.map((c) => `${c.name} (${c.id})`).join(", ")]);
+      if (targetStudents.length === 0) return;
+
+      const targetCourses = courses.filter((c) => {
+        return targetStudents.some((r) =>
+          matchCourse(r.s1Sports, c.id, c.name) ||
+          matchCourse(r.s1StudentLife, c.id, c.name) ||
+          matchCourse(r.s2Sports, c.id, c.name) ||
+          matchCourse(r.s2StudentLife, c.id, c.name)
+        );
+      });
+
+      const aoaData: any[][] = [];
+      aoaData.push(["FACULTY MENTOR / NAME:", fac]);
+      aoaData.push(["TOTAL ASSIGNED STUDENTS:", targetStudents.length]);
       aoaData.push([]);
 
-      facultyCourses.forEach((c) => {
-        const s1Students = registrations.filter((r) => {
-          if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
-          return matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name);
-        });
+      targetCourses.forEach((c) => {
+        const s1Students = targetStudents.filter(
+          (r) => matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name)
+        );
 
-        const s2Students = registrations.filter((r) => {
-          if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
-          return matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name);
-        });
+        const s2Students = targetStudents.filter(
+          (r) => matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name)
+        );
 
         aoaData.push([`=== SUBJECT: ${c.name} (${c.id}) ===`]);
         aoaData.push([`--- SESSION 1 (${s1Students.length} Students) ---`]);
@@ -655,25 +676,54 @@ export default function AdminDashboard() {
   const studentLifeS1Total = studentLifeCourses.reduce((acc, c) => acc + c.s1SeatsOccupied, 0);
   const studentLifeS2Total = studentLifeCourses.reduce((acc, c) => acc + c.s2SeatsOccupied, 0);
 
-  // Unique faculty list derived from courses
+  // Unique faculty list derived from student registration excel data & course faculties
   const allFaculties = Array.from(
-    new Set(courses.map((c) => c.faculty).filter(Boolean))
-  ) as string[];
+    new Set([
+      ...registrations.map((r) => r.facultyName?.trim()).filter(Boolean),
+      ...courses.map((c) => c.faculty?.trim()).filter(Boolean),
+    ])
+  ).sort() as string[];
 
-  // Filter faculties by search query (faculty name or course name)
+  // Filter faculties by search query (faculty name or subject chosen by their assigned students)
   const filteredFaculties = allFaculties.filter((fac) => {
     if (!facultySearchQuery.trim()) return true;
     const q = facultySearchQuery.toLowerCase().trim();
     if (fac.toLowerCase().includes(q)) return true;
-    const facCourses = courses.filter((c) => c.faculty === fac);
-    return facCourses.some(
-      (c) => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q)
+
+    // Check if any student assigned to this faculty chose a subject matching query
+    const facStudents = registrations.filter(
+      (r) => (r.facultyName || "").trim().toLowerCase() === fac.toLowerCase()
+    );
+    return facStudents.some(
+      (r) =>
+        r.s1Sports?.toLowerCase().includes(q) ||
+        r.s1StudentLife?.toLowerCase().includes(q) ||
+        r.s2Sports?.toLowerCase().includes(q) ||
+        r.s2StudentLife?.toLowerCase().includes(q)
     );
   });
 
   // Default selected faculty if none selected
   const activeFaculty = selectedFaculty || filteredFaculties[0] || allFaculties[0] || "";
-  const activeFacultyCourses = courses.filter((c) => c.faculty === activeFaculty);
+
+  // Registered students belonging to the active faculty
+  const activeFacultyStudents = registrations.filter((r) => {
+    if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+    const facName = (r.facultyName || "").trim();
+    if (!facName) return activeFaculty === "Unassigned Faculty";
+    return facName.toLowerCase() === activeFaculty.trim().toLowerCase();
+  });
+
+  // Unique subjects chosen by students assigned to activeFaculty
+  const activeFacultySubjects = courses.filter((c) => {
+    return activeFacultyStudents.some(
+      (r) =>
+        matchCourse(r.s1Sports, c.id, c.name) ||
+        matchCourse(r.s1StudentLife, c.id, c.name) ||
+        matchCourse(r.s2Sports, c.id, c.name) ||
+        matchCourse(r.s2StudentLife, c.id, c.name)
+    );
+  });
 
   if (loading) {
     return (
@@ -1559,21 +1609,12 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#7ECEB7]/30">
             {filteredFaculties.map((fac) => {
               const isSelected = activeFaculty === fac;
-              const facCourses = courses.filter((c) => c.faculty === fac);
               
-              // Total enrolled count for this faculty
-              let totalFacStudents = 0;
-              facCourses.forEach((c) => {
-                const s1 = registrations.filter((r) => {
-                  if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
-                  return matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name);
-                }).length;
-                const s2 = registrations.filter((r) => {
-                  if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
-                  return matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name);
-                }).length;
-                totalFacStudents += s1 + s2;
-              });
+              // Total student count assigned to this faculty from registration data
+              const facStudentsCount = registrations.filter((r) => {
+                if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+                return (r.facultyName || "").trim().toLowerCase() === fac.trim().toLowerCase();
+              }).length;
 
               return (
                 <button
@@ -1592,7 +1633,7 @@ export default function AdminDashboard() {
                       isSelected ? "bg-white/20 text-white" : "bg-[#041C19] text-[#7ECEB7]"
                     }`}
                   >
-                    {totalFacStudents} students
+                    {facStudentsCount} students
                   </span>
                 </button>
               );
@@ -1615,16 +1656,20 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-bold text-[#F5EBE0]">{activeFaculty}</h3>
                   <span className="px-2.5 py-0.5 rounded-full bg-[#037A74]/20 border border-[#7ECEB7]/30 text-[#7ECEB7] text-xs font-mono">
-                    Faculty Roster
+                    {activeFacultyStudents.length} Students Assigned
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 text-xs text-[#D6C7A1]">
-                  <span>Teaching Subject(s):</span>
-                  {activeFacultyCourses.map((c) => (
-                    <span key={c.id} className="font-semibold text-white bg-[#072C28] px-2 py-0.5 rounded border border-[#7ECEB7]/15">
-                      {c.name} ({c.id})
-                    </span>
-                  ))}
+                  <span>Subjects Chosen by Students:</span>
+                  {activeFacultySubjects.length > 0 ? (
+                    activeFacultySubjects.map((c) => (
+                      <span key={c.id} className="font-semibold text-white bg-[#072C28] px-2 py-0.5 rounded border border-[#7ECEB7]/15">
+                        {c.name} ({c.id})
+                      </span>
+                    ))
+                  ) : (
+                    <span className="italic text-[#D6C7A1]/60">No course selections registered yet.</span>
+                  )}
                 </div>
               </div>
 
@@ -1662,16 +1707,14 @@ export default function AdminDashboard() {
 
             {/* SUBJECT ROSTER TABLES FOR THIS FACULTY */}
             <div className="space-y-6">
-              {activeFacultyCourses.map((c) => {
-                const s1All = registrations.filter((r) => {
-                  if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
-                  return matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name);
-                });
+              {activeFacultySubjects.map((c) => {
+                const s1All = activeFacultyStudents.filter(
+                  (r) => matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name)
+                );
 
-                const s2All = registrations.filter((r) => {
-                  if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
-                  return matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name);
-                });
+                const s2All = activeFacultyStudents.filter(
+                  (r) => matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name)
+                );
 
                 const q = facultyStudentSearchQuery.trim().toLowerCase();
                 const s1Filtered = s1All.filter(
@@ -1692,7 +1735,7 @@ export default function AdminDashboard() {
                         <span className="text-xs text-[#D6C7A1] font-mono">[{c.category}]</span>
                       </div>
                       <span className="text-xs font-mono font-semibold text-[#7ECEB7]">
-                        Total Enrolled: {s1All.length + s2All.length} students
+                        Enrolled Students: {s1All.length + s2All.length}
                       </span>
                     </div>
 
@@ -1766,6 +1809,12 @@ export default function AdminDashboard() {
                   </div>
                 );
               })}
+
+              {activeFacultySubjects.length === 0 && (
+                <div className="p-6 text-center text-[#D6C7A1]/60 italic border border-[#7ECEB7]/15 rounded-xl bg-[#072C28]/20">
+                  No registered students found under this faculty yet.
+                </div>
+              )}
             </div>
           </div>
         ) : (
