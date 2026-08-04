@@ -13,15 +13,31 @@ export async function GET() {
   try {
     const masterStudents = await fetchMasterStudents();
     const registrations = await fetchRegistrations();
-    const coursesWithSeats = calculateDynamicSeats(registrations);
+
+    const masterMap = new Map<string, string>();
+    masterStudents.forEach((s) => {
+      if (s.email) masterMap.set(s.email.toLowerCase(), s.facultyName || "");
+      if (s.regNo) masterMap.set(s.regNo.toLowerCase(), s.facultyName || "");
+    });
+
+    const enrichedRegistrations = registrations.map((r) => ({
+      ...r,
+      facultyName:
+        r.facultyName ||
+        masterMap.get((r.email || "").toLowerCase()) ||
+        masterMap.get((r.regNo || "").toLowerCase()) ||
+        "",
+    }));
+
+    const coursesWithSeats = calculateDynamicSeats(enrichedRegistrations);
     const isRegistrationOpen = await getRegistrationStatus();
 
     return NextResponse.json({
       adminEmail: session.email,
       totalMasterStudents: masterStudents.length,
-      totalRegisteredStudents: registrations.length,
+      totalRegisteredStudents: enrichedRegistrations.length,
       courses: coursesWithSeats,
-      registrations,
+      registrations: enrichedRegistrations,
       isRegistrationOpen,
     });
   } catch (error: any) {

@@ -43,6 +43,7 @@ export interface RegistrationRow {
   s2StudentLife: string;
   timestamp: string;
   status: string;
+  facultyName?: string;
 }
 
 export interface SeatHold {

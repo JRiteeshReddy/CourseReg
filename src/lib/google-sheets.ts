@@ -7,6 +7,7 @@ export interface MasterStudent {
   regNo: string;
   name: string;
   email: string;
+  facultyName?: string;
 }
 
 const MASTER_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTAHfkezxz7xqAPI2lKn_bss6dhvStfRbMoSCviq43O4U_12qnuecxc-ovkRyKTGBtBzryWvBKfuE7B/pub?output=csv';
@@ -168,6 +169,7 @@ export async function fetchMasterStudents(): Promise<MasterStudent[]> {
         regNo: row.reg_no || row.regNo || '',
         name: row.name || '',
         email: (row.email || '').toLowerCase(),
+        facultyName: row.faculty_name || row.facultyName || row.faculty || '',
       }));
 
       cachedMasterStudents = students;
@@ -190,6 +192,7 @@ export async function fetchMasterStudents(): Promise<MasterStudent[]> {
         regNo: parts[0] || '',
         name: parts[1] || '',
         email: (parts[2] || '').toLowerCase(),
+        facultyName: parts[3] || '',
       };
     });
 
@@ -218,6 +221,7 @@ export async function checkStudentAuthorized(email: string): Promise<MasterStude
         regNo: data.reg_no || data.regNo || '',
         name: data.name || '',
         email: (data.email || '').toLowerCase(),
+        facultyName: data.faculty_name || data.facultyName || data.faculty || '',
       };
     }
   } catch (err) {
@@ -262,6 +266,7 @@ export async function fetchRegistrations(): Promise<RegistrationRow[]> {
             s2StudentLife: row.s2_student_life || row.s2StudentLife || '',
             timestamp: row.timestamp || new Date().toISOString(),
             status: row.status || 'CONFIRMED',
+            facultyName: row.faculty_name || row.facultyName || row.faculty || '',
           });
         }
       }

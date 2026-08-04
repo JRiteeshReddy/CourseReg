@@ -376,16 +376,17 @@ export default function AdminDashboard() {
 
     // Session 1 Section
     aoaData.push([`--- SESSION 1 REGISTERED STUDENTS (${s1Students.length}) ---`]);
-    aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Registration Timestamp"]);
+    aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Faculty Attendance"]);
 
     if (s1Students.length > 0) {
       s1Students.forEach((r, idx) => {
+        const facultyVal = r.facultyName && r.facultyName.trim() ? r.facultyName.trim() : " ";
         aoaData.push([
           idx + 1,
           r.regNo,
           r.name,
           r.email,
-          r.timestamp ? new Date(r.timestamp).toLocaleString() : "N/A",
+          facultyVal,
         ]);
       });
     } else {
@@ -397,16 +398,17 @@ export default function AdminDashboard() {
 
     // Session 2 Section
     aoaData.push([`--- SESSION 2 REGISTERED STUDENTS (${s2Students.length}) ---`]);
-    aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Registration Timestamp"]);
+    aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Faculty Attendance"]);
 
     if (s2Students.length > 0) {
       s2Students.forEach((r, idx) => {
+        const facultyVal = r.facultyName && r.facultyName.trim() ? r.facultyName.trim() : " ";
         aoaData.push([
           idx + 1,
           r.regNo,
           r.name,
           r.email,
-          r.timestamp ? new Date(r.timestamp).toLocaleString() : "N/A",
+          facultyVal,
         ]);
       });
     } else {
@@ -420,7 +422,7 @@ export default function AdminDashboard() {
       { wch: 22 }, // Reg No
       { wch: 28 }, // Name
       { wch: 35 }, // Email
-      { wch: 25 }, // Timestamp
+      { wch: 25 }, // Faculty Attendance
     ];
     XLSX.utils.book_append_sheet(workbook, mainWorksheet, "Course Roster");
 
