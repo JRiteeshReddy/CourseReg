@@ -74,11 +74,19 @@ const DRAFT_HOLD_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes temporary seat hold
 // Legacy alias mapping to maintain backwards compatibility with existing registered data
 const COURSE_ALIASES: Record<string, string[]> = {
   "SL04": ["Folk Dance", "Folk Dance - FIPA"],
-  "SL05": ["Yoga Therapy & Wellness Consultant", "Mental Wellbeing and Peer Support", "Mental Well-being & Peer Support", "Mental Wellbeing & Peer Support"],
+  "SL05": ["Yoga Therapy & Wellness Consultant", "Mental Wellbeing and Peer Support", "Mental Well-being & Peer Support"],
   "SL06": ["Traditional Music - Invocatory Song", "Introduction to Traditional Music"],
   "SL07": ["Introduction to Folk and Light Music", "Music Band Contemporary and Light Music"],
   "SL11": ["Traditional Dance", "Invocatory_Dances", "Invocatory Dances"],
 };
+
+export function matchCourse(val: string | undefined | null, id: string, name: string): boolean {
+  if (!val) return false;
+  const v = val.trim().toLowerCase();
+  if (v === id.toLowerCase() || v === name.toLowerCase()) return true;
+  const aliases = COURSE_ALIASES[id] || [];
+  return aliases.some((a) => a.toLowerCase() === v);
+}
 
 /**
  * Calculates dynamic seat counts over confirmed registrations and active draft seat holds.
@@ -87,42 +95,42 @@ export function calculateDynamicSeats(
   registrations: RegistrationRow[],
   seatHolds: SeatHold[] = []
 ): CalculatedCourse[] {
-  const confirmed = registrations.filter(r => r.status?.toUpperCase() === 'CONFIRMED');
-  const confirmedEmails = new Set(confirmed.map(r => r.email.toLowerCase()));
+  const confirmed = registrations.filter((r) => {
+    const s = (r.status || "CONFIRMED").toUpperCase();
+    return s === "CONFIRMED" || s === "SUBMITTED";
+  });
 
-  const s1Counts: Record<string, number> = {};
-  const s2Counts: Record<string, number> = {};
-
-  // 1. Count confirmed registrations
-  for (const reg of confirmed) {
-    if (reg.s1Sports) s1Counts[reg.s1Sports] = (s1Counts[reg.s1Sports] || 0) + 1;
-    if (reg.s1StudentLife) s1Counts[reg.s1StudentLife] = (s1Counts[reg.s1StudentLife] || 0) + 1;
-    if (reg.s2Sports) s2Counts[reg.s2Sports] = (s2Counts[reg.s2Sports] || 0) + 1;
-    if (reg.s2StudentLife) s2Counts[reg.s2StudentLife] = (s2Counts[reg.s2StudentLife] || 0) + 1;
-  }
-
-  // 2. Count active non-expired draft seat holds for unconfirmed students
+  const confirmedEmails = new Set(confirmed.map((r) => (r.email || "").toLowerCase()));
   const now = Date.now();
-  for (const hold of seatHolds) {
-    if (!hold.email || confirmedEmails.has(hold.email.toLowerCase())) continue;
-    if (now - hold.updatedAt > DRAFT_HOLD_TIMEOUT_MS) continue; // expired hold
+  const activeHolds = seatHolds.filter((h) => {
+    if (!h.email || confirmedEmails.has(h.email.toLowerCase())) return false;
+    return now - h.updatedAt <= DRAFT_HOLD_TIMEOUT_MS;
+  });
 
-    if (hold.s1Sports) s1Counts[hold.s1Sports] = (s1Counts[hold.s1Sports] || 0) + 1;
-    if (hold.s1StudentLife) s1Counts[hold.s1StudentLife] = (s1Counts[hold.s1StudentLife] || 0) + 1;
-    if (hold.s2Sports) s2Counts[hold.s2Sports] = (s2Counts[hold.s2Sports] || 0) + 1;
-    if (hold.s2StudentLife) s2Counts[hold.s2StudentLife] = (s2Counts[hold.s2StudentLife] || 0) + 1;
-  }
-
-  return COURSES.map(course => {
-    const aliases = COURSE_ALIASES[course.id] || [];
-    const validKeys = [course.id, course.name, ...aliases];
-    
+  return COURSES.map((course) => {
     let s1Occupied = 0;
     let s2Occupied = 0;
 
-    for (const key of validKeys) {
-      s1Occupied += (s1Counts[key] || 0);
-      s2Occupied += (s2Counts[key] || 0);
+    // 1. Count confirmed/submitted registrations
+    for (const reg of confirmed) {
+      if (course.category === "Sports") {
+        if (matchCourse(reg.s1Sports, course.id, course.name)) s1Occupied++;
+        if (matchCourse(reg.s2Sports, course.id, course.name)) s2Occupied++;
+      } else {
+        if (matchCourse(reg.s1StudentLife, course.id, course.name)) s1Occupied++;
+        if (matchCourse(reg.s2StudentLife, course.id, course.name)) s2Occupied++;
+      }
+    }
+
+    // 2. Count active non-expired draft seat holds
+    for (const hold of activeHolds) {
+      if (course.category === "Sports") {
+        if (matchCourse(hold.s1Sports, course.id, course.name)) s1Occupied++;
+        if (matchCourse(hold.s2Sports, course.id, course.name)) s2Occupied++;
+      } else {
+        if (matchCourse(hold.s1StudentLife, course.id, course.name)) s1Occupied++;
+        if (matchCourse(hold.s2StudentLife, course.id, course.name)) s2Occupied++;
+      }
     }
 
     return {
