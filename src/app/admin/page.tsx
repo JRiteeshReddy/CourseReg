@@ -31,6 +31,8 @@ import {
   Layers,
   RefreshCw,
   UserCheck,
+  User,
+  ClipboardList,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -43,6 +45,11 @@ export default function AdminDashboard() {
   const [adminEmail, setAdminEmail] = useState("");
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
+
+  // Filtering States for Faculty Attendance Section
+  const [selectedFaculty, setSelectedFaculty] = useState<string>("");
+  const [facultySearchQuery, setFacultySearchQuery] = useState("");
+  const [facultyStudentSearchQuery, setFacultyStudentSearchQuery] = useState("");
 
   // Filtering States for Course Cards Section
   const [courseCategoryTab, setCourseCategoryTab] = useState<"ALL" | "Sports" | "Student Life">("ALL");
@@ -430,6 +437,159 @@ export default function AdminDashboard() {
     XLSX.writeFile(workbook, `${safeFileName}_Combined_Course_Roster.xlsx`);
   };
 
+  // Faculty-Specific Attendance Excel Export
+  const exportFacultyExcel = (targetFaculty: string) => {
+    const facultyCourses = courses.filter((c) => c.faculty === targetFaculty);
+    if (facultyCourses.length === 0) {
+      alert(`No courses found assigned to faculty: ${targetFaculty}`);
+      return;
+    }
+
+    const aoaData: any[][] = [];
+    aoaData.push(["FACULTY NAME:", targetFaculty]);
+    aoaData.push(["ASSIGNED SUBJECTS:", facultyCourses.map((c) => `${c.name} (${c.id})`).join(", ")]);
+    aoaData.push(["REPORT GENERATION DATE:", new Date().toLocaleDateString()]);
+    aoaData.push([]); // blank row
+
+    let totalEnrolledCount = 0;
+
+    facultyCourses.forEach((c) => {
+      const s1Students = registrations.filter((r) => {
+        if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+        return matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name);
+      });
+
+      const s2Students = registrations.filter((r) => {
+        if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+        return matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name);
+      });
+
+      totalEnrolledCount += s1Students.length + s2Students.length;
+
+      aoaData.push([`=== SUBJECT: ${c.name} (${c.id}) | Category: ${c.category} ===`]);
+      aoaData.push([]);
+
+      // Session 1 Table
+      aoaData.push([`--- SESSION 1 REGISTERED STUDENTS (${s1Students.length}) ---`]);
+      aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Attendance Verification"]);
+
+      if (s1Students.length > 0) {
+        s1Students.forEach((r, idx) => {
+          aoaData.push([idx + 1, r.regNo, r.name, r.email, "[   ] Present"]);
+        });
+      } else {
+        aoaData.push(["-", "No students registered for Session 1", "-", "-", "-"]);
+      }
+
+      aoaData.push([]);
+
+      // Session 2 Table
+      aoaData.push([`--- SESSION 2 REGISTERED STUDENTS (${s2Students.length}) ---`]);
+      aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Attendance Verification"]);
+
+      if (s2Students.length > 0) {
+        s2Students.forEach((r, idx) => {
+          aoaData.push([idx + 1, r.regNo, r.name, r.email, "[   ] Present"]);
+        });
+      } else {
+        aoaData.push(["-", "No students registered for Session 2", "-", "-", "-"]);
+      }
+
+      aoaData.push([]);
+      aoaData.push([]);
+    });
+
+    if (totalEnrolledCount === 0) {
+      alert(`No students are currently registered for any subjects taught by ${targetFaculty}.`);
+      return;
+    }
+
+    const workbook = XLSX.utils.book_new();
+    const mainWorksheet = XLSX.utils.aoa_to_sheet(aoaData);
+    mainWorksheet["!cols"] = [
+      { wch: 8 },  // S.No
+      { wch: 22 }, // Reg No
+      { wch: 28 }, // Name
+      { wch: 35 }, // Email
+      { wch: 28 }, // Attendance
+    ];
+    XLSX.utils.book_append_sheet(workbook, mainWorksheet, "Faculty Attendance Roster");
+
+    const safeFileName = targetFaculty.replace(/[^a-zA-Z0-9]/g, "_");
+    XLSX.writeFile(workbook, `Faculty_Attendance_${safeFileName}_${new Date().toISOString().split("T")[0]}.xlsx`);
+  };
+
+  // Master Export for ALL Faculties into One Workbook
+  const exportAllFacultiesExcel = () => {
+    const allFacultyNames = Array.from(
+      new Set(courses.map((c) => c.faculty).filter(Boolean))
+    ) as string[];
+
+    if (allFacultyNames.length === 0) {
+      alert("No faculty data available to export.");
+      return;
+    }
+
+    const workbook = XLSX.utils.book_new();
+
+    allFacultyNames.forEach((fac) => {
+      const facultyCourses = courses.filter((c) => c.faculty === fac);
+      const aoaData: any[][] = [];
+
+      aoaData.push(["FACULTY NAME:", fac]);
+      aoaData.push(["TEACHING SUBJECTS:", facultyCourses.map((c) => `${c.name} (${c.id})`).join(", ")]);
+      aoaData.push([]);
+
+      facultyCourses.forEach((c) => {
+        const s1Students = registrations.filter((r) => {
+          if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+          return matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name);
+        });
+
+        const s2Students = registrations.filter((r) => {
+          if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+          return matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name);
+        });
+
+        aoaData.push([`=== SUBJECT: ${c.name} (${c.id}) ===`]);
+        aoaData.push([`--- SESSION 1 (${s1Students.length} Students) ---`]);
+        aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Attendance"]);
+
+        if (s1Students.length > 0) {
+          s1Students.forEach((r, idx) => {
+            aoaData.push([idx + 1, r.regNo, r.name, r.email, "[  ] Present"]);
+          });
+        } else {
+          aoaData.push(["-", "No students registered", "-", "-", "-"]);
+        }
+
+        aoaData.push([]);
+        aoaData.push([`--- SESSION 2 (${s2Students.length} Students) ---`]);
+        aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Attendance"]);
+
+        if (s2Students.length > 0) {
+          s2Students.forEach((r, idx) => {
+            aoaData.push([idx + 1, r.regNo, r.name, r.email, "[  ] Present"]);
+          });
+        } else {
+          aoaData.push(["-", "No students registered", "-", "-", "-"]);
+        }
+
+        aoaData.push([]);
+      });
+
+      const sheet = XLSX.utils.aoa_to_sheet(aoaData);
+      sheet["!cols"] = [{ wch: 8 }, { wch: 22 }, { wch: 28 }, { wch: 35 }, { wch: 25 }];
+      const safeSheetName = fac.replace(/[^a-zA-Z0-9 ]/g, "").slice(0, 30) || "Faculty";
+      XLSX.utils.book_append_sheet(workbook, sheet, safeSheetName);
+    });
+
+    XLSX.writeFile(
+      workbook,
+      `Master_All_Faculties_Attendance_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
+  };
+
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/");
@@ -494,6 +654,26 @@ export default function AdminDashboard() {
   const studentLifeCourses = courses.filter((c) => c.category === "Student Life");
   const studentLifeS1Total = studentLifeCourses.reduce((acc, c) => acc + c.s1SeatsOccupied, 0);
   const studentLifeS2Total = studentLifeCourses.reduce((acc, c) => acc + c.s2SeatsOccupied, 0);
+
+  // Unique faculty list derived from courses
+  const allFaculties = Array.from(
+    new Set(courses.map((c) => c.faculty).filter(Boolean))
+  ) as string[];
+
+  // Filter faculties by search query (faculty name or course name)
+  const filteredFaculties = allFaculties.filter((fac) => {
+    if (!facultySearchQuery.trim()) return true;
+    const q = facultySearchQuery.toLowerCase().trim();
+    if (fac.toLowerCase().includes(q)) return true;
+    const facCourses = courses.filter((c) => c.faculty === fac);
+    return facCourses.some(
+      (c) => c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q)
+    );
+  });
+
+  // Default selected faculty if none selected
+  const activeFaculty = selectedFaculty || filteredFaculties[0] || allFaculties[0] || "";
+  const activeFacultyCourses = courses.filter((c) => c.faculty === activeFaculty);
 
   if (loading) {
     return (
@@ -1321,6 +1501,278 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
+      </section>
+
+      {/* FACULTY ATTENDANCE & ROSTER SHEETS SECTION */}
+      <section className="glass-panel p-6 space-y-6 border border-[#7ECEB7]/20">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#7ECEB7]/15 pb-4">
+          <div>
+            <h2 className="text-xl font-bold text-[#F5EBE0] flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-[#7ECEB7]" />
+              Faculty Attendance Roster & Search
+            </h2>
+            <p className="text-xs text-[#D6C7A1] mt-0.5">
+              Select any faculty tab to view students enrolled under their subjects or export formatted Excel sheets.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Search Faculty */}
+            <div className="relative min-w-[220px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7ECEB7]/70" />
+              <input
+                type="text"
+                placeholder="Search faculty or subject..."
+                value={facultySearchQuery}
+                onChange={(e) => setFacultySearchQuery(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-xs text-[#F5EBE0] placeholder-[#D6C7A1]/40 focus:outline-none focus:border-[#7ECEB7]"
+              />
+              {facultySearchQuery && (
+                <button
+                  onClick={() => setFacultySearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#D6C7A1] hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Master Export All Faculties */}
+            <button
+              onClick={exportAllFacultiesExcel}
+              className="px-4 py-2 rounded-xl bg-[#072C28] hover:bg-[#037A74]/30 text-[#7ECEB7] border border-[#7ECEB7]/30 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm whitespace-nowrap"
+              title="Export attendance workbook for all faculties"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-[#7ECEB7]" />
+              <span>Export All Faculties (.xlsx)</span>
+            </button>
+          </div>
+        </div>
+
+        {/* FACULTY SELECTION TABS */}
+        <div className="space-y-3">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#D6C7A1] flex items-center gap-1.5">
+            <User className="w-3.5 h-3.5 text-[#7ECEB7]" />
+            Faculty Members ({filteredFaculties.length})
+          </label>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#7ECEB7]/30">
+            {filteredFaculties.map((fac) => {
+              const isSelected = activeFaculty === fac;
+              const facCourses = courses.filter((c) => c.faculty === fac);
+              
+              // Total enrolled count for this faculty
+              let totalFacStudents = 0;
+              facCourses.forEach((c) => {
+                const s1 = registrations.filter((r) => {
+                  if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+                  return matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name);
+                }).length;
+                const s2 = registrations.filter((r) => {
+                  if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+                  return matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name);
+                }).length;
+                totalFacStudents += s1 + s2;
+              });
+
+              return (
+                <button
+                  key={fac}
+                  onClick={() => setSelectedFaculty(fac)}
+                  className={`px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2.5 whitespace-nowrap border ${
+                    isSelected
+                      ? "bg-[#037A74] text-white border-[#7ECEB7] shadow-lg shadow-[#037A74]/30"
+                      : "bg-[#072C28] text-[#D6C7A1] hover:text-white border-[#7ECEB7]/20 hover:border-[#7ECEB7]/40"
+                  }`}
+                >
+                  <User className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-[#7ECEB7]"}`} />
+                  <span>{fac}</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                      isSelected ? "bg-white/20 text-white" : "bg-[#041C19] text-[#7ECEB7]"
+                    }`}
+                  >
+                    {totalFacStudents} students
+                  </span>
+                </button>
+              );
+            })}
+
+            {filteredFaculties.length === 0 && (
+              <p className="text-xs text-[#D6C7A1]/60 italic p-2">
+                No faculties matching &quot;{facultySearchQuery}&quot;
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* SELECTED FACULTY DETAILS & ROSTER CARD */}
+        {activeFaculty ? (
+          <div className="glass-card p-5 space-y-5 border border-[#7ECEB7]/30 bg-[#041C19]/80 rounded-2xl">
+            {/* Faculty Header Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#7ECEB7]/15 pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-[#F5EBE0]">{activeFaculty}</h3>
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#037A74]/20 border border-[#7ECEB7]/30 text-[#7ECEB7] text-xs font-mono">
+                    Faculty Roster
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 text-xs text-[#D6C7A1]">
+                  <span>Teaching Subject(s):</span>
+                  {activeFacultyCourses.map((c) => (
+                    <span key={c.id} className="font-semibold text-white bg-[#072C28] px-2 py-0.5 rounded border border-[#7ECEB7]/15">
+                      {c.name} ({c.id})
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Search student inside active faculty */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7ECEB7]/70" />
+                  <input
+                    type="text"
+                    placeholder="Search student in faculty roster..."
+                    value={facultyStudentSearchQuery}
+                    onChange={(e) => setFacultyStudentSearchQuery(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 rounded-lg bg-[#072C28] border border-[#7ECEB7]/20 text-xs text-[#F5EBE0] placeholder-[#D6C7A1]/40 focus:outline-none focus:border-[#7ECEB7]"
+                  />
+                  {facultyStudentSearchQuery && (
+                    <button
+                      onClick={() => setFacultyStudentSearchQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#D6C7A1] hover:text-white"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Export single faculty Excel button */}
+                <button
+                  onClick={() => exportFacultyExcel(activeFaculty)}
+                  className="btn-primary px-4 py-2 text-xs font-bold text-[#F5EBE0] flex items-center gap-1.5 shadow-md whitespace-nowrap"
+                >
+                  <Download className="w-4 h-4 text-[#F5EBE0]" />
+                  <span>Download Attendance Sheet (.xlsx)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* SUBJECT ROSTER TABLES FOR THIS FACULTY */}
+            <div className="space-y-6">
+              {activeFacultyCourses.map((c) => {
+                const s1All = registrations.filter((r) => {
+                  if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+                  return matchCourse(r.s1Sports, c.id, c.name) || matchCourse(r.s1StudentLife, c.id, c.name);
+                });
+
+                const s2All = registrations.filter((r) => {
+                  if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+                  return matchCourse(r.s2Sports, c.id, c.name) || matchCourse(r.s2StudentLife, c.id, c.name);
+                });
+
+                const q = facultyStudentSearchQuery.trim().toLowerCase();
+                const s1Filtered = s1All.filter(
+                  (s) => !q || s.name?.toLowerCase().includes(q) || s.regNo?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q)
+                );
+                const s2Filtered = s2All.filter(
+                  (s) => !q || s.name?.toLowerCase().includes(q) || s.regNo?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q)
+                );
+
+                const isSports = c.category === "Sports";
+
+                return (
+                  <div key={c.id} className="space-y-4 bg-[#072C28]/40 p-4 rounded-xl border border-[#7ECEB7]/15">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {isSports ? <Dumbbell className="w-4 h-4 text-[#7ECEB7]" /> : <GraduationCap className="w-4 h-4 text-[#A07850]" />}
+                        <h4 className="font-bold text-sm text-[#F5EBE0]">{c.name} ({c.id})</h4>
+                        <span className="text-xs text-[#D6C7A1] font-mono">[{c.category}]</span>
+                      </div>
+                      <span className="text-xs font-mono font-semibold text-[#7ECEB7]">
+                        Total Enrolled: {s1All.length + s2All.length} students
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Session 1 List */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs font-semibold text-[#7ECEB7] border-b border-[#7ECEB7]/15 pb-1">
+                          <span>Session 1 ({s1Filtered.length})</span>
+                        </div>
+                        {s1Filtered.length > 0 ? (
+                          <div className="overflow-x-auto rounded-lg border border-[#7ECEB7]/15 bg-[#041C19]">
+                            <table className="w-full text-left text-xs">
+                              <thead className="bg-[#072C28] text-[#D6C7A1]">
+                                <tr>
+                                  <th className="p-2">#</th>
+                                  <th className="p-2">Reg No</th>
+                                  <th className="p-2">Student Name</th>
+                                  <th className="p-2">Email</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-[#7ECEB7]/10 text-[#F5EBE0]">
+                                {s1Filtered.map((st, idx) => (
+                                  <tr key={idx} className="hover:bg-[#037A74]/15">
+                                    <td className="p-2 text-[#D6C7A1]">{idx + 1}</td>
+                                    <td className="p-2 font-mono text-[#7ECEB7] font-semibold">{st.regNo}</td>
+                                    <td className="p-2 font-medium text-white">{st.name}</td>
+                                    <td className="p-2 font-mono text-[11px] text-[#D6C7A1]/80">{st.email}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-[#D6C7A1]/50 italic p-2">No Session 1 students.</p>
+                        )}
+                      </div>
+
+                      {/* Session 2 List */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs font-semibold text-[#A07850] border-b border-[#A07850]/15 pb-1">
+                          <span>Session 2 ({s2Filtered.length})</span>
+                        </div>
+                        {s2Filtered.length > 0 ? (
+                          <div className="overflow-x-auto rounded-lg border border-[#7ECEB7]/15 bg-[#041C19]">
+                            <table className="w-full text-left text-xs">
+                              <thead className="bg-[#072C28] text-[#D6C7A1]">
+                                <tr>
+                                  <th className="p-2">#</th>
+                                  <th className="p-2">Reg No</th>
+                                  <th className="p-2">Student Name</th>
+                                  <th className="p-2">Email</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-[#7ECEB7]/10 text-[#F5EBE0]">
+                                {s2Filtered.map((st, idx) => (
+                                  <tr key={idx} className="hover:bg-[#A07850]/15">
+                                    <td className="p-2 text-[#D6C7A1]">{idx + 1}</td>
+                                    <td className="p-2 font-mono text-[#A07850] font-semibold">{st.regNo}</td>
+                                    <td className="p-2 font-medium text-white">{st.name}</td>
+                                    <td className="p-2 font-mono text-[11px] text-[#D6C7A1]/80">{st.email}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-[#D6C7A1]/50 italic p-2">No Session 2 students.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="p-8 text-center glass-panel border border-[#7ECEB7]/15 text-[#D6C7A1]/60">
+            Select a faculty member above to view their attendance roster.
+          </div>
+        )}
       </section>
 
       {/* MASTER REGISTERED STUDENT ROSTER TABLE WITH ADVANCED MULTI-FILTERING */}
