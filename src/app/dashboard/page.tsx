@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { MasterStudent } from "@/lib/google-sheets";
 import { CalculatedCourse, COURSES, RegistrationRow } from "@/lib/courses";
+import RegistrationNoticeModal from "@/components/RegistrationNoticeModal";
 import { 
   CheckCircle2, 
   Lock, 
@@ -25,7 +26,9 @@ import {
   KeyRound,
   X,
   Eye,
-  EyeOff
+  EyeOff,
+  Bell,
+  Ban
 } from "lucide-react";
 
 export default function StudentDashboard() {
@@ -36,6 +39,7 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [coursesList, setCoursesList] = useState<CalculatedCourse[]>([]);
   const [catalogFilter, setCatalogFilter] = useState<"all" | "Sports" | "Student Life">("all");
+  const [showNoticeModal, setShowNoticeModal] = useState(false);
 
   // Change Password state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -115,6 +119,10 @@ export default function StudentDashboard() {
 
         setIsSession1Complete(s1Done || isConfirmed);
         setIsSession2Complete(s2Done || isConfirmed);
+
+        if (!sessionStorage.getItem("notice_modal_seen")) {
+          setShowNoticeModal(true);
+        }
       } catch (err) {
         console.error("Failed to load student data", err);
       } finally {
@@ -227,6 +235,13 @@ export default function StudentDashboard() {
         </div>
 
         <div className="flex items-center gap-3 z-10 flex-wrap">
+          <button
+            onClick={() => setShowNoticeModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#A07850]/20 hover:bg-[#A07850]/30 text-[#D6C7A1] hover:text-[#F5EBE0] text-xs font-bold border border-[#A07850]/40 transition-all shadow-sm"
+          >
+            <Bell className="w-4 h-4 text-[#7ECEB7] animate-pulse" /> Course Updates Notice
+          </button>
+
           <button
             onClick={() => {
               setPasswordMsg("");
@@ -798,6 +813,15 @@ export default function StudentDashboard() {
         </div>,
         document.body
       )}
+
+      {/* REGISTRATION ANNOUNCEMENT POPUP MODAL */}
+      <RegistrationNoticeModal
+        isOpen={showNoticeModal}
+        onClose={() => {
+          setShowNoticeModal(false);
+          sessionStorage.setItem("notice_modal_seen", "true");
+        }}
+      />
     </div>
   );
 }

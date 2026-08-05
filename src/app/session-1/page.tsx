@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { MasterStudent } from "@/lib/google-sheets";
-import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Info } from "lucide-react";
+import RegistrationNoticeModal from "@/components/RegistrationNoticeModal";
+import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Info, Bell } from "lucide-react";
 
 export default function Session1Page() {
   const [student, setStudent] = useState<MasterStudent | null>(null);
   const [courses, setCourses] = useState<CalculatedCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showNoticeModal, setShowNoticeModal] = useState(false);
 
   // Temporary selections
   const [selectedSports, setSelectedSports] = useState<string>("");
@@ -134,9 +136,18 @@ export default function Session1Page() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-[#D6C7A1] bg-[#072C28] p-3 rounded-xl border border-[#7ECEB7]/20">
-          <Sparkles className="w-4 h-4 text-[#A07850]" />
-          <span>Pick exactly 1 Sports + 1 Student Life course</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowNoticeModal(true)}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#A07850]/20 hover:bg-[#A07850]/30 text-[#D6C7A1] hover:text-[#F5EBE0] text-xs font-bold border border-[#A07850]/40 transition-all shadow-sm"
+          >
+            <Bell className="w-4 h-4 text-[#7ECEB7] animate-pulse" />
+            <span>Course Notice</span>
+          </button>
+          <div className="flex items-center gap-3 text-xs text-[#D6C7A1] bg-[#072C28] p-3 rounded-xl border border-[#7ECEB7]/20">
+            <Sparkles className="w-4 h-4 text-[#A07850]" />
+            <span>Pick exactly 1 Sports + 1 Student Life course</span>
+          </div>
         </div>
       </header>
 
@@ -246,8 +257,21 @@ export default function Session1Page() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {studentLifeCourses.map((course) => {
             const seatsRemaining = course.s1SeatsAvailable;
-            const isFull = seatsRemaining <= 0;
+            const isFull = seatsRemaining <= 0 || course.isS1Frozen || course.isFrozen || course.isClosed;
             const isSelected = selectedStudentLife === course.id || selectedStudentLife === course.name;
+
+            let badgeText = "";
+            let badgeStyle = "";
+            if (course.isFrozen) {
+              badgeText = "Completely Frozen";
+              badgeStyle = "bg-red-500/20 text-red-300 border-red-500/40";
+            } else if (course.isClosed) {
+              badgeText = "Closed Completely";
+              badgeStyle = "bg-red-500/20 text-red-300 border-red-500/40";
+            } else if (course.isS1Frozen) {
+              badgeText = "Frozen for Wednesday";
+              badgeStyle = "bg-[#A07850]/20 text-[#D6C7A1] border-[#A07850]/40";
+            }
 
             return (
               <div
@@ -260,7 +284,7 @@ export default function Session1Page() {
                 }}
                 className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all ${
                   isFull
-                    ? "opacity-50 cursor-not-allowed border-red-500/20 bg-red-950/10"
+                    ? "opacity-60 cursor-not-allowed border-red-500/20 bg-red-950/10"
                     : isSelected
                     ? "border-[#A07850] bg-[#A07850]/30 shadow-lg shadow-[#A07850]/20 scale-[1.02] cursor-pointer"
                     : "border-[#7ECEB7]/15 hover:border-[#7ECEB7]/40 cursor-pointer"
@@ -272,6 +296,21 @@ export default function Session1Page() {
                     {isSelected && <CheckCircle2 className="w-5 h-5 text-[#D6C7A1]" />}
                   </div>
                   <h3 className="font-bold text-base text-[#F5EBE0]">{course.name}</h3>
+
+                  {badgeText && (
+                    <div className="pt-1">
+                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${badgeStyle}`}>
+                        {badgeText}
+                      </span>
+                    </div>
+                  )}
+
+                  {course.statusNotice && (
+                    <p className="text-[11px] text-[#7ECEB7] font-medium pt-1">
+                      {course.statusNotice}
+                    </p>
+                  )}
+
                   <div className="flex items-center gap-1.5 text-xs text-[#D6C7A1] pt-1">
                     <span>Faculty: <strong className="text-[#F5EBE0] font-normal">{course.faculty || "<faculty name>"}</strong></span>
                     <button
@@ -306,7 +345,15 @@ export default function Session1Page() {
 
                 <div className="pt-2 border-t border-[#7ECEB7]/15 flex items-center justify-between text-xs font-mono">
                   <span className="text-[#D6C7A1]">Seats:</span>
-                  {isFull ? (
+                  {course.isFrozen || course.isClosed ? (
+                    <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-bold border border-red-500/30">
+                      Unavailable
+                    </span>
+                  ) : course.isS1Frozen ? (
+                    <span className="px-2 py-0.5 rounded bg-[#A07850]/20 text-[#D6C7A1] font-bold border border-[#A07850]/30">
+                      Frozen for Wed
+                    </span>
+                  ) : isFull ? (
                     <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-bold border border-red-500/30">
                       Course Full
                     </span>
@@ -342,6 +389,12 @@ export default function Session1Page() {
           <ArrowRight className="w-5 h-5" />
         </button>
       </footer>
+
+      {/* REGISTRATION ANNOUNCEMENT POPUP MODAL */}
+      <RegistrationNoticeModal
+        isOpen={showNoticeModal}
+        onClose={() => setShowNoticeModal(false)}
+      />
     </div>
   );
 }

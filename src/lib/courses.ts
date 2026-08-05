@@ -6,6 +6,13 @@ export interface Course {
   faculty?: string;
   docUrl?: string;
   schedule?: string;
+  isFrozen?: boolean;
+  isClosed?: boolean;
+  isS1Frozen?: boolean;
+  isS2Frozen?: boolean;
+  s1SlotsLeft?: number;
+  s2SlotsLeft?: number;
+  statusNotice?: string;
 }
 
 export const COURSES: Course[] = [
@@ -19,17 +26,81 @@ export const COURSES: Course[] = [
   { id: "SP07", name: "Throwball", category: "Sports", maxSeats: 80, faculty: "Prashanth V", docUrl: "https://docs.google.com/document/d/1HHMJxQ1wvQLgojdWuIUVCcrF2Kea0Zbm/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Tuesday | Wednesday | Thursday | Friday" },
   { id: "SP08", name: "Volleyball", category: "Sports", maxSeats: 80, faculty: "Kiran J", docUrl: "https://docs.google.com/document/d/1X1QRA-YhAA-T9QxL9YzLcTQjslrnJjX6/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Tuesday | Wednesday | Thursday | Friday" },
 
-  // 11 Student Life Courses (Wednesday & Friday = 50 maxSeats, Exceptions = Friday only 25 maxSeats)
-  { id: "SL01", name: "Basics of Theatre Acting", category: "Student Life", maxSeats: 50, faculty: "Dr. Charu Agaru", docUrl: "https://docs.google.com/document/d/1LQibgzRR2cnitJRCYjO14zJzPxgZ0ZLf/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
-  { id: "SL02", name: "Communication, Life skills and Soft skills", category: "Student Life", maxSeats: 50, faculty: "Mehul Shah", docUrl: "https://docs.google.com/document/d/1tMWN5atlY2ELa5Sh1GFW_kJAKfg1WaY5/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
-  { id: "SL03", name: "Contemporary Dance, Hip Hop and Freestyle", category: "Student Life", maxSeats: 25, faculty: "Rajesh Kumar", docUrl: "https://docs.google.com/document/d/18XTPM8tqzjbo_rHfhn_m0ogFZUryNVVl/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Friday" },
+  // 11 Student Life Courses
+  { 
+    id: "SL01", 
+    name: "Basics of Theatre Acting", 
+    category: "Student Life", 
+    maxSeats: 50, 
+    faculty: "Dr. Charu Agaru", 
+    docUrl: "https://docs.google.com/document/d/1LQibgzRR2cnitJRCYjO14zJzPxgZ0ZLf/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
+    schedule: "Friday",
+    isS1Frozen: true,
+    s2SlotsLeft: 18,
+    statusNotice: "Frozen for Wednesday | Open for Friday (18 slots left)" 
+  },
+  { 
+    id: "SL02", 
+    name: "Communication, Life skills and Soft skills", 
+    category: "Student Life", 
+    maxSeats: 50, 
+    faculty: "Mehul Shah", 
+    docUrl: "https://docs.google.com/document/d/1tMWN5atlY2ELa5Sh1GFW_kJAKfg1WaY5/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
+    schedule: "Frozen",
+    isFrozen: true,
+    statusNotice: "Completely Frozen — No new students accepted" 
+  },
+  { 
+    id: "SL03", 
+    name: "Contemporary Dance, Hip Hop and Freestyle", 
+    category: "Student Life", 
+    maxSeats: 25, 
+    faculty: "Rajesh Kumar", 
+    docUrl: "https://docs.google.com/document/d/18XTPM8tqzjbo_rHfhn_m0ogFZUryNVVl/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
+    schedule: "Closed",
+    isClosed: true,
+    statusNotice: "Closed Completely" 
+  },
   { id: "SL04", name: "Folk Dance - FIPA", category: "Student Life", maxSeats: 50, faculty: "Dr. Anitha U S", docUrl: "https://docs.google.com/document/d/1as5vc9dTD5GvXKVtRE0zyL8LEx8eHuxB/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
-  { id: "SL05", name: "Mental Wellbeing and Peer Support", category: "Student Life", maxSeats: 50, faculty: "Dr. Prajwala H V", docUrl: "https://docs.google.com/document/d/1DCankpA0EbQ4Rl8pEr3gcVgNnKwwXQrG/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { 
+    id: "SL05", 
+    name: "Mental Wellbeing and Peer Support", 
+    category: "Student Life", 
+    maxSeats: 50, 
+    faculty: "Dr. Prajwala H V", 
+    docUrl: "https://docs.google.com/document/d/1DCankpA0EbQ4Rl8pEr3gcVgNnKwwXQrG/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
+    schedule: "Friday",
+    isS1Frozen: true,
+    s2SlotsLeft: 11,
+    statusNotice: "Frozen for Wednesday | Open for Friday (11 slots left)" 
+  },
   { id: "SL06", name: "Introduction to Traditional Music", category: "Student Life", maxSeats: 25, faculty: "Seetha M I", docUrl: "https://docs.google.com/document/d/1Bneug18xXjnGbD85FmSOYRSRcdOHJhag/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Friday" },
   { id: "SL07", name: "Music Band Contemporary and Light Music", category: "Student Life", maxSeats: 50, faculty: "Sunil Kumar M P", docUrl: "https://docs.google.com/document/d/1KR3-ozpFjnGK3G54Tg6-MmjmSrHRunii/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
   { id: "SL08", name: "Rhythm Appreciation", category: "Student Life", maxSeats: 50, faculty: "Sreekanth P V", docUrl: "https://docs.google.com/document/d/1ho8DU4CurHwYnGKnteO8hkrmPCawYRF_/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
-  { id: "SL09", name: "Creative Design, Innovation and Sustainability", category: "Student Life", maxSeats: 50, faculty: "Moses Kotikela", docUrl: "https://docs.google.com/document/d/1Orvu3IoWyK1uQAFORd1NeJ5vCgY6FPhk/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
-  { id: "SL10", name: "Social Media and Digital Content Creation", category: "Student Life", maxSeats: 50, faculty: "Meghna Ganguly", docUrl: "https://docs.google.com/document/d/1Q6qN97uzBwNMtZ5tVHYqV55V6x_SHe4r/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { 
+    id: "SL09", 
+    name: "Creative Design, Innovation and Sustainability", 
+    category: "Student Life", 
+    maxSeats: 50, 
+    faculty: "Moses Kotikela", 
+    docUrl: "https://docs.google.com/document/d/1Orvu3IoWyK1uQAFORd1NeJ5vCgY6FPhk/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
+    schedule: "Friday",
+    isS1Frozen: true,
+    s2SlotsLeft: 26,
+    statusNotice: "Frozen for Wednesday | Open for Friday (26 slots left)" 
+  },
+  { 
+    id: "SL10", 
+    name: "Social Media and Digital Content Creation", 
+    category: "Student Life", 
+    maxSeats: 50, 
+    faculty: "Meghna Ganguly", 
+    docUrl: "https://docs.google.com/document/d/1Q6qN97uzBwNMtZ5tVHYqV55V6x_SHe4r/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
+    schedule: "Friday Only",
+    isS1Frozen: true,
+    s2SlotsLeft: 13,
+    statusNotice: "Frozen for Wednesday | Open for Friday ONLY (13 slots left)" 
+  },
   { id: "SL11", name: "Invocatory_Dances", category: "Student Life", maxSeats: 50, faculty: "Dr. Divya Nedungadi", docUrl: "https://docs.google.com/document/d/17n0M-zWAIMtn7Chcqw8ds35I5xe7Q6f1/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
 ];
 
@@ -133,12 +204,32 @@ export function calculateDynamicSeats(
       }
     }
 
+    let s1Available = Math.max(0, course.maxSeats - s1Occupied);
+    let s2Available = Math.max(0, course.maxSeats - s2Occupied);
+
+    if (course.isFrozen || course.isClosed) {
+      s1Available = 0;
+      s2Available = 0;
+    } else {
+      if (course.isS1Frozen) {
+        s1Available = 0;
+      } else if (typeof course.s1SlotsLeft === "number") {
+        s1Available = Math.max(0, course.s1SlotsLeft - s1Occupied);
+      }
+
+      if (course.isS2Frozen) {
+        s2Available = 0;
+      } else if (typeof course.s2SlotsLeft === "number") {
+        s2Available = Math.max(0, course.s2SlotsLeft - s2Occupied);
+      }
+    }
+
     return {
       ...course,
       s1SeatsOccupied: s1Occupied,
-      s1SeatsAvailable: Math.max(0, course.maxSeats - s1Occupied),
+      s1SeatsAvailable: s1Available,
       s2SeatsOccupied: s2Occupied,
-      s2SeatsAvailable: Math.max(0, course.maxSeats - s2Occupied),
+      s2SeatsAvailable: s2Available,
     };
   });
 }

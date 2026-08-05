@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { MasterStudent } from "@/lib/google-sheets";
-import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Ban, Info } from "lucide-react";
+import RegistrationNoticeModal from "@/components/RegistrationNoticeModal";
+import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Ban, Info, Bell } from "lucide-react";
 
 export default function Session2Page() {
   const [student, setStudent] = useState<MasterStudent | null>(null);
   const [courses, setCourses] = useState<CalculatedCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showNoticeModal, setShowNoticeModal] = useState(false);
 
   // Session 1 draft choices
   const [s1SportsChoice, setS1SportsChoice] = useState<string>("");
@@ -154,9 +156,18 @@ export default function Session2Page() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-[#D6C7A1] bg-[#072C28] p-3 rounded-xl border border-[#7ECEB7]/20">
-          <Sparkles className="w-4 h-4 text-[#A07850]" />
-          <span>Session 1 selections are automatically disabled for Session 2</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowNoticeModal(true)}
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#A07850]/20 hover:bg-[#A07850]/30 text-[#D6C7A1] hover:text-[#F5EBE0] text-xs font-bold border border-[#A07850]/40 transition-all shadow-sm"
+          >
+            <Bell className="w-4 h-4 text-[#7ECEB7] animate-pulse" />
+            <span>Course Notice</span>
+          </button>
+          <div className="flex items-center gap-3 text-xs text-[#D6C7A1] bg-[#072C28] p-3 rounded-xl border border-[#7ECEB7]/20">
+            <Sparkles className="w-4 h-4 text-[#A07850]" />
+            <span>Session 1 selections are automatically disabled for Session 2</span>
+          </div>
         </div>
       </header>
 
@@ -280,10 +291,23 @@ export default function Session2Page() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {studentLifeCourses.map((course) => {
             const seatsRemaining = course.s2SeatsAvailable;
-            const isFull = seatsRemaining <= 0;
+            const isFull = seatsRemaining <= 0 || course.isFrozen || course.isClosed || course.isS2Frozen;
             const isSelectedInSession1 = course.id === s1LifeChoice || course.name === s1LifeChoice;
             const isDisabled = isFull || isSelectedInSession1;
             const isSelected = selectedStudentLife === course.id || selectedStudentLife === course.name;
+
+            let badgeText = "";
+            let badgeStyle = "";
+            if (course.isFrozen) {
+              badgeText = "Completely Frozen";
+              badgeStyle = "bg-red-500/20 text-red-300 border-red-500/40";
+            } else if (course.isClosed) {
+              badgeText = "Closed Completely";
+              badgeStyle = "bg-red-500/20 text-red-300 border-red-500/40";
+            } else if (course.isS1Frozen) {
+              badgeText = "Open for Friday";
+              badgeStyle = "bg-[#7ECEB7]/20 text-[#7ECEB7] border-[#7ECEB7]/40";
+            }
 
             return (
               <div
@@ -297,8 +321,8 @@ export default function Session2Page() {
                 className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all ${
                   isSelectedInSession1
                     ? "opacity-40 cursor-not-allowed border-[#7ECEB7]/10 bg-[#041C19]"
-                    : isFull
-                    ? "opacity-50 cursor-not-allowed border-red-500/20 bg-red-950/10"
+                    : isDisabled
+                    ? "opacity-60 cursor-not-allowed border-red-500/20 bg-red-950/10"
                     : isSelected
                     ? "border-[#A07850] bg-[#A07850]/30 shadow-lg shadow-[#A07850]/20 scale-[1.02] cursor-pointer"
                     : "border-[#7ECEB7]/15 hover:border-[#7ECEB7]/40 cursor-pointer"
@@ -316,6 +340,21 @@ export default function Session2Page() {
                     ) : null}
                   </div>
                   <h3 className="font-bold text-base text-[#F5EBE0]">{course.name}</h3>
+
+                  {badgeText && !isSelectedInSession1 && (
+                    <div className="pt-1">
+                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${badgeStyle}`}>
+                        {badgeText}
+                      </span>
+                    </div>
+                  )}
+
+                  {course.statusNotice && !isSelectedInSession1 && (
+                    <p className="text-[11px] text-[#7ECEB7] font-medium pt-1">
+                      {course.statusNotice}
+                    </p>
+                  )}
+
                   <div className="flex items-center gap-1.5 text-xs text-[#D6C7A1] pt-1">
                     <span>Faculty: <strong className="text-[#F5EBE0] font-normal">{course.faculty || "<faculty name>"}</strong></span>
                     <button
@@ -354,13 +393,17 @@ export default function Session2Page() {
                     <span className="px-2 py-0.5 rounded bg-[#072C28] text-[#D6C7A1]/50 border border-[#7ECEB7]/10">
                       Disabled
                     </span>
+                  ) : course.isFrozen || course.isClosed ? (
+                    <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-bold border border-red-500/30">
+                      Unavailable
+                    </span>
                   ) : isFull ? (
                     <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-bold border border-red-500/30">
                       Course Full
                     </span>
                   ) : (
                     <span className={`px-2 py-0.5 rounded ${isSelected ? "bg-[#A07850]/25 text-[#D6C7A1] font-bold" : "bg-[#072C28] text-[#D6C7A1]"}`}>
-                      {seatsRemaining} / {course.maxSeats} Seats Remaining
+                      {seatsRemaining} / {course.s2SlotsLeft ?? course.maxSeats} Seats Remaining
                     </span>
                   )}
                 </div>
@@ -390,6 +433,12 @@ export default function Session2Page() {
           <ArrowRight className="w-5 h-5" />
         </button>
       </footer>
+
+      {/* REGISTRATION ANNOUNCEMENT POPUP MODAL */}
+      <RegistrationNoticeModal
+        isOpen={showNoticeModal}
+        onClose={() => setShowNoticeModal(false)}
+      />
     </div>
   );
 }
