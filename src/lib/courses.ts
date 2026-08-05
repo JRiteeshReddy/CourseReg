@@ -215,13 +215,29 @@ export function calculateDynamicSeats(
       if (course.isS1Frozen) {
         s1Available = 0;
       } else if (typeof course.s1SlotsLeft === "number") {
-        s1Available = Math.max(0, course.s1SlotsLeft - s1Occupied);
+        let s1Holds = 0;
+        for (const hold of activeHolds) {
+          if (course.category === "Sports") {
+            if (matchCourse(hold.s1Sports, course.id, course.name)) s1Holds++;
+          } else {
+            if (matchCourse(hold.s1StudentLife, course.id, course.name)) s1Holds++;
+          }
+        }
+        s1Available = Math.max(0, course.s1SlotsLeft - s1Holds);
       }
 
       if (course.isS2Frozen) {
         s2Available = 0;
       } else if (typeof course.s2SlotsLeft === "number") {
-        s2Available = Math.max(0, course.s2SlotsLeft - s2Occupied);
+        let s2Holds = 0;
+        for (const hold of activeHolds) {
+          if (course.category === "Sports") {
+            if (matchCourse(hold.s2Sports, course.id, course.name)) s2Holds++;
+          } else {
+            if (matchCourse(hold.s2StudentLife, course.id, course.name)) s2Holds++;
+          }
+        }
+        s2Available = Math.max(0, course.s2SlotsLeft - s2Holds);
       }
     }
 
