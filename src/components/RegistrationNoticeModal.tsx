@@ -75,11 +75,11 @@ export default function RegistrationNoticeModal({ isOpen, onClose }: NoticeModal
             </div>
           </div>
 
-          {/* Section 2: Wednesday Frozen / Friday Open Courses */}
+          {/* Section 2: Open Friday-Only Session 1 Courses */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 font-bold text-[#F5EBE0] text-sm uppercase tracking-wider">
               <Calendar className="w-4 h-4 text-[#7ECEB7]" />
-              <span>Wednesday-Frozen Courses (Open for Friday Only)</span>
+              <span>Open Friday-Only Session 1 Courses (Limited Slots)</span>
             </div>
 
             <div className="space-y-2">
@@ -87,40 +87,40 @@ export default function RegistrationNoticeModal({ isOpen, onClose }: NoticeModal
               <div className="p-3.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/25 flex flex-col md:flex-row md:items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-[#F5EBE0]">Social Media and Digital Content Creation</h4>
-                  <p className="text-xs text-[#D6C7A1]">Frozen for Wednesday | <span className="text-[#7ECEB7] font-semibold">Open ONLY for Friday</span></p>
+                  <p className="text-xs text-[#D6C7A1]">Open for Session 1 — <span className="text-[#7ECEB7] font-semibold">Friday Class Schedule Only</span></p>
                 </div>
                 <span className="px-3 py-1 rounded-lg bg-[#037A74]/40 border border-[#7ECEB7]/30 text-xs font-mono text-[#7ECEB7] self-start md:self-auto">
-                  13 Slots Remaining
+                  13 Slots Open
                 </span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/25 flex flex-col md:flex-row md:items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-[#F5EBE0]">Creative Design, Innovation and Sustainability</h4>
-                  <p className="text-xs text-[#D6C7A1]">Frozen for Wednesday | <span className="text-[#7ECEB7] font-semibold">Open for Friday</span></p>
+                  <p className="text-xs text-[#D6C7A1]">Open for Session 1 — <span className="text-[#7ECEB7] font-semibold">Friday Class Schedule Only</span></p>
                 </div>
                 <span className="px-3 py-1 rounded-lg bg-[#037A74]/40 border border-[#7ECEB7]/30 text-xs font-mono text-[#7ECEB7] self-start md:self-auto">
-                  26 Slots Remaining
+                  26 Slots Open
                 </span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/25 flex flex-col md:flex-row md:items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-[#F5EBE0]">Basics of Theatre Acting</h4>
-                  <p className="text-xs text-[#D6C7A1]">Frozen for Wednesday | <span className="text-[#7ECEB7] font-semibold">Open for Friday</span></p>
+                  <p className="text-xs text-[#D6C7A1]">Open for Session 1 — <span className="text-[#7ECEB7] font-semibold">Friday Class Schedule Only</span></p>
                 </div>
                 <span className="px-3 py-1 rounded-lg bg-[#037A74]/40 border border-[#7ECEB7]/30 text-xs font-mono text-[#7ECEB7] self-start md:self-auto">
-                  18 Slots Remaining
+                  18 Slots Open
                 </span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/25 flex flex-col md:flex-row md:items-center justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-[#F5EBE0]">Mental Wellbeing and Peer Support</h4>
-                  <p className="text-xs text-[#D6C7A1]">Frozen for Wednesday | <span className="text-[#7ECEB7] font-semibold">Open for Friday</span></p>
+                  <p className="text-xs text-[#D6C7A1]">Open for Session 1 — <span className="text-[#7ECEB7] font-semibold">Friday Class Schedule Only</span></p>
                 </div>
                 <span className="px-3 py-1 rounded-lg bg-[#037A74]/40 border border-[#7ECEB7]/30 text-xs font-mono text-[#7ECEB7] self-start md:self-auto">
-                  11 Slots Remaining
+                  11 Slots Open
                 </span>
               </div>
 

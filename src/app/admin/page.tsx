@@ -295,18 +295,83 @@ export default function AdminDashboard() {
   };
 
   // Master Export
+  const isFridayOnlyS1Choice = (choice: string | undefined | null) => {
+    if (!choice) return false;
+    const c = choice.trim().toLowerCase();
+    const specialIds = ["sl01", "sl05", "sl09", "sl10"];
+    const specialNames = [
+      "basics of theatre acting",
+      "mental wellbeing and peer support",
+      "creative design, innovation and sustainability",
+      "social media and digital content creation"
+    ];
+    return specialIds.includes(c) || specialNames.some((n) => c.includes(n));
+  };
+
   const exportAllToExcel = () => {
     if (registrations.length === 0) {
       alert("No registration data available to export.");
       return;
     }
 
-    const exportRows = registrations.map((r) => ({
+    const allExportRows = registrations.map((r) => ({
       "Registration Number": r.regNo,
       "Student Name": r.name,
       "Student Email": r.email,
       "Session 1 Sports": r.s1Sports,
       "Session 1 Student Life": r.s1StudentLife,
+      "Session 2 Sports": r.s2Sports,
+      "Session 2 Student Life": r.s2StudentLife,
+      "Friday-Only S1 Course": isFridayOnlyS1Choice(r.s1StudentLife) ? "YES" : "NO",
+      "Registration Timestamp": r.timestamp,
+      Status: r.status,
+    }));
+
+    const fridayOnlyS1Rows = registrations
+      .filter((r) => isFridayOnlyS1Choice(r.s1StudentLife))
+      .map((r) => ({
+        "Registration Number": r.regNo,
+        "Student Name": r.name,
+        "Student Email": r.email,
+        "Session 1 Sports": r.s1Sports,
+        "Session 1 Student Life (Friday-Only Course)": r.s1StudentLife,
+        "Session 2 Sports": r.s2Sports,
+        "Session 2 Student Life": r.s2StudentLife,
+        "Registration Timestamp": r.timestamp,
+        Status: r.status,
+      }));
+
+    const workbook = XLSX.utils.book_new();
+
+    const mainWorksheet = XLSX.utils.json_to_sheet(allExportRows);
+    XLSX.utils.book_append_sheet(workbook, mainWorksheet, "All Registrations");
+
+    if (fridayOnlyS1Rows.length > 0) {
+      const specialWorksheet = XLSX.utils.json_to_sheet(fridayOnlyS1Rows);
+      XLSX.utils.book_append_sheet(workbook, specialWorksheet, "Friday-Only S1 Registrations");
+    }
+
+    XLSX.writeFile(
+      workbook,
+      `Master_University_Course_Registrations_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
+  };
+
+  const exportFridayOnlyS1ToExcel = () => {
+    const fridayOnlyS1Students = registrations.filter((r) => isFridayOnlyS1Choice(r.s1StudentLife));
+
+    if (fridayOnlyS1Students.length === 0) {
+      alert("No students have registered for Friday-Only Session 1 courses yet.");
+      return;
+    }
+
+    const exportRows = fridayOnlyS1Students.map((r) => ({
+      "Registration Number": r.regNo,
+      "Student Name": r.name,
+      "Student Email": r.email,
+      "Faculty Mentor": r.facultyName || "Unassigned",
+      "Session 1 Sports": r.s1Sports,
+      "Session 1 Friday-Only Student Life Course": r.s1StudentLife,
       "Session 2 Sports": r.s2Sports,
       "Session 2 Student Life": r.s2StudentLife,
       "Registration Timestamp": r.timestamp,
@@ -315,10 +380,10 @@ export default function AdminDashboard() {
 
     const worksheet = XLSX.utils.json_to_sheet(exportRows);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "All Registrations");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Friday-Only S1 Students");
     XLSX.writeFile(
       workbook,
-      `Master_University_Course_Registrations_${new Date().toISOString().split("T")[0]}.xlsx`
+      `Friday_Only_Session1_Special_Registrations_${new Date().toISOString().split("T")[0]}.xlsx`
     );
   };
 
@@ -1103,6 +1168,14 @@ export default function AdminDashboard() {
             className="btn-primary flex-1 sm:flex-none flex items-center justify-center gap-2 text-xs font-bold text-[#F5EBE0] py-2.5 px-4"
           >
             <Download className="w-4 h-4 text-[#F5EBE0]" /> Export All (.xlsx)
+          </button>
+
+          <button
+            onClick={exportFridayOnlyS1ToExcel}
+            className="px-4 py-2.5 rounded-xl bg-[#037A74]/40 hover:bg-[#037A74]/60 text-[#7ECEB7] border border-[#7ECEB7]/30 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
+            title="Export students registered for Friday-Only S1 courses"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-[#7ECEB7]" /> Export Friday-Only S1 (.xlsx)
           </button>
 
           <button

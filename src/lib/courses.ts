@@ -10,6 +10,7 @@ export interface Course {
   isClosed?: boolean;
   isS1Frozen?: boolean;
   isS2Frozen?: boolean;
+  isS1FridayOnly?: boolean;
   s1SlotsLeft?: number;
   s2SlotsLeft?: number;
   statusNotice?: string;
@@ -35,9 +36,9 @@ export const COURSES: Course[] = [
     faculty: "Dr. Charu Agaru", 
     docUrl: "https://docs.google.com/document/d/1LQibgzRR2cnitJRCYjO14zJzPxgZ0ZLf/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
     schedule: "Friday",
-    isS1Frozen: true,
-    s2SlotsLeft: 18,
-    statusNotice: "Frozen for Wednesday | Open for Friday (18 slots left)" 
+    s1SlotsLeft: 18,
+    isS1FridayOnly: true,
+    statusNotice: "Open for Friday Class Only (18 slots left)" 
   },
   { 
     id: "SL02", 
@@ -70,9 +71,9 @@ export const COURSES: Course[] = [
     faculty: "Dr. Prajwala H V", 
     docUrl: "https://docs.google.com/document/d/1DCankpA0EbQ4Rl8pEr3gcVgNnKwwXQrG/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
     schedule: "Friday",
-    isS1Frozen: true,
-    s2SlotsLeft: 11,
-    statusNotice: "Frozen for Wednesday | Open for Friday (11 slots left)" 
+    s1SlotsLeft: 11,
+    isS1FridayOnly: true,
+    statusNotice: "Open for Friday Class Only (11 slots left)" 
   },
   { id: "SL06", name: "Introduction to Traditional Music", category: "Student Life", maxSeats: 25, faculty: "Seetha M I", docUrl: "https://docs.google.com/document/d/1Bneug18xXjnGbD85FmSOYRSRcdOHJhag/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Friday" },
   { id: "SL07", name: "Music Band Contemporary and Light Music", category: "Student Life", maxSeats: 50, faculty: "Sunil Kumar M P", docUrl: "https://docs.google.com/document/d/1KR3-ozpFjnGK3G54Tg6-MmjmSrHRunii/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
@@ -85,9 +86,9 @@ export const COURSES: Course[] = [
     faculty: "Moses Kotikela", 
     docUrl: "https://docs.google.com/document/d/1Orvu3IoWyK1uQAFORd1NeJ5vCgY6FPhk/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
     schedule: "Friday",
-    isS1Frozen: true,
-    s2SlotsLeft: 26,
-    statusNotice: "Frozen for Wednesday | Open for Friday (26 slots left)" 
+    s1SlotsLeft: 26,
+    isS1FridayOnly: true,
+    statusNotice: "Open for Friday Class Only (26 slots left)" 
   },
   { 
     id: "SL10", 
@@ -97,9 +98,9 @@ export const COURSES: Course[] = [
     faculty: "Meghna Ganguly", 
     docUrl: "https://docs.google.com/document/d/1Q6qN97uzBwNMtZ5tVHYqV55V6x_SHe4r/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
     schedule: "Friday Only",
-    isS1Frozen: true,
-    s2SlotsLeft: 13,
-    statusNotice: "Frozen for Wednesday | Open for Friday ONLY (13 slots left)" 
+    s1SlotsLeft: 13,
+    isS1FridayOnly: true,
+    statusNotice: "Open for Friday Class ONLY (13 slots left)" 
   },
   { id: "SL11", name: "Invocatory_Dances", category: "Student Life", maxSeats: 50, faculty: "Dr. Divya Nedungadi", docUrl: "https://docs.google.com/document/d/17n0M-zWAIMtn7Chcqw8ds35I5xe7Q6f1/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
 ];
