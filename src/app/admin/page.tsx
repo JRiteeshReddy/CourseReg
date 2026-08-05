@@ -1558,7 +1558,7 @@ export default function AdminDashboard() {
                         Session 1 Occupancy
                       </span>
                       <span>
-                        <strong className="text-white">{course.s1SeatsOccupied}</strong> / {course.s1EffectiveMaxSeats || course.maxSeats} seats
+                        <strong className="text-white">{course.s1SeatsOccupied}</strong> Registered / {course.s1EffectiveMaxSeats || course.maxSeats} Cap ({course.s1SeatsAvailable} Remaining)
                       </span>
                     </div>
                     <div className="w-full h-2.5 bg-[#041C19] rounded-full overflow-hidden border border-[#7ECEB7]/10">
@@ -1578,7 +1578,7 @@ export default function AdminDashboard() {
                         Session 2 Occupancy
                       </span>
                       <span>
-                        <strong className="text-white">{course.s2SeatsOccupied}</strong> / {course.s2EffectiveMaxSeats || course.maxSeats} seats
+                        <strong className="text-white">{course.s2SeatsOccupied}</strong> Registered / {course.s2EffectiveMaxSeats || course.maxSeats} Cap ({course.s2SeatsAvailable} Remaining)
                       </span>
                     </div>
                     <div className="w-full h-2.5 bg-[#041C19] rounded-full overflow-hidden border border-[#7ECEB7]/10">
