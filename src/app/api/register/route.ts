@@ -37,8 +37,11 @@ export async function POST(request: Request) {
 
     const student = await checkStudentAuthorized(sessionUser.email) || sessionUser;
 
+    const allRegs = await fetchRegistrations();
+    const calculatedCourses = calculateDynamicSeats(allRegs);
+
     // Resolve course objects and full names
-    const getCourseObj = (idOrName: string) => COURSES.find(c => c.id === idOrName || c.name === idOrName);
+    const getCourseObj = (idOrName: string) => calculatedCourses.find(c => c.id === idOrName || c.name === idOrName);
     const s1SportsObj = getCourseObj(s1Sports);
     const s1LifeObj = getCourseObj(s1StudentLife);
     const s2SportsObj = getCourseObj(s2Sports);
@@ -59,10 +62,10 @@ export async function POST(request: Request) {
         p_s1_life: s1LifeName,
         p_s2_sports: s2SportsName,
         p_s2_life: s2LifeName,
-        p_s1_sports_max: s1SportsObj?.maxSeats || 80,
-        p_s1_life_max: s1LifeObj?.maxSeats || 50,
-        p_s2_sports_max: s2SportsObj?.maxSeats || 80,
-        p_s2_life_max: s2LifeObj?.maxSeats || 50,
+        p_s1_sports_max: s1SportsObj?.s1EffectiveMaxSeats || s1SportsObj?.maxSeats || 80,
+        p_s1_life_max: s1LifeObj?.s1EffectiveMaxSeats || s1LifeObj?.maxSeats || 50,
+        p_s2_sports_max: s2SportsObj?.s2EffectiveMaxSeats || s2SportsObj?.maxSeats || 80,
+        p_s2_life_max: s2LifeObj?.s2EffectiveMaxSeats || s2LifeObj?.maxSeats || 50,
       });
 
       if (!rpcError && rpcData) {

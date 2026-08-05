@@ -365,7 +365,7 @@ export default function Session1Page() {
                     </span>
                   ) : (
                     <span className={`px-2 py-0.5 rounded ${isSelected ? "bg-[#A07850]/25 text-[#D6C7A1] font-bold" : "bg-[#072C28] text-[#D6C7A1]"}`}>
-                      {seatsRemaining} / {course.maxSeats} Seats Remaining
+                      {seatsRemaining} / {course.s1EffectiveMaxSeats || course.maxSeats} Seats Remaining
                     </span>
                   )}
                 </div>

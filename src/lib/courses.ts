@@ -137,8 +137,10 @@ export interface SeatHold {
 export interface CalculatedCourse extends Course {
   s1SeatsOccupied: number;
   s1SeatsAvailable: number;
+  s1EffectiveMaxSeats: number;
   s2SeatsOccupied: number;
   s2SeatsAvailable: number;
+  s2EffectiveMaxSeats: number;
 }
 
 const DRAFT_HOLD_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes temporary seat hold
@@ -205,8 +207,10 @@ export function calculateDynamicSeats(
       }
     }
 
-    let s1Available = Math.max(0, course.maxSeats - s1Occupied);
-    let s2Available = Math.max(0, course.maxSeats - s2Occupied);
+    let s1MaxSeats = course.maxSeats;
+    let s2MaxSeats = course.maxSeats;
+    let s1Available = Math.max(0, s1MaxSeats - s1Occupied);
+    let s2Available = Math.max(0, s2MaxSeats - s2Occupied);
 
     if (course.isFrozen || course.isClosed) {
       s1Available = 0;
@@ -223,7 +227,10 @@ export function calculateDynamicSeats(
             if (matchCourse(hold.s1StudentLife, course.id, course.name)) s1Holds++;
           }
         }
-        s1Available = Math.max(0, course.s1SlotsLeft - s1Holds);
+        // Calculate new seat cap: current occupied + remaining slots requested (capped at course.maxSeats, e.g. 50)
+        const targetCap = s1Occupied + course.s1SlotsLeft;
+        s1MaxSeats = targetCap > course.maxSeats ? course.maxSeats : targetCap;
+        s1Available = Math.max(0, s1MaxSeats - s1Occupied - s1Holds);
       }
 
       if (course.isS2Frozen) {
@@ -237,7 +244,9 @@ export function calculateDynamicSeats(
             if (matchCourse(hold.s2StudentLife, course.id, course.name)) s2Holds++;
           }
         }
-        s2Available = Math.max(0, course.s2SlotsLeft - s2Holds);
+        const targetCap = s2Occupied + course.s2SlotsLeft;
+        s2MaxSeats = targetCap > course.maxSeats ? course.maxSeats : targetCap;
+        s2Available = Math.max(0, s2MaxSeats - s2Occupied - s2Holds);
       }
     }
 
@@ -245,8 +254,10 @@ export function calculateDynamicSeats(
       ...course,
       s1SeatsOccupied: s1Occupied,
       s1SeatsAvailable: s1Available,
+      s1EffectiveMaxSeats: s1MaxSeats,
       s2SeatsOccupied: s2Occupied,
       s2SeatsAvailable: s2Available,
+      s2EffectiveMaxSeats: s2MaxSeats,
     };
   });
 }
