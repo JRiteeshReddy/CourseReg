@@ -279,7 +279,8 @@ export default function Session1Page() {
                 key={course.id}
                 onClick={() => {
                   if (!isFull) {
-                    if (course.isS1FridayOnly && selectedStudentLife !== course.id && selectedStudentLife !== course.name) {
+                    const isFridayOnly = course.isS1FridayOnly || ["SL01", "SL05", "SL09", "SL10"].includes(course.id);
+                    if (isFridayOnly && selectedStudentLife !== course.id && selectedStudentLife !== course.name) {
                       setPendingFridayCourse(course);
                     } else {
                       setSelectedStudentLife(course.id);
@@ -414,7 +415,7 @@ export default function Session1Page() {
                   FRIDAY CLASS NOTICE
                 </span>
                 <h3 className="text-lg font-bold text-[#F5EBE0] mt-1">
-                  Friday Session Schedule Warning
+                  Friday Class Availability Notice
                 </h3>
               </div>
             </div>
@@ -423,12 +424,14 @@ export default function Session1Page() {
               <p className="font-semibold text-[#7ECEB7] text-base">
                 {pendingFridayCourse.name} ({pendingFridayCourse.id})
               </p>
-              <p className="text-xs text-[#D6C7A1] leading-relaxed">
-                Please note: <strong className="text-[#F5EBE0]">This class is only available for the Friday class</strong>.
-              </p>
-              <p className="text-xs text-[#7ECEB7]">
-                By selecting this course, your Session 1 class schedule will be held on Friday.
-              </p>
+              <div className="p-3 rounded-lg bg-[#041C19] border border-[#7ECEB7]/30 text-amber-200 text-xs font-medium space-y-1">
+                <p className="font-bold text-[#F5EBE0] text-sm">
+                  ⚠️ This subject is only open for Friday.
+                </p>
+                <p className="text-[#D6C7A1]">
+                  By selecting this subject, your Session 1 class will be scheduled for the Friday class.
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -449,7 +452,7 @@ export default function Session1Page() {
                 className="px-5 py-2.5 rounded-xl bg-[#037A74] hover:bg-[#7ECEB7] text-[#F5EBE0] hover:text-[#041C19] text-xs font-bold transition-all shadow-lg flex items-center gap-1.5"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>I Understand & Select Course</span>
+                <span>I Understand & Select Subject</span>
               </button>
             </div>
           </div>
