@@ -1750,6 +1750,11 @@ export default function AdminDashboard() {
                       {course.faculty && (
                         <p className="text-xs text-[#D6C7A1]/80 mt-0.5">Faculty: {course.faculty}</p>
                       )}
+                      <div className="mt-1 flex items-center gap-1.5 text-[11px] font-mono">
+                        <span className={`px-2 py-0.5 rounded border ${isSports ? "bg-[#072C28] text-[#7ECEB7] border-[#7ECEB7]/20" : "bg-[#072C28] text-[#D6C7A1] border-[#A07850]/30"}`}>
+                          {isSports ? "⏰ 3:00 PM – 4:00 PM (Tue – Fri)" : "⏰ 4:00 PM – 5:00 PM (Wed & Fri)"}
+                        </span>
+                      </div>
                     </div>
 
                     <span

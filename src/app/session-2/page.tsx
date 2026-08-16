@@ -374,8 +374,14 @@ export default function Session2Page() {
                       <Info className="w-3.5 h-3.5" />
                     </button>
                   </div>
+
+                  <div className="flex items-center gap-1 text-[11px] font-mono text-[#D6C7A1] bg-[#072C28] px-2 py-1 rounded border border-[#A07850]/30 mt-1">
+                    <Clock className="w-3 h-3 text-[#A07850]" />
+                    <span>4:00 PM – 5:00 PM (Wed & Fri)</span>
+                  </div>
+
                   {course.schedule && (
-                    <div className="pt-1.5 flex flex-wrap items-center gap-1">
+                    <div className="pt-1 flex flex-wrap items-center gap-1">
                       {course.schedule.split(" | ").map((day, idx) => (
                         <span
                           key={idx}
