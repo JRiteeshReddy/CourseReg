@@ -586,6 +586,96 @@ export default function AdminDashboard() {
     XLSX.writeFile(workbook, `${safeFileName}_Combined_Course_Roster.xlsx`);
   };
 
+  // Course-Specific New Students Excel Export (Only students registered after cutoff)
+  const exportCourseNewStudentsExcel = (courseId: string, courseName: string, category: string) => {
+    const s1NewStudents = registrations.filter((r) => {
+      if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+      if (!isNewRegistration(r)) return false;
+      return matchCourse(r.s1Sports, courseId, courseName) || matchCourse(r.s1StudentLife, courseId, courseName);
+    });
+
+    const s2NewStudents = registrations.filter((r) => {
+      if (r.status?.toUpperCase() !== "CONFIRMED" && r.status?.toUpperCase() !== "SUBMITTED") return false;
+      if (!isNewRegistration(r)) return false;
+      return matchCourse(r.s2Sports, courseId, courseName) || matchCourse(r.s2StudentLife, courseId, courseName);
+    });
+
+    if (s1NewStudents.length === 0 && s2NewStudents.length === 0) {
+      const cutoffStr = registrationCutoff
+        ? new Date(registrationCutoff).toLocaleString()
+        : "Not Set";
+      alert(`No new students are registered for ${courseName} after the cutoff date (${cutoffStr}).`);
+      return;
+    }
+
+    const aoaData: any[][] = [];
+
+    // Course Title & Metadata Header
+    aoaData.push(["COURSE NAME:", courseName]);
+    aoaData.push(["COURSE CODE:", courseId]);
+    aoaData.push(["CATEGORY:", category]);
+    aoaData.push(["REGISTRATION CUTOFF:", registrationCutoff ? new Date(registrationCutoff).toLocaleString() : "Not Set"]);
+    aoaData.push([]); // blank spacing row
+
+    // Session 1 Section
+    aoaData.push([`--- SESSION 1 NEWLY REGISTERED STUDENTS (${s1NewStudents.length}) ---`]);
+    aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Registration Timestamp", "Faculty Attendance"]);
+
+    if (s1NewStudents.length > 0) {
+      s1NewStudents.forEach((r, idx) => {
+        const facultyVal = r.facultyName && r.facultyName.trim() ? r.facultyName.trim() : " ";
+        aoaData.push([
+          idx + 1,
+          r.regNo,
+          r.name,
+          r.email,
+          r.timestamp || "-",
+          facultyVal,
+        ]);
+      });
+    } else {
+      aoaData.push(["-", "No new students registered for Session 1", "-", "-", "-", "-"]);
+    }
+
+    aoaData.push([]); // blank spacing row
+    aoaData.push([]); // blank spacing row
+
+    // Session 2 Section
+    aoaData.push([`--- SESSION 2 NEWLY REGISTERED STUDENTS (${s2NewStudents.length}) ---`]);
+    aoaData.push(["S.No", "Registration Number", "Student Name", "Email Address", "Registration Timestamp", "Faculty Attendance"]);
+
+    if (s2NewStudents.length > 0) {
+      s2NewStudents.forEach((r, idx) => {
+        const facultyVal = r.facultyName && r.facultyName.trim() ? r.facultyName.trim() : " ";
+        aoaData.push([
+          idx + 1,
+          r.regNo,
+          r.name,
+          r.email,
+          r.timestamp || "-",
+          facultyVal,
+        ]);
+      });
+    } else {
+      aoaData.push(["-", "No new students registered for Session 2", "-", "-", "-", "-"]);
+    }
+
+    const workbook = XLSX.utils.book_new();
+    const mainWorksheet = XLSX.utils.aoa_to_sheet(aoaData);
+    mainWorksheet["!cols"] = [
+      { wch: 8 },  // S.No
+      { wch: 22 }, // Reg No
+      { wch: 28 }, // Name
+      { wch: 35 }, // Email
+      { wch: 25 }, // Timestamp
+      { wch: 25 }, // Faculty Attendance
+    ];
+    XLSX.utils.book_append_sheet(workbook, mainWorksheet, "New Course Roster");
+
+    const safeFileName = courseName.replace(/[^a-zA-Z0-9]/g, "_");
+    XLSX.writeFile(workbook, `${safeFileName}_New_Students_Roster.xlsx`);
+  };
+
   // Faculty-Specific Attendance Excel Export (based on Master Student Data & Registrations)
   const exportFacultyExcel = (targetFaculty: string) => {
     const facMaster = masterStudents.filter(
@@ -1752,7 +1842,14 @@ export default function AdminDashboard() {
                               key={idx}
                               className="flex items-center justify-between text-[11px] font-mono text-[#F5EBE0] py-1 border-b border-[#7ECEB7]/10 last:border-none px-1 hover:bg-[#037A74]/10 rounded"
                             >
-                              <span className="text-[#D6C7A1] font-semibold min-w-[70px]">{s.regNo}</span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[#D6C7A1] font-semibold min-w-[70px]">{s.regNo}</span>
+                                {isNewRegistration(s) && (
+                                  <span className="px-1 py-0.2 rounded text-[8px] font-bold bg-[#A07850]/40 text-[#F5EBE0]">
+                                    NEW
+                                  </span>
+                                )}
+                              </div>
                               <span className="truncate max-w-[130px] font-sans font-medium text-white">
                                 {s.name}
                               </span>
@@ -1784,7 +1881,14 @@ export default function AdminDashboard() {
                               key={idx}
                               className="flex items-center justify-between text-[11px] font-mono text-[#F5EBE0] py-1 border-b border-[#7ECEB7]/10 last:border-none px-1 hover:bg-[#A07850]/10 rounded"
                             >
-                              <span className="text-[#D6C7A1] font-semibold min-w-[70px]">{s.regNo}</span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[#D6C7A1] font-semibold min-w-[70px]">{s.regNo}</span>
+                                {isNewRegistration(s) && (
+                                  <span className="px-1 py-0.2 rounded text-[8px] font-bold bg-[#A07850]/40 text-[#F5EBE0]">
+                                    NEW
+                                  </span>
+                                )}
+                              </div>
                               <span className="truncate max-w-[130px] font-sans font-medium text-white">
                                 {s.name}
                               </span>
@@ -1802,24 +1906,34 @@ export default function AdminDashboard() {
                 )}
 
                 {/* ACTION BUTTONS */}
-                <div className="pt-3 border-t border-[#7ECEB7]/15 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="pt-3 border-t border-[#7ECEB7]/15 grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     onClick={() => setExpandedCourseId(isExpanded ? null : course.id)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#072C28] hover:bg-[#037A74]/20 text-[#D6C7A1] hover:text-white border border-[#7ECEB7]/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                    className="w-full px-2 py-2.5 rounded-xl bg-[#072C28] hover:bg-[#037A74]/20 text-[#D6C7A1] hover:text-white border border-[#7ECEB7]/20 text-xs font-semibold flex items-center justify-center gap-1 transition-all"
                   >
                     <UserCheck className="w-3.5 h-3.5 text-[#7ECEB7]" />
                     <span>
-                      {isExpanded ? "Hide Roster" : `View Students (${s1Students.length + s2Students.length})`}
+                      {isExpanded ? "Hide" : `Roster (${s1Students.length + s2Students.length})`}
                     </span>
                     {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   </button>
 
                   <button
                     onClick={() => exportCourseExcel(course.id, course.name, course.category)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#037A74]/20 hover:bg-[#037A74]/35 text-[#7ECEB7] border border-[#037A74]/50 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                    className="w-full px-2 py-2.5 rounded-xl bg-[#037A74]/20 hover:bg-[#037A74]/35 text-[#7ECEB7] border border-[#037A74]/50 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-sm"
+                    title="Export all registered students for this course"
                   >
                     <FileSpreadsheet className="w-3.5 h-3.5 text-[#7ECEB7]" />
-                    <span>Export Excel (.xlsx)</span>
+                    <span>Export All (.xlsx)</span>
+                  </button>
+
+                  <button
+                    onClick={() => exportCourseNewStudentsExcel(course.id, course.name, course.category)}
+                    className="w-full px-2 py-2.5 rounded-xl bg-[#A07850]/20 hover:bg-[#A07850]/40 text-[#F5EBE0] border border-[#A07850]/50 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-sm"
+                    title="Export ONLY newly registered students for this course after cutoff date"
+                  >
+                    <UserPlus className="w-3.5 h-3.5 text-[#F5EBE0]" />
+                    <span>Export New (.xlsx)</span>
                   </button>
                 </div>
               </div>
