@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getFullSession } from '@/lib/auth';
 import { runWithRegistrationLock } from '@/lib/concurrency';
 import { fetchRegistrations, upsertRegistration, checkStudentAuthorized, getRegistrationStatus } from '@/lib/google-sheets';
-import { calculateDynamicSeats, COURSES, matchCourse, parseSportsDay } from '@/lib/courses';
+import { calculateDynamicSeats, COURSES, matchCourse, parseSportsDay, parseDay } from '@/lib/courses';
 import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
@@ -40,17 +40,16 @@ export async function POST(request: Request) {
     const allRegs = await fetchRegistrations();
     const calculatedCourses = calculateDynamicSeats(allRegs);
 
-    // Resolve course objects and full names
-    const getCourseObj = (idOrName: string) => calculatedCourses.find(c => c.id === idOrName || c.name === idOrName);
-    const s1SportsObj = getCourseObj(s1Sports);
-    const s1LifeObj = getCourseObj(s1StudentLife);
-    const s2SportsObj = getCourseObj(s2Sports);
-    const s2LifeObj = getCourseObj(s2StudentLife);
+    // Resolve course objects
+    const s1SportsObj = calculatedCourses.find(c => matchCourse(s1Sports, c.id, c.name));
+    const s1LifeObj = calculatedCourses.find(c => matchCourse(s1StudentLife, c.id, c.name));
+    const s2SportsObj = calculatedCourses.find(c => matchCourse(s2Sports, c.id, c.name));
+    const s2LifeObj = calculatedCourses.find(c => matchCourse(s2StudentLife, c.id, c.name));
 
-    const s1SportsName = s1SportsObj?.name || s1Sports;
-    const s1LifeName = s1LifeObj?.name || s1StudentLife;
-    const s2SportsName = s2SportsObj?.name || s2Sports;
-    const s2LifeName = s2LifeObj?.name || s2StudentLife;
+    const s1SportsName = s1Sports;
+    const s1LifeName = s1StudentLife;
+    const s2SportsName = s2Sports;
+    const s2LifeName = s2StudentLife;
 
     // 3. Attempt Atomic Database Seat Reservation in Supabase Postgres RPC (locks natively across all serverless instances)
     try {
@@ -116,6 +115,10 @@ export async function POST(request: Request) {
       if (!s1LifeCourse || s1LifeCourse.s1SeatsAvailable <= 0) {
         return { error: `Sorry, Session 1 Student Life (${s1LifeCourse?.name || s1StudentLife}) is full.` };
       }
+      const s1LifeDay = parseDay(s1StudentLife);
+      if (s1LifeDay && s1LifeCourse.s1LifeDaysSeats && s1LifeCourse.s1LifeDaysSeats[s1LifeDay] && s1LifeCourse.s1LifeDaysSeats[s1LifeDay].available <= 0) {
+        return { error: `Sorry, ${s1LifeDay} for ${s1LifeCourse.name} is full. Please select another day.` };
+      }
 
       const s2SportsCourse = computedSeats.find(c => matchCourse(s2Sports, c.id, c.name));
       if (!s2SportsCourse || s2SportsCourse.s2SeatsAvailable <= 0) {
@@ -130,15 +133,19 @@ export async function POST(request: Request) {
       if (!s2LifeCourse || s2LifeCourse.s2SeatsAvailable <= 0) {
         return { error: `Sorry, Session 2 Student Life (${s2LifeCourse?.name || s2LifeCourse}) is full.` };
       }
+      const s2LifeDay = parseDay(s2StudentLife);
+      if (s2LifeDay && s2LifeCourse.s2LifeDaysSeats && s2LifeCourse.s2LifeDaysSeats[s2LifeDay] && s2LifeCourse.s2LifeDaysSeats[s2LifeDay].available <= 0) {
+        return { error: `Sorry, ${s2LifeDay} for ${s2LifeCourse.name} is full. Please select another day.` };
+      }
 
       await upsertRegistration({
         regNo: student.regNo,
         name: student.name,
         email: student.email.toLowerCase(),
         s1Sports: s1Sports,
-        s1StudentLife: s1LifeCourse.name,
+        s1StudentLife: s1StudentLife,
         s2Sports: s2Sports,
-        s2StudentLife: s2LifeCourse.name,
+        s2StudentLife: s2StudentLife,
         timestamp: new Date().toISOString(),
         status: 'CONFIRMED',
       });
