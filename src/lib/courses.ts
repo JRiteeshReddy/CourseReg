@@ -187,6 +187,17 @@ export function matchCourse(val: string | undefined | null, id: string, name: st
   return aliases.some((a) => a.toLowerCase() === v || v.startsWith(a.toLowerCase()));
 }
 
+export const SPORTS_INITIAL_OCCUPIED: Record<string, Record<SportsDay, number>> = {
+  SP01: { Tuesday: 12, Wednesday: 3, Thursday: 6, Friday: 8 },  // Basketball
+  SP02: { Tuesday: 1, Wednesday: 5, Thursday: 20, Friday: 12 }, // Cricket (Thu 20 -> BLOCKED)
+  SP03: { Tuesday: 14, Wednesday: 0, Thursday: 15, Friday: 12 }, // Fitness and Nutrition
+  SP04: { Tuesday: 2, Wednesday: 2, Thursday: 9, Friday: 5 },   // Football
+  SP05: { Tuesday: 4, Wednesday: 0, Thursday: 8, Friday: 16 },  // Kabaddi
+  SP06: { Tuesday: 16, Wednesday: 0, Thursday: 7, Friday: 4 },  // Holistic Wellbeing and Yoga Therapy
+  SP07: { Tuesday: 1, Wednesday: 2, Thursday: 12, Friday: 12 }, // Throwball
+  SP08: { Tuesday: 13, Wednesday: 0, Thursday: 10, Friday: 9 }, // Volleyball
+};
+
 /**
  * Calculates dynamic seat counts over confirmed registrations and active draft seat holds.
  */
@@ -241,8 +252,10 @@ export function calculateDynamicSeats(
     let s2SportsDaysSeats: Record<SportsDay, SportsDaySeatInfo> | undefined;
 
     if (course.category === "Sports") {
-      const s1DayOcc: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
-      const s2DayOcc: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
+      const initOcc = SPORTS_INITIAL_OCCUPIED[course.id] || { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
+
+      const s1DayOcc: Record<SportsDay, number> = { ...initOcc };
+      const s2DayOcc: Record<SportsDay, number> = { ...initOcc };
 
       const s1DayHolds: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
       const s2DayHolds: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
