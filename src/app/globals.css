@@ -191,3 +191,25 @@
 .animate-modal-pop {
   animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Mobile Responsive Utilities */
+@media (max-width: 640px) {
+  .glass-panel {
+    border-radius: 1rem;
+  }
+
+  /* Touch tap feedback */
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Touch scrolling smoothness */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Input fields font size on mobile to prevent iOS auto-zoom */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}

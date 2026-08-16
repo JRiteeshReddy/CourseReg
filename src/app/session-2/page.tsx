@@ -125,34 +125,34 @@ export default function Session2Page() {
   };
 
   return (
-    <div className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in bg-[#041C19] text-[#F5EBE0]">
+    <div className="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-6 md:p-8 space-y-6 sm:space-y-8 animate-fade-in bg-[#041C19] text-[#F5EBE0]">
       {/* Header Banner */}
-      <header className="glass-panel p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-[#7ECEB7]/20">
-        <div className="flex items-center gap-4">
+      <header className="glass-panel p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-[#7ECEB7]/20">
+        <div className="flex items-center gap-3 sm:gap-4">
           <button
             onClick={() => router.push("/session-1")}
-            className="p-2.5 rounded-xl glass-card hover:bg-[#037A74]/30 text-[#D6C7A1] transition-all border border-[#7ECEB7]/20"
+            className="p-2 sm:p-2.5 rounded-xl glass-card hover:bg-[#037A74]/30 text-[#D6C7A1] transition-all border border-[#7ECEB7]/20 flex-shrink-0"
             title="Back to Session 1"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-[#A07850]/20 text-[#D6C7A1] border border-[#A07850]/40">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold font-mono bg-[#A07850]/20 text-[#D6C7A1] border border-[#A07850]/40">
                 SESSION 2 REGISTRATION
               </span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight mt-1 text-[#F5EBE0]">Select Session 2 Courses</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight mt-1 text-[#F5EBE0]">Select Session 2 Courses</h1>
             <p className="text-xs text-[#D6C7A1]">
               Student: <span className="text-[#F5EBE0] font-medium">{student?.name}</span> ({student?.regNo})
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 text-xs text-[#D6C7A1] bg-[#072C28] p-3 rounded-xl border border-[#7ECEB7]/20">
-            <Sparkles className="w-4 h-4 text-[#A07850]" />
-            <span>Session 1 selections are automatically disabled for Session 2</span>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 text-xs text-[#D6C7A1] bg-[#072C28] p-2.5 sm:p-3 rounded-xl border border-[#7ECEB7]/20 w-full sm:w-auto">
+            <Sparkles className="w-4 h-4 text-[#A07850] flex-shrink-0" />
+            <span>Session 1 selections disabled for Session 2</span>
           </div>
         </div>
       </header>
@@ -160,8 +160,8 @@ export default function Session2Page() {
       {/* SECTION 1: SPORTS */}
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-[#7ECEB7]/20 pb-3">
-          <div className="flex items-center gap-2 text-[#7ECEB7] font-semibold text-lg">
-            <Trophy className="w-5 h-5" />
+          <div className="flex items-center gap-2 text-[#7ECEB7] font-semibold text-base sm:text-lg">
+            <Trophy className="w-5 h-5 flex-shrink-0" />
             <h2>Sports Category (Independent Session 2 Capacity)</h2>
           </div>
           <span className="text-xs font-mono text-[#D6C7A1]">
@@ -169,7 +169,7 @@ export default function Session2Page() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {sportsCourses.map((course) => {
             const isSelectedInSession1 = matchCourse(s1SportsChoice, course.id, course.name);
             const isAnyDaySelected = matchCourse(selectedSports, course.id, course.name);
@@ -177,7 +177,7 @@ export default function Session2Page() {
             return (
               <div
                 key={course.id}
-                className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all border ${
+                className={`glass-card p-4 sm:p-5 flex flex-col justify-between space-y-3 sm:space-y-4 transition-all border ${
                   isSelectedInSession1
                     ? "opacity-40 border-[#7ECEB7]/10 bg-[#041C19]"
                     : isAnyDaySelected
@@ -189,7 +189,7 @@ export default function Session2Page() {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono text-[#D6C7A1]">{course.id}</span>
                     {isSelectedInSession1 ? (
-                      <span className="text-[10px] font-semibold text-[#A07850] bg-[#A07850]/15 border border-[#A07850]/30 px-2 py-0.5 rounded flex items-center gap-1">
+                      <span className="text-[10px] font-semibold text-[#7ECEB7] bg-[#7ECEB7]/15 border border-[#7ECEB7]/30 px-2 py-0.5 rounded flex items-center gap-1">
                         <Ban className="w-3 h-3" /> Selected in S1
                       </span>
                     ) : isAnyDaySelected ? (
@@ -247,7 +247,7 @@ export default function Session2Page() {
                                 syncSeatHold(formattedChoice, selectedStudentLife);
                               }
                             }}
-                            className={`px-2.5 py-2 rounded-lg text-xs font-mono flex items-center justify-between transition-all border ${
+                            className={`px-2 py-2 sm:px-2.5 sm:py-2 rounded-lg text-xs font-mono flex items-center justify-between transition-all border ${
                               isThisDaySelected
                                 ? "bg-[#7ECEB7] text-[#041C19] font-bold border-[#7ECEB7] shadow-md scale-[1.03]"
                                 : isDisabled
@@ -257,7 +257,7 @@ export default function Session2Page() {
                           >
                             <span>{day.slice(0, 3)}</span>
                             {isSelectedInSession1 ? (
-                              <span className="text-[9px] font-bold text-[#A07850]">S1</span>
+                              <span className="text-[9px] font-bold text-[#7ECEB7]">S1</span>
                             ) : isDayFull ? (
                               <span className="text-[9px] font-bold text-red-400 uppercase">FULL</span>
                             ) : (
@@ -280,8 +280,8 @@ export default function Session2Page() {
       {/* SECTION 2: STUDENT LIFE */}
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-[#7ECEB7]/20 pb-3">
-          <div className="flex items-center gap-2 text-[#A07850] font-semibold text-lg">
-            <Compass className="w-5 h-5" />
+          <div className="flex items-center gap-2 text-[#A07850] font-semibold text-base sm:text-lg">
+            <Compass className="w-5 h-5 flex-shrink-0" />
             <h2>Student Life Category (Independent Session 2 Capacity)</h2>
           </div>
           <span className="text-xs font-mono text-[#D6C7A1]">
@@ -289,7 +289,7 @@ export default function Session2Page() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {studentLifeCourses.map((course) => {
             const isSelectedInSession1 = matchCourse(s1LifeChoice, course.id, course.name);
             const isAnyDaySelected = matchCourse(selectedStudentLife, course.id, course.name);
@@ -298,7 +298,7 @@ export default function Session2Page() {
             return (
               <div
                 key={course.id}
-                className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all border ${
+                className={`glass-card p-4 sm:p-5 flex flex-col justify-between space-y-3 sm:space-y-4 transition-all border ${
                   isSelectedInSession1
                     ? "opacity-40 border-[#7ECEB7]/10 bg-[#041C19]"
                     : isAnyDaySelected
@@ -368,7 +368,7 @@ export default function Session2Page() {
                                   syncSeatHold(selectedSports, formattedChoice);
                                 }
                               }}
-                              className={`px-2.5 py-2 rounded-lg text-xs font-mono flex items-center justify-between transition-all border ${
+                              className={`px-2 py-2 sm:px-2.5 sm:py-2 rounded-lg text-xs font-mono flex items-center justify-between transition-all border ${
                                 isThisDaySelected
                                   ? "bg-[#A07850] text-[#041C19] font-bold border-[#A07850] shadow-md scale-[1.03]"
                                   : isDisabled
@@ -400,20 +400,20 @@ export default function Session2Page() {
       </section>
 
       {/* FOOTER ACTION BAR */}
-      <footer className="glass-panel p-6 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-6 shadow-2xl z-30 border-[#A07850]/30">
-        <div>
-          <h3 className="font-semibold text-[#F5EBE0]">Session 2 Selections</h3>
+      <footer className="glass-panel p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 sticky bottom-3 sm:bottom-6 shadow-2xl z-30 border-[#A07850]/30 backdrop-blur-xl">
+        <div className="text-center sm:text-left">
+          <h3 className="font-semibold text-sm sm:text-base text-[#F5EBE0]">Session 2 Selections</h3>
           <p className="text-xs text-[#D6C7A1]">
             {canContinue
               ? "Session 2 selections ready. Proceed to final review!"
-              : "Please select 1 Sports course and 1 Student Life course to unlock Continue."}
+              : "Please select 1 Sports course and 1 Student Life course."}
           </p>
         </div>
 
         <button
           onClick={handleContinue}
           disabled={!canContinue}
-          className="btn-bronze w-full sm:w-auto px-8 py-3 flex items-center justify-center gap-2 text-base font-bold disabled:opacity-40 disabled:cursor-not-allowed text-[#F5EBE0]"
+          className="btn-bronze w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 flex items-center justify-center gap-2 text-sm sm:text-base font-bold disabled:opacity-40 disabled:cursor-not-allowed text-[#F5EBE0]"
         >
           <span>Proceed to Final Review</span>
           <ArrowRight className="w-5 h-5" />

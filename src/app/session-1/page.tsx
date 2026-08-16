@@ -110,34 +110,34 @@ export default function Session1Page() {
   };
 
   return (
-    <div className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-8 space-y-8 animate-fade-in bg-[#041C19] text-[#F5EBE0]">
+    <div className="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-6 md:p-8 space-y-6 sm:space-y-8 animate-fade-in bg-[#041C19] text-[#F5EBE0]">
       {/* Header Banner */}
-      <header className="glass-panel p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-[#7ECEB7]/20">
-        <div className="flex items-center gap-4">
+      <header className="glass-panel p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-[#7ECEB7]/20">
+        <div className="flex items-center gap-3 sm:gap-4">
           <button
             onClick={() => router.push("/dashboard")}
-            className="p-2.5 rounded-xl glass-card hover:bg-[#037A74]/30 text-[#D6C7A1] transition-all border border-[#7ECEB7]/20"
+            className="p-2 sm:p-2.5 rounded-xl glass-card hover:bg-[#037A74]/30 text-[#D6C7A1] transition-all border border-[#7ECEB7]/20 flex-shrink-0"
             title="Back to Dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-[#037A74]/30 text-[#7ECEB7] border border-[#037A74]/50">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold font-mono bg-[#037A74]/30 text-[#7ECEB7] border border-[#037A74]/50">
                 SESSION 1 REGISTRATION
               </span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight mt-1 text-[#F5EBE0]">Select Session 1 Courses</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight mt-1 text-[#F5EBE0]">Select Session 1 Courses</h1>
             <p className="text-xs text-[#D6C7A1]">
               Student: <span className="text-[#F5EBE0] font-medium">{student?.name}</span> ({student?.regNo})
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 text-xs text-[#D6C7A1] bg-[#072C28] p-3 rounded-xl border border-[#7ECEB7]/20">
-            <Sparkles className="w-4 h-4 text-[#A07850]" />
-            <span>Pick exactly 1 Sports + 1 Student Life course</span>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 text-xs text-[#D6C7A1] bg-[#072C28] p-2.5 sm:p-3 rounded-xl border border-[#7ECEB7]/20 w-full sm:w-auto">
+            <Sparkles className="w-4 h-4 text-[#A07850] flex-shrink-0" />
+            <span>Pick 1 Sports + 1 Student Life course</span>
           </div>
         </div>
       </header>
@@ -145,8 +145,8 @@ export default function Session1Page() {
       {/* SECTION 1: SPORTS */}
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-[#7ECEB7]/20 pb-3">
-          <div className="flex items-center gap-2 text-[#7ECEB7] font-semibold text-lg">
-            <Trophy className="w-5 h-5" />
+          <div className="flex items-center gap-2 text-[#7ECEB7] font-semibold text-base sm:text-lg">
+            <Trophy className="w-5 h-5 flex-shrink-0" />
             <h2>Sports Category ({sportsCourses.length} Courses)</h2>
           </div>
           <span className="text-xs font-mono text-[#D6C7A1]">
@@ -154,14 +154,14 @@ export default function Session1Page() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {sportsCourses.map((course) => {
             const isAnyDaySelected = matchCourse(selectedSports, course.id, course.name);
 
             return (
               <div
                 key={course.id}
-                className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all border ${
+                className={`glass-card p-4 sm:p-5 flex flex-col justify-between space-y-3 sm:space-y-4 transition-all border ${
                   isAnyDaySelected
                     ? "border-[#7ECEB7] bg-[#037A74]/35 shadow-lg shadow-[#037A74]/30 scale-[1.02]"
                     : "border-[#7ECEB7]/15 hover:border-[#7ECEB7]/40"
@@ -221,7 +221,7 @@ export default function Session1Page() {
                                 syncSeatHold(formattedChoice, selectedStudentLife);
                               }
                             }}
-                            className={`px-2.5 py-2 rounded-lg text-xs font-mono flex items-center justify-between transition-all border ${
+                            className={`px-2 py-2 sm:px-2.5 sm:py-2 rounded-lg text-xs font-mono flex items-center justify-between transition-all border ${
                               isThisDaySelected
                                 ? "bg-[#7ECEB7] text-[#041C19] font-bold border-[#7ECEB7] shadow-md scale-[1.03]"
                                 : isDayFull
@@ -252,8 +252,8 @@ export default function Session1Page() {
       {/* SECTION 2: STUDENT LIFE */}
       <section className="space-y-4">
         <div className="flex items-center justify-between border-b border-[#7ECEB7]/20 pb-3">
-          <div className="flex items-center gap-2 text-[#A07850] font-semibold text-lg">
-            <Compass className="w-5 h-5" />
+          <div className="flex items-center gap-2 text-[#A07850] font-semibold text-base sm:text-lg">
+            <Compass className="w-5 h-5 flex-shrink-0" />
             <h2>Student Life Category ({studentLifeCourses.length} Courses)</h2>
           </div>
           <span className="text-xs font-mono text-[#D6C7A1]">
@@ -261,7 +261,7 @@ export default function Session1Page() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {studentLifeCourses.map((course) => {
             const isAnyDaySelected = matchCourse(selectedStudentLife, course.id, course.name);
             const daysSeats = course.s1LifeDaysSeats ? Object.values(course.s1LifeDaysSeats) : [];
@@ -269,7 +269,7 @@ export default function Session1Page() {
             return (
               <div
                 key={course.id}
-                className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all border ${
+                className={`glass-card p-4 sm:p-5 flex flex-col justify-between space-y-3 sm:space-y-4 transition-all border ${
                   isAnyDaySelected
                     ? "border-[#A07850] bg-[#A07850]/30 shadow-lg shadow-[#A07850]/20 scale-[1.02]"
                     : "border-[#7ECEB7]/15 hover:border-[#7ECEB7]/40"
@@ -329,7 +329,7 @@ export default function Session1Page() {
                                   syncSeatHold(selectedSports, formattedChoice);
                                 }
                               }}
-                              className={`px-2.5 py-2 rounded-lg text-xs font-mono flex items-center justify-between transition-all border ${
+                              className={`px-2 py-2 sm:px-2.5 sm:py-2 rounded-lg text-xs font-mono flex items-center justify-between transition-all border ${
                                 isThisDaySelected
                                   ? "bg-[#A07850] text-[#041C19] font-bold border-[#A07850] shadow-md scale-[1.03]"
                                   : isDayFull
@@ -359,20 +359,20 @@ export default function Session1Page() {
       </section>
 
       {/* FOOTER ACTION BAR */}
-      <footer className="glass-panel p-6 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-6 shadow-2xl z-30 border-[#7ECEB7]/30">
-        <div>
-          <h3 className="font-semibold text-[#F5EBE0]">Session 1 Selections</h3>
+      <footer className="glass-panel p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 sticky bottom-3 sm:bottom-6 shadow-2xl z-30 border-[#7ECEB7]/30 backdrop-blur-xl">
+        <div className="text-center sm:text-left">
+          <h3 className="font-semibold text-sm sm:text-base text-[#F5EBE0]">Session 1 Selections</h3>
           <p className="text-xs text-[#D6C7A1]">
             {canContinue
               ? "Both Sports & Student Life selected. Ready to continue!"
-              : "Please select 1 Sports course and 1 Student Life course to unlock Continue."}
+              : "Please select 1 Sports course and 1 Student Life course."}
           </p>
         </div>
 
         <button
           onClick={handleContinue}
           disabled={!canContinue}
-          className="btn-primary w-full sm:w-auto px-8 py-3 flex items-center justify-center gap-2 text-base font-bold disabled:opacity-40 disabled:cursor-not-allowed text-[#F5EBE0]"
+          className="btn-primary w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 flex items-center justify-center gap-2 text-sm sm:text-base font-bold disabled:opacity-40 disabled:cursor-not-allowed text-[#F5EBE0]"
         >
           <span>Continue to Session 2</span>
           <ArrowRight className="w-5 h-5" />

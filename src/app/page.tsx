@@ -47,18 +47,18 @@ export default function AuthPage() {
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#A07850]/15 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Main Glass Panel */}
-      <div className="glass-panel w-full max-w-md p-8 animate-fade-in relative overflow-hidden border border-[#7ECEB7]/20 shadow-2xl">
+      <div className="glass-panel w-full max-w-md p-5 sm:p-8 animate-fade-in relative overflow-hidden border border-[#7ECEB7]/20 shadow-2xl">
         {/* Top Decorative Gradient Line */}
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#A07850] via-[#7ECEB7] to-[#037A74]"></div>
 
-        <div className="text-center mb-8 mt-2">
+        <div className="text-center mb-6 sm:mb-8 mt-1 sm:mt-2">
           <img 
             src="/images/2.png" 
             alt="Campus Life Logo" 
-            className="h-16 w-auto object-contain mx-auto mb-4 drop-shadow-[0_4px_12px_rgba(126,206,183,0.3)]" 
+            className="h-12 sm:h-16 w-auto object-contain mx-auto mb-3 sm:mb-4 drop-shadow-[0_4px_12px_rgba(126,206,183,0.3)]" 
           />
-          <h1 className="text-3xl font-bold tracking-tight mb-2 text-[#F5EBE0]">Student Portal</h1>
-          <p className="text-[#D6C7A1] text-sm">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1.5 sm:mb-2 text-[#F5EBE0]">Student Portal</h1>
+          <p className="text-[#D6C7A1] text-xs sm:text-sm">
             University Campus Life Course Registration System
           </p>
         </div>
