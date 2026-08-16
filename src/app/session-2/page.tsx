@@ -339,7 +339,7 @@ export default function Session2Page() {
 
                   <div className="flex items-center gap-1 text-[11px] font-mono text-[#D6C7A1] bg-[#072C28] px-2 py-1 rounded border border-[#A07850]/30">
                     <Clock className="w-3 h-3 text-[#A07850]" />
-                    <span>4:00 PM – 5:00 PM ({course.id === "SL03" ? "Thu & Fri" : "Wed & Fri"})</span>
+                    <span>4:00 PM – 5:00 PM ({course.id === "SL03" ? "Thu & Fri" : course.id === "SL06" ? "Friday Only" : "Wed & Fri"})</span>
                   </div>
 
                   {/* Day-Wise Seat Selection Grid for Student Life */}
