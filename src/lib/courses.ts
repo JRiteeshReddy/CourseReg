@@ -134,6 +134,16 @@ export interface SeatHold {
   updatedAt: number;
 }
 
+export const SPORTS_DAYS = ["Tuesday", "Wednesday", "Thursday", "Friday"] as const;
+export type SportsDay = typeof SPORTS_DAYS[number];
+
+export interface SportsDaySeatInfo {
+  day: SportsDay;
+  maxSeats: number;
+  occupied: number;
+  available: number;
+}
+
 export interface CalculatedCourse extends Course {
   s1SeatsOccupied: number;
   s1SeatsAvailable: number;
@@ -141,6 +151,8 @@ export interface CalculatedCourse extends Course {
   s2SeatsOccupied: number;
   s2SeatsAvailable: number;
   s2EffectiveMaxSeats: number;
+  s1SportsDaysSeats?: Record<SportsDay, SportsDaySeatInfo>;
+  s2SportsDaysSeats?: Record<SportsDay, SportsDaySeatInfo>;
 }
 
 const DRAFT_HOLD_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes temporary seat hold
@@ -154,12 +166,25 @@ const COURSE_ALIASES: Record<string, string[]> = {
   "SL11": ["Traditional Dance", "Invocatory_Dances", "Invocatory Dances"],
 };
 
+export function parseSportsDay(val: string | undefined | null): SportsDay | null {
+  if (!val) return null;
+  const v = val.toLowerCase();
+  if (v.includes("tuesday")) return "Tuesday";
+  if (v.includes("wednesday")) return "Wednesday";
+  if (v.includes("thursday")) return "Thursday";
+  if (v.includes("friday")) return "Friday";
+  return null;
+}
+
 export function matchCourse(val: string | undefined | null, id: string, name: string): boolean {
   if (!val) return false;
   const v = val.trim().toLowerCase();
-  if (v === id.toLowerCase() || v === name.toLowerCase()) return true;
+  const idLower = id.toLowerCase();
+  const nameLower = name.toLowerCase();
+  if (v === idLower || v === nameLower) return true;
+  if (v.startsWith(idLower) || v.startsWith(nameLower)) return true;
   const aliases = COURSE_ALIASES[id] || [];
-  return aliases.some((a) => a.toLowerCase() === v);
+  return aliases.some((a) => a.toLowerCase() === v || v.startsWith(a.toLowerCase()));
 }
 
 /**
@@ -212,6 +237,68 @@ export function calculateDynamicSeats(
     let s1Available = Math.max(0, s1MaxSeats - s1Occupied);
     let s2Available = Math.max(0, s2MaxSeats - s2Occupied);
 
+    let s1SportsDaysSeats: Record<SportsDay, SportsDaySeatInfo> | undefined;
+    let s2SportsDaysSeats: Record<SportsDay, SportsDaySeatInfo> | undefined;
+
+    if (course.category === "Sports") {
+      const s1DayOcc: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
+      const s2DayOcc: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
+
+      const s1DayHolds: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
+      const s2DayHolds: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
+
+      let s1LegacyCount = 0;
+      let s2LegacyCount = 0;
+
+      for (const reg of confirmed) {
+        if (matchCourse(reg.s1Sports, course.id, course.name)) {
+          const day = parseSportsDay(reg.s1Sports);
+          if (day) {
+            s1DayOcc[day]++;
+          } else {
+            const assignedDay = SPORTS_DAYS[s1LegacyCount % 4];
+            s1LegacyCount++;
+            s1DayOcc[assignedDay]++;
+          }
+        }
+        if (matchCourse(reg.s2Sports, course.id, course.name)) {
+          const day = parseSportsDay(reg.s2Sports);
+          if (day) {
+            s2DayOcc[day]++;
+          } else {
+            const assignedDay = SPORTS_DAYS[s2LegacyCount % 4];
+            s2LegacyCount++;
+            s2DayOcc[assignedDay]++;
+          }
+        }
+      }
+
+      for (const hold of activeHolds) {
+        if (matchCourse(hold.s1Sports, course.id, course.name)) {
+          const day = parseSportsDay(hold.s1Sports);
+          if (day) s1DayHolds[day]++;
+        }
+        if (matchCourse(hold.s2Sports, course.id, course.name)) {
+          const day = parseSportsDay(hold.s2Sports);
+          if (day) s2DayHolds[day]++;
+        }
+      }
+
+      s1SportsDaysSeats = {
+        Tuesday: { day: "Tuesday", maxSeats: 20, occupied: s1DayOcc.Tuesday, available: Math.max(0, 20 - s1DayOcc.Tuesday - s1DayHolds.Tuesday) },
+        Wednesday: { day: "Wednesday", maxSeats: 20, occupied: s1DayOcc.Wednesday, available: Math.max(0, 20 - s1DayOcc.Wednesday - s1DayHolds.Wednesday) },
+        Thursday: { day: "Thursday", maxSeats: 20, occupied: s1DayOcc.Thursday, available: Math.max(0, 20 - s1DayOcc.Thursday - s1DayHolds.Thursday) },
+        Friday: { day: "Friday", maxSeats: 20, occupied: s1DayOcc.Friday, available: Math.max(0, 20 - s1DayOcc.Friday - s1DayHolds.Friday) },
+      };
+
+      s2SportsDaysSeats = {
+        Tuesday: { day: "Tuesday", maxSeats: 20, occupied: s2DayOcc.Tuesday, available: Math.max(0, 20 - s2DayOcc.Tuesday - s2DayHolds.Tuesday) },
+        Wednesday: { day: "Wednesday", maxSeats: 20, occupied: s2DayOcc.Wednesday, available: Math.max(0, 20 - s2DayOcc.Wednesday - s2DayHolds.Wednesday) },
+        Thursday: { day: "Thursday", maxSeats: 20, occupied: s2DayOcc.Thursday, available: Math.max(0, 20 - s2DayOcc.Thursday - s2DayHolds.Thursday) },
+        Friday: { day: "Friday", maxSeats: 20, occupied: s2DayOcc.Friday, available: Math.max(0, 20 - s2DayOcc.Friday - s2DayHolds.Friday) },
+      };
+    }
+
     if (course.isFrozen || course.isClosed) {
       s1Available = 0;
       s2Available = 0;
@@ -258,6 +345,8 @@ export function calculateDynamicSeats(
       s2SeatsOccupied: s2Occupied,
       s2SeatsAvailable: s2Available,
       s2EffectiveMaxSeats: s2MaxSeats,
+      s1SportsDaysSeats,
+      s2SportsDaysSeats,
     };
   });
 }

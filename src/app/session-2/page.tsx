@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CalculatedCourse } from "@/lib/courses";
+import { CalculatedCourse, SPORTS_DAYS, matchCourse } from "@/lib/courses";
 import { MasterStudent } from "@/lib/google-sheets";
-import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Ban, Info, Bell } from "lucide-react";
+import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Ban, Info, Bell, Clock } from "lucide-react";
 
 export default function Session2Page() {
   const [student, setStudent] = useState<MasterStudent | null>(null);
@@ -31,12 +31,7 @@ export default function Session2Page() {
       const res = await fetch("/api/hold-seats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          s1Sports,
-          s1StudentLife: s1Life,
-          s2Sports,
-          s2StudentLife: s2Life,
-        }),
+        body: JSON.stringify({ s1Sports, s1StudentLife: s1Life, s2Sports, s2StudentLife: s2Life }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -90,7 +85,7 @@ export default function Session2Page() {
     }
     loadData();
 
-    // Poll every 5s for real-time dynamic seat updates across devices
+    // Poll every 3.5s for real-time dynamic seat updates across devices
     const interval = setInterval(async () => {
       try {
         const res = await fetch("/api/courses");
@@ -99,7 +94,7 @@ export default function Session2Page() {
           if (data.courses) setCourses(data.courses);
         }
       } catch (e) {}
-    }, 5000);
+    }, 3500);
 
     return () => clearInterval(interval);
   }, [router]);
@@ -170,96 +165,111 @@ export default function Session2Page() {
             <h2>Sports Category (Independent Session 2 Capacity)</h2>
           </div>
           <span className="text-xs font-mono text-[#D6C7A1]">
-            {selectedSports ? "1 / 1 Selected" : "0 / 1 Selected"}
+            {selectedSports ? `Selected: ${selectedSports}` : "0 / 1 Selected"}
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {sportsCourses.map((course) => {
-            const seatsRemaining = course.s2SeatsAvailable;
-            const isFull = seatsRemaining <= 0;
-            const isSelectedInSession1 = course.id === s1SportsChoice || course.name === s1SportsChoice;
-            const isDisabled = isFull || isSelectedInSession1;
-            const isSelected = selectedSports === course.id || selectedSports === course.name;
+            const isSelectedInSession1 = matchCourse(s1SportsChoice, course.id, course.name);
+            const isAnyDaySelected = matchCourse(selectedSports, course.id, course.name);
 
             return (
               <div
                 key={course.id}
-                onClick={() => {
-                  if (!isDisabled) {
-                    setSelectedSports(course.id);
-                    syncSeatHold(course.id, selectedStudentLife);
-                  }
-                }}
-                className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all ${
+                className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all border ${
                   isSelectedInSession1
-                    ? "opacity-40 cursor-not-allowed border-[#7ECEB7]/10 bg-[#041C19]"
-                    : isFull
-                    ? "opacity-50 cursor-not-allowed border-red-500/20 bg-red-950/10"
-                    : isSelected
-                    ? "border-[#7ECEB7] bg-[#037A74]/35 shadow-lg shadow-[#037A74]/30 scale-[1.02] cursor-pointer"
-                    : "border-[#7ECEB7]/15 hover:border-[#7ECEB7]/40 cursor-pointer"
+                    ? "opacity-40 border-[#7ECEB7]/10 bg-[#041C19]"
+                    : isAnyDaySelected
+                    ? "border-[#7ECEB7] bg-[#037A74]/35 shadow-lg shadow-[#037A74]/30 scale-[1.02]"
+                    : "border-[#7ECEB7]/15 hover:border-[#7ECEB7]/40"
                 }`}
               >
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono text-[#D6C7A1]">{course.id}</span>
                     {isSelectedInSession1 ? (
                       <span className="text-[10px] font-semibold text-[#A07850] bg-[#A07850]/15 border border-[#A07850]/30 px-2 py-0.5 rounded flex items-center gap-1">
                         <Ban className="w-3 h-3" /> Selected in S1
                       </span>
-                    ) : isSelected ? (
+                    ) : isAnyDaySelected ? (
                       <CheckCircle2 className="w-5 h-5 text-[#7ECEB7]" />
                     ) : null}
                   </div>
-                  <h3 className="font-bold text-base text-[#F5EBE0]">{course.name}</h3>
-                  <div className="flex items-center gap-1.5 text-xs text-[#D6C7A1] pt-1">
-                    <span>Faculty: <strong className="text-[#F5EBE0] font-normal">{course.faculty || "<faculty name>"}</strong></span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (course.docUrl) {
-                          window.open(course.docUrl, "_blank", "noopener,noreferrer");
-                        } else {
-                          alert(`Syllabus/Docs for ${course.name} will be available soon.`);
-                        }
-                      }}
-                      className="p-1 text-[#7ECEB7] hover:text-[#F5EBE0] hover:bg-[#7ECEB7]/20 rounded-full transition-colors inline-flex items-center justify-center"
-                      title="View Course Google Doc"
-                    >
-                      <Info className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  {course.schedule && (
-                    <div className="pt-1.5 flex flex-wrap items-center gap-1">
-                      {course.schedule.split(" | ").map((day, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-[#037A74]/30 text-[#7ECEB7] border border-[#7ECEB7]/30"
-                        >
-                          {day}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
 
-                <div className="pt-2 border-t border-[#7ECEB7]/15 flex items-center justify-between text-xs font-mono">
-                  <span className="text-[#D6C7A1]">Seats:</span>
-                  {isSelectedInSession1 ? (
-                    <span className="px-2 py-0.5 rounded bg-[#072C28] text-[#D6C7A1]/50 border border-[#7ECEB7]/10">
-                      Disabled
-                    </span>
-                  ) : isFull ? (
-                    <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-bold border border-red-500/30">
-                      Course Full
-                    </span>
-                  ) : (
-                    <span className={`px-2 py-0.5 rounded ${isSelected ? "bg-[#7ECEB7]/20 text-[#7ECEB7] font-bold" : "bg-[#072C28] text-[#D6C7A1]"}`}>
-                      {seatsRemaining} / {course.maxSeats} Seats Remaining
-                    </span>
-                  )}
+                  <h3 className="font-bold text-base text-[#F5EBE0]">{course.name}</h3>
+
+                  <div className="flex items-center justify-between text-xs text-[#D6C7A1] pt-0.5">
+                    <span>Faculty: <strong className="text-[#F5EBE0] font-normal">{course.faculty || "Faculty"}</strong></span>
+                    {course.docUrl && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(course.docUrl, "_blank", "noopener,noreferrer");
+                        }}
+                        className="p-1 text-[#7ECEB7] hover:text-[#F5EBE0] hover:bg-[#7ECEB7]/20 rounded-full transition-colors inline-flex items-center justify-center"
+                        title="View Course Google Doc"
+                      >
+                        <Info className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1 text-[11px] font-mono text-[#7ECEB7] bg-[#072C28] px-2 py-1 rounded border border-[#7ECEB7]/20">
+                    <Clock className="w-3 h-3" />
+                    <span>3:00 PM – 4:00 PM</span>
+                  </div>
+
+                  {/* Day-Wise Seat Selection Grid (Tue - Fri, 20 seats/day) */}
+                  <div className="space-y-1.5 pt-2 border-t border-[#7ECEB7]/15">
+                    <div className="text-[10px] font-semibold text-[#D6C7A1] uppercase tracking-wider flex items-center justify-between">
+                      <span>Pick Class Day:</span>
+                      <span className="text-[#7ECEB7]">20 seats/day</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {SPORTS_DAYS.map((day) => {
+                        const dayInfo = course.s2SportsDaysSeats?.[day] || { day, maxSeats: 20, occupied: 0, available: 20 };
+                        const isDayFull = dayInfo.available <= 0;
+                        const isDisabled = isSelectedInSession1 || isDayFull;
+                        const formattedChoice = `${course.name} (${day})`;
+                        const isThisDaySelected = selectedSports === formattedChoice;
+
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            disabled={isDisabled}
+                            onClick={() => {
+                              if (!isDisabled) {
+                                setSelectedSports(formattedChoice);
+                                syncSeatHold(formattedChoice, selectedStudentLife);
+                              }
+                            }}
+                            className={`px-2.5 py-2 rounded-lg text-xs font-mono flex items-center justify-between transition-all border ${
+                              isThisDaySelected
+                                ? "bg-[#7ECEB7] text-[#041C19] font-bold border-[#7ECEB7] shadow-md scale-[1.03]"
+                                : isDisabled
+                                ? "bg-red-950/20 text-red-400/60 border-red-500/20 cursor-not-allowed line-through opacity-70"
+                                : "bg-[#072C28] text-[#F5EBE0] hover:bg-[#037A74]/30 border-[#7ECEB7]/20 hover:border-[#7ECEB7]/40"
+                            }`}
+                          >
+                            <span>{day.slice(0, 3)}</span>
+                            {isSelectedInSession1 ? (
+                              <span className="text-[9px] font-bold text-[#A07850]">S1</span>
+                            ) : isDayFull ? (
+                              <span className="text-[9px] font-bold text-red-400 uppercase">FULL</span>
+                            ) : (
+                              <span className={`text-[10px] ${isThisDaySelected ? "text-[#041C19] font-bold" : "text-[#7ECEB7]"}`}>
+                                {dayInfo.available} left
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
             );

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getFullSession } from '@/lib/auth';
 import { runWithRegistrationLock } from '@/lib/concurrency';
 import { fetchRegistrations, upsertRegistration, checkStudentAuthorized, getRegistrationStatus } from '@/lib/google-sheets';
-import { calculateDynamicSeats, COURSES } from '@/lib/courses';
+import { calculateDynamicSeats, COURSES, matchCourse, parseSportsDay } from '@/lib/courses';
 import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
@@ -103,22 +103,30 @@ export async function POST(request: Request) {
 
       const computedSeats = calculateDynamicSeats(currentRegistrations);
 
-      const s1SportsCourse = computedSeats.find(c => c.id === s1Sports || c.name === s1Sports);
+      const s1SportsCourse = computedSeats.find(c => matchCourse(s1Sports, c.id, c.name));
       if (!s1SportsCourse || s1SportsCourse.s1SeatsAvailable <= 0) {
         return { error: `Sorry, Session 1 Sports (${s1SportsCourse?.name || s1Sports}) is full.` };
       }
+      const s1Day = parseSportsDay(s1Sports);
+      if (s1Day && s1SportsCourse.s1SportsDaysSeats && s1SportsCourse.s1SportsDaysSeats[s1Day].available <= 0) {
+        return { error: `Sorry, ${s1Day} for ${s1SportsCourse.name} is full (20/20 seats taken). Please select another day.` };
+      }
 
-      const s1LifeCourse = computedSeats.find(c => c.id === s1StudentLife || c.name === s1StudentLife);
+      const s1LifeCourse = computedSeats.find(c => matchCourse(s1StudentLife, c.id, c.name));
       if (!s1LifeCourse || s1LifeCourse.s1SeatsAvailable <= 0) {
         return { error: `Sorry, Session 1 Student Life (${s1LifeCourse?.name || s1StudentLife}) is full.` };
       }
 
-      const s2SportsCourse = computedSeats.find(c => c.id === s2Sports || c.name === s2Sports);
+      const s2SportsCourse = computedSeats.find(c => matchCourse(s2Sports, c.id, c.name));
       if (!s2SportsCourse || s2SportsCourse.s2SeatsAvailable <= 0) {
         return { error: `Sorry, Session 2 Sports (${s2SportsCourse?.name || s2Sports}) is full.` };
       }
+      const s2Day = parseSportsDay(s2Sports);
+      if (s2Day && s2SportsCourse.s2SportsDaysSeats && s2SportsCourse.s2SportsDaysSeats[s2Day].available <= 0) {
+        return { error: `Sorry, ${s2Day} for ${s2SportsCourse.name} is full (20/20 seats taken). Please select another day.` };
+      }
 
-      const s2LifeCourse = computedSeats.find(c => c.id === s2StudentLife || c.name === s2StudentLife);
+      const s2LifeCourse = computedSeats.find(c => matchCourse(s2StudentLife, c.id, c.name));
       if (!s2LifeCourse || s2LifeCourse.s2SeatsAvailable <= 0) {
         return { error: `Sorry, Session 2 Student Life (${s2LifeCourse?.name || s2LifeCourse}) is full.` };
       }
@@ -127,9 +135,9 @@ export async function POST(request: Request) {
         regNo: student.regNo,
         name: student.name,
         email: student.email.toLowerCase(),
-        s1Sports: s1SportsCourse.name,
+        s1Sports: s1Sports,
         s1StudentLife: s1LifeCourse.name,
-        s2Sports: s2SportsCourse.name,
+        s2Sports: s2Sports,
         s2StudentLife: s2LifeCourse.name,
         timestamp: new Date().toISOString(),
         status: 'CONFIRMED',

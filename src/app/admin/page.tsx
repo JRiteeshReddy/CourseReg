@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { CalculatedCourse, RegistrationRow, MasterStudent } from "@/lib/courses";
+import { CalculatedCourse, RegistrationRow, MasterStudent, SPORTS_DAYS } from "@/lib/courses";
 import {
   ShieldCheck,
   Download,
@@ -1782,6 +1782,21 @@ export default function AdminDashboard() {
                         style={{ width: `${Math.min(100, s1Percentage)}%` }}
                       ></div>
                     </div>
+                    {isSports && course.s1SportsDaysSeats && (
+                      <div className="pt-1.5 grid grid-cols-4 gap-1 text-[10px] font-mono">
+                        {SPORTS_DAYS.map((day) => {
+                          const d1 = course.s1SportsDaysSeats?.[day];
+                          return (
+                            <div key={day} className="bg-[#041C19] p-1 rounded border border-[#7ECEB7]/15 text-center">
+                              <div className="text-[#D6C7A1] text-[9px]">{day.slice(0, 3)}</div>
+                              <div className={`font-bold ${d1 && d1.available <= 0 ? "text-red-400" : "text-[#7ECEB7]"}`}>
+                                {d1 ? d1.occupied : 0}/20
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Session 2 Fill Bar */}
@@ -1802,6 +1817,21 @@ export default function AdminDashboard() {
                         style={{ width: `${Math.min(100, s2Percentage)}%` }}
                       ></div>
                     </div>
+                    {isSports && course.s2SportsDaysSeats && (
+                      <div className="pt-1.5 grid grid-cols-4 gap-1 text-[10px] font-mono">
+                        {SPORTS_DAYS.map((day) => {
+                          const d2 = course.s2SportsDaysSeats?.[day];
+                          return (
+                            <div key={day} className="bg-[#041C19] p-1 rounded border border-[#A07850]/20 text-center">
+                              <div className="text-[#D6C7A1] text-[9px]">{day.slice(0, 3)}</div>
+                              <div className={`font-bold ${d2 && d2.available <= 0 ? "text-red-400" : "text-[#A07850]"}`}>
+                                {d2 ? d2.occupied : 0}/20
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
 
