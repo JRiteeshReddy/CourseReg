@@ -247,28 +247,17 @@ export function calculateDynamicSeats(
       const s1DayHolds: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
       const s2DayHolds: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
 
-      let s1LegacyCount = 0;
-      let s2LegacyCount = 0;
-
       for (const reg of confirmed) {
         if (matchCourse(reg.s1Sports, course.id, course.name)) {
           const day = parseSportsDay(reg.s1Sports);
           if (day) {
             s1DayOcc[day]++;
-          } else {
-            const assignedDay = SPORTS_DAYS[s1LegacyCount % 4];
-            s1LegacyCount++;
-            s1DayOcc[assignedDay]++;
           }
         }
         if (matchCourse(reg.s2Sports, course.id, course.name)) {
           const day = parseSportsDay(reg.s2Sports);
           if (day) {
             s2DayOcc[day]++;
-          } else {
-            const assignedDay = SPORTS_DAYS[s2LegacyCount % 4];
-            s2LegacyCount++;
-            s2DayOcc[assignedDay]++;
           }
         }
       }
