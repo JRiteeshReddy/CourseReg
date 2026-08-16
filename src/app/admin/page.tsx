@@ -1802,6 +1802,18 @@ export default function AdminDashboard() {
                         })}
                       </div>
                     )}
+                    {!isSports && course.s1LifeDaysSeats && (
+                      <div className="pt-1.5 grid grid-cols-2 gap-1 text-[10px] font-mono">
+                        {Object.values(course.s1LifeDaysSeats).map((dayInfo) => (
+                          <div key={dayInfo.day} className="bg-[#041C19] p-1 rounded border border-[#A07850]/20 text-center">
+                            <div className="text-[#D6C7A1] text-[9px]">{dayInfo.day.slice(0, 3)}</div>
+                            <div className={`font-bold ${dayInfo.available <= 0 ? "text-red-400" : "text-[#A07850]"}`}>
+                              {dayInfo.occupied}/{dayInfo.maxSeats}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Session 2 Fill Bar */}
@@ -1835,6 +1847,18 @@ export default function AdminDashboard() {
                             </div>
                           );
                         })}
+                      </div>
+                    )}
+                    {!isSports && course.s2LifeDaysSeats && (
+                      <div className="pt-1.5 grid grid-cols-2 gap-1 text-[10px] font-mono">
+                        {Object.values(course.s2LifeDaysSeats).map((dayInfo) => (
+                          <div key={dayInfo.day} className="bg-[#041C19] p-1 rounded border border-[#A07850]/20 text-center">
+                            <div className="text-[#D6C7A1] text-[9px]">{dayInfo.day.slice(0, 3)}</div>
+                            <div className={`font-bold ${dayInfo.available <= 0 ? "text-red-400" : "text-[#A07850]"}`}>
+                              {dayInfo.occupied}/{dayInfo.maxSeats}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>

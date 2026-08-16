@@ -291,127 +291,106 @@ export default function Session2Page() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {studentLifeCourses.map((course) => {
-            const seatsRemaining = course.s2SeatsAvailable;
-            const isFull = seatsRemaining <= 0 || course.isFrozen || course.isClosed || course.isS2Frozen;
-            const isSelectedInSession1 = course.id === s1LifeChoice || course.name === s1LifeChoice;
-            const isDisabled = isFull || isSelectedInSession1;
-            const isSelected = selectedStudentLife === course.id || selectedStudentLife === course.name;
-
-            let badgeText = "";
-            let badgeStyle = "";
-            if (course.isFrozen) {
-              badgeText = "Completely Frozen";
-              badgeStyle = "bg-red-500/20 text-red-300 border-red-500/40";
-            } else if (course.isClosed) {
-              badgeText = "Closed Completely";
-              badgeStyle = "bg-red-500/20 text-red-300 border-red-500/40";
-            } else if (course.isS1Frozen) {
-              badgeText = "Open for Friday";
-              badgeStyle = "bg-[#7ECEB7]/20 text-[#7ECEB7] border-[#7ECEB7]/40";
-            }
+            const isSelectedInSession1 = matchCourse(s1LifeChoice, course.id, course.name);
+            const isAnyDaySelected = matchCourse(selectedStudentLife, course.id, course.name);
+            const daysSeats = course.s2LifeDaysSeats ? Object.values(course.s2LifeDaysSeats) : [];
 
             return (
               <div
                 key={course.id}
-                onClick={() => {
-                  if (!isDisabled) {
-                    setSelectedStudentLife(course.id);
-                    syncSeatHold(selectedSports, course.id);
-                  }
-                }}
-                className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all ${
+                className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all border ${
                   isSelectedInSession1
-                    ? "opacity-40 cursor-not-allowed border-[#7ECEB7]/10 bg-[#041C19]"
-                    : isDisabled
-                    ? "opacity-60 cursor-not-allowed border-red-500/20 bg-red-950/10"
-                    : isSelected
-                    ? "border-[#A07850] bg-[#A07850]/30 shadow-lg shadow-[#A07850]/20 scale-[1.02] cursor-pointer"
-                    : "border-[#7ECEB7]/15 hover:border-[#7ECEB7]/40 cursor-pointer"
+                    ? "opacity-40 border-[#7ECEB7]/10 bg-[#041C19]"
+                    : isAnyDaySelected
+                    ? "border-[#A07850] bg-[#A07850]/30 shadow-lg shadow-[#A07850]/20 scale-[1.02]"
+                    : "border-[#7ECEB7]/15 hover:border-[#7ECEB7]/40"
                 }`}
               >
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono text-[#D6C7A1]">{course.id}</span>
                     {isSelectedInSession1 ? (
                       <span className="text-[10px] font-semibold text-[#A07850] bg-[#A07850]/15 border border-[#A07850]/30 px-2 py-0.5 rounded flex items-center gap-1">
                         <Ban className="w-3 h-3" /> Selected in S1
                       </span>
-                    ) : isSelected ? (
-                      <CheckCircle2 className="w-5 h-5 text-[#D6C7A1]" />
+                    ) : isAnyDaySelected ? (
+                      <CheckCircle2 className="w-5 h-5 text-[#A07850]" />
                     ) : null}
                   </div>
+
                   <h3 className="font-bold text-base text-[#F5EBE0]">{course.name}</h3>
 
-                  {badgeText && !isSelectedInSession1 && (
-                    <div className="pt-1">
-                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${badgeStyle}`}>
-                        {badgeText}
-                      </span>
-                    </div>
-                  )}
-
-                  {course.statusNotice && !isSelectedInSession1 && (
-                    <p className="text-[11px] text-[#7ECEB7] font-medium pt-1">
-                      {course.statusNotice}
-                    </p>
-                  )}
-
-                  <div className="flex items-center gap-1.5 text-xs text-[#D6C7A1] pt-1">
-                    <span>Faculty: <strong className="text-[#F5EBE0] font-normal">{course.faculty || "<faculty name>"}</strong></span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (course.docUrl) {
+                  <div className="flex items-center justify-between text-xs text-[#D6C7A1] pt-0.5">
+                    <span>Faculty: <strong className="text-[#F5EBE0] font-normal">{course.faculty || "Faculty"}</strong></span>
+                    {course.docUrl && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           window.open(course.docUrl, "_blank", "noopener,noreferrer");
-                        } else {
-                          alert(`Syllabus/Docs for ${course.name} will be available soon.`);
-                        }
-                      }}
-                      className="p-1 text-[#7ECEB7] hover:text-[#F5EBE0] hover:bg-[#7ECEB7]/20 rounded-full transition-colors inline-flex items-center justify-center"
-                      title="View Course Google Doc"
-                    >
-                      <Info className="w-3.5 h-3.5" />
-                    </button>
+                        }}
+                        className="p-1 text-[#7ECEB7] hover:text-[#F5EBE0] hover:bg-[#7ECEB7]/20 rounded-full transition-colors inline-flex items-center justify-center"
+                        title="View Course Google Doc"
+                      >
+                        <Info className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-1 text-[11px] font-mono text-[#D6C7A1] bg-[#072C28] px-2 py-1 rounded border border-[#A07850]/30 mt-1">
+                  <div className="flex items-center gap-1 text-[11px] font-mono text-[#D6C7A1] bg-[#072C28] px-2 py-1 rounded border border-[#A07850]/30">
                     <Clock className="w-3 h-3 text-[#A07850]" />
-                    <span>4:00 PM – 5:00 PM (Wed & Fri)</span>
+                    <span>4:00 PM – 5:00 PM ({course.id === "SL03" ? "Thu & Fri" : "Wed & Fri"})</span>
                   </div>
 
-                  {course.schedule && (
-                    <div className="pt-1 flex flex-wrap items-center gap-1">
-                      {course.schedule.split(" | ").map((day, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-[#A07850]/20 text-[#D6C7A1] border border-[#A07850]/40"
-                        >
-                          {day}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                  {/* Day-Wise Seat Selection Grid for Student Life */}
+                  {daysSeats.length > 0 && (
+                    <div className="space-y-1.5 pt-2 border-t border-[#7ECEB7]/15">
+                      <div className="text-[10px] font-semibold text-[#D6C7A1] uppercase tracking-wider flex items-center justify-between">
+                        <span>Pick Class Day:</span>
+                        <span className="text-[#A07850]">Day Seats</span>
+                      </div>
 
-                <div className="pt-2 border-t border-[#7ECEB7]/15 flex items-center justify-between text-xs font-mono">
-                  <span className="text-[#D6C7A1]">Seats:</span>
-                  {isSelectedInSession1 ? (
-                    <span className="px-2 py-0.5 rounded bg-[#072C28] text-[#D6C7A1]/50 border border-[#7ECEB7]/10">
-                      Disabled
-                    </span>
-                  ) : course.isFrozen || course.isClosed ? (
-                    <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-bold border border-red-500/30">
-                      Unavailable
-                    </span>
-                  ) : isFull ? (
-                    <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-bold border border-red-500/30">
-                      Course Full
-                    </span>
-                  ) : (
-                    <span className={`px-2 py-0.5 rounded ${isSelected ? "bg-[#A07850]/25 text-[#D6C7A1] font-bold" : "bg-[#072C28] text-[#D6C7A1]"}`}>
-                      {seatsRemaining} / {course.s2SlotsLeft ?? course.maxSeats} Seats Remaining
-                    </span>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {daysSeats.map((dayInfo) => {
+                          const isDayFull = dayInfo.available <= 0;
+                          const isDisabled = isSelectedInSession1 || isDayFull;
+                          const formattedChoice = `${course.name} (${dayInfo.day})`;
+                          const isThisDaySelected = selectedStudentLife === formattedChoice;
+
+                          return (
+                            <button
+                              key={dayInfo.day}
+                              type="button"
+                              disabled={isDisabled}
+                              onClick={() => {
+                                if (!isDisabled) {
+                                  setSelectedStudentLife(formattedChoice);
+                                  syncSeatHold(selectedSports, formattedChoice);
+                                }
+                              }}
+                              className={`px-2.5 py-2 rounded-lg text-xs font-mono flex items-center justify-between transition-all border ${
+                                isThisDaySelected
+                                  ? "bg-[#A07850] text-[#041C19] font-bold border-[#A07850] shadow-md scale-[1.03]"
+                                  : isDisabled
+                                  ? "bg-red-950/20 text-red-400/60 border-red-500/20 cursor-not-allowed line-through opacity-70"
+                                  : "bg-[#072C28] text-[#F5EBE0] hover:bg-[#A07850]/30 border-[#A07850]/30 hover:border-[#A07850]/50"
+                              }`}
+                            >
+                              <span>{dayInfo.day.slice(0, 3)}</span>
+                              {isSelectedInSession1 ? (
+                                <span className="text-[9px] font-bold text-[#A07850]">S1</span>
+                              ) : isDayFull ? (
+                                <span className="text-[9px] font-bold text-red-400 uppercase">FULL</span>
+                              ) : (
+                                <span className={`text-[10px] ${isThisDaySelected ? "text-[#041C19] font-bold" : "text-[#D6C7A1]"}`}>
+                                  {dayInfo.available} left
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

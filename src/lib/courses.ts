@@ -28,81 +28,17 @@ export const COURSES: Course[] = [
   { id: "SP08", name: "Volleyball", category: "Sports", maxSeats: 80, faculty: "Kiran J", docUrl: "https://docs.google.com/document/d/1X1QRA-YhAA-T9QxL9YzLcTQjslrnJjX6/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Tuesday | Wednesday | Thursday | Friday" },
 
   // 11 Student Life Courses
-  { 
-    id: "SL01", 
-    name: "Basics of Theatre Acting", 
-    category: "Student Life", 
-    maxSeats: 50, 
-    faculty: "Dr. Charu Agaru", 
-    docUrl: "https://docs.google.com/document/d/1LQibgzRR2cnitJRCYjO14zJzPxgZ0ZLf/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
-    schedule: "Friday",
-    s1SlotsLeft: 18,
-    isS1FridayOnly: true,
-    statusNotice: "Open for Friday Class Only (18 slots left)" 
-  },
-  { 
-    id: "SL02", 
-    name: "Communication, Life skills and Soft skills", 
-    category: "Student Life", 
-    maxSeats: 50, 
-    faculty: "Mehul Shah", 
-    docUrl: "https://docs.google.com/document/d/1tMWN5atlY2ELa5Sh1GFW_kJAKfg1WaY5/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
-    schedule: "Frozen",
-    isFrozen: true,
-    statusNotice: "Completely Frozen — No new students accepted" 
-  },
-  { 
-    id: "SL03", 
-    name: "Contemporary Dance, Hip Hop and Freestyle", 
-    category: "Student Life", 
-    maxSeats: 25, 
-    faculty: "Rajesh Kumar", 
-    docUrl: "https://docs.google.com/document/d/18XTPM8tqzjbo_rHfhn_m0ogFZUryNVVl/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
-    schedule: "Closed",
-    isClosed: true,
-    statusNotice: "Closed Completely" 
-  },
-  { id: "SL04", name: "Folk Dance - FIPA", category: "Student Life", maxSeats: 50, faculty: "Dr. Anitha U S", docUrl: "https://docs.google.com/document/d/1as5vc9dTD5GvXKVtRE0zyL8LEx8eHuxB/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
-  { 
-    id: "SL05", 
-    name: "Mental Wellbeing and Peer Support", 
-    category: "Student Life", 
-    maxSeats: 50, 
-    faculty: "Dr. Prajwala H V", 
-    docUrl: "https://docs.google.com/document/d/1DCankpA0EbQ4Rl8pEr3gcVgNnKwwXQrG/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
-    schedule: "Friday",
-    s1SlotsLeft: 11,
-    isS1FridayOnly: true,
-    statusNotice: "Open for Friday Class Only (11 slots left)" 
-  },
-  { id: "SL06", name: "Introduction to Traditional Music", category: "Student Life", maxSeats: 25, faculty: "Seetha M I", docUrl: "https://docs.google.com/document/d/1Bneug18xXjnGbD85FmSOYRSRcdOHJhag/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Friday" },
-  { id: "SL07", name: "Music Band Contemporary and Light Music", category: "Student Life", maxSeats: 50, faculty: "Sunil Kumar M P", docUrl: "https://docs.google.com/document/d/1KR3-ozpFjnGK3G54Tg6-MmjmSrHRunii/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { id: "SL01", name: "Basics of Theatre Acting", category: "Student Life", maxSeats: 40, faculty: "Dr. Charu Agaru", docUrl: "https://docs.google.com/document/d/1LQibgzRR2cnitJRCYjO14zJzPxgZ0ZLf/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { id: "SL02", name: "Communication, Life skills and Soft skills", category: "Student Life", maxSeats: 50, faculty: "Mehul Shah", docUrl: "https://docs.google.com/document/d/1tMWN5atlY2ELa5Sh1GFW_kJAKfg1WaY5/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { id: "SL03", name: "Contemporary Dance, Hip Hop and Freestyle", category: "Student Life", maxSeats: 40, faculty: "Rajesh Kumar", docUrl: "https://docs.google.com/document/d/18XTPM8tqzjbo_rHfhn_m0ogFZUryNVVl/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Thursday | Friday" },
+  { id: "SL04", name: "Folk Dance - FIPA", category: "Student Life", maxSeats: 40, faculty: "Dr. Anitha U S", docUrl: "https://docs.google.com/document/d/1as5vc9dTD5GvXKVtRE0zyL8LEx8eHuxB/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { id: "SL05", name: "Mental Wellbeing and Peer Support", category: "Student Life", maxSeats: 60, faculty: "Dr. Prajwala H V", docUrl: "https://docs.google.com/document/d/1DCankpA0EbQ4Rl8pEr3gcVgNnKwwXQrG/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { id: "SL06", name: "Introduction to Traditional Music", category: "Student Life", maxSeats: 50, faculty: "Seetha M I", docUrl: "https://docs.google.com/document/d/1Bneug18xXjnGbD85FmSOYRSRcdOHJhag/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { id: "SL07", name: "Music Band Contemporary and Light Music", category: "Student Life", maxSeats: 40, faculty: "Sunil Kumar M P", docUrl: "https://docs.google.com/document/d/1KR3-ozpFjnGK3G54Tg6-MmjmSrHRunii/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
   { id: "SL08", name: "Rhythm Appreciation", category: "Student Life", maxSeats: 50, faculty: "Sreekanth P V", docUrl: "https://docs.google.com/document/d/1ho8DU4CurHwYnGKnteO8hkrmPCawYRF_/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
-  { 
-    id: "SL09", 
-    name: "Creative Design, Innovation and Sustainability", 
-    category: "Student Life", 
-    maxSeats: 50, 
-    faculty: "Moses Kotikela", 
-    docUrl: "https://docs.google.com/document/d/1Orvu3IoWyK1uQAFORd1NeJ5vCgY6FPhk/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
-    schedule: "Friday",
-    s1SlotsLeft: 26,
-    isS1FridayOnly: true,
-    statusNotice: "Open for Friday Class Only (26 slots left)" 
-  },
-  { 
-    id: "SL10", 
-    name: "Social Media and Digital Content Creation", 
-    category: "Student Life", 
-    maxSeats: 50, 
-    faculty: "Meghna Ganguly", 
-    docUrl: "https://docs.google.com/document/d/1Q6qN97uzBwNMtZ5tVHYqV55V6x_SHe4r/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", 
-    schedule: "Friday Only",
-    s1SlotsLeft: 13,
-    isS1FridayOnly: true,
-    statusNotice: "Open for Friday Class ONLY (13 slots left)" 
-  },
-  { id: "SL11", name: "Invocatory_Dances", category: "Student Life", maxSeats: 50, faculty: "Dr. Divya Nedungadi", docUrl: "https://docs.google.com/document/d/17n0M-zWAIMtn7Chcqw8ds35I5xe7Q6f1/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { id: "SL09", name: "Creative Design, Innovation and Sustainability", category: "Student Life", maxSeats: 60, faculty: "Moses Kotikela", docUrl: "https://docs.google.com/document/d/1Orvu3IoWyK1uQAFORd1NeJ5vCgY6FPhk/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { id: "SL10", name: "Social Media and Digital Content Creation", category: "Student Life", maxSeats: 50, faculty: "Meghna Ganguly", docUrl: "https://docs.google.com/document/d/1Q6qN97uzBwNMtZ5tVHYqV55V6x_SHe4r/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
+  { id: "SL11", name: "Invocatory_Dances", category: "Student Life", maxSeats: 40, faculty: "Dr. Divya Nedungadi", docUrl: "https://docs.google.com/document/d/17n0M-zWAIMtn7Chcqw8ds35I5xe7Q6f1/edit?usp=sharing&ouid=117607264633629638910&rtpof=true&sd=true", schedule: "Wednesday | Friday" },
 ];
 
 export interface RegistrationRow {
@@ -144,6 +80,15 @@ export interface SportsDaySeatInfo {
   available: number;
 }
 
+export type StudentLifeDay = "Wednesday" | "Thursday" | "Friday";
+
+export interface StudentLifeDaySeatInfo {
+  day: StudentLifeDay;
+  maxSeats: number;
+  occupied: number;
+  available: number;
+}
+
 export interface CalculatedCourse extends Course {
   s1SeatsOccupied: number;
   s1SeatsAvailable: number;
@@ -153,6 +98,8 @@ export interface CalculatedCourse extends Course {
   s2EffectiveMaxSeats: number;
   s1SportsDaysSeats?: Record<SportsDay, SportsDaySeatInfo>;
   s2SportsDaysSeats?: Record<SportsDay, SportsDaySeatInfo>;
+  s1LifeDaysSeats?: Record<string, StudentLifeDaySeatInfo>;
+  s2LifeDaysSeats?: Record<string, StudentLifeDaySeatInfo>;
 }
 
 const DRAFT_HOLD_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes temporary seat hold
@@ -166,7 +113,7 @@ const COURSE_ALIASES: Record<string, string[]> = {
   "SL11": ["Traditional Dance", "Invocatory_Dances", "Invocatory Dances"],
 };
 
-export function parseSportsDay(val: string | undefined | null): SportsDay | null {
+export function parseDay(val: string | undefined | null): string | null {
   if (!val) return null;
   const v = val.toLowerCase();
   if (v.includes("tuesday")) return "Tuesday";
@@ -174,6 +121,10 @@ export function parseSportsDay(val: string | undefined | null): SportsDay | null
   if (v.includes("thursday")) return "Thursday";
   if (v.includes("friday")) return "Friday";
   return null;
+}
+
+export function parseSportsDay(val: string | undefined | null): SportsDay | null {
+  return parseDay(val) as SportsDay | null;
 }
 
 export function matchCourse(val: string | undefined | null, id: string, name: string): boolean {
@@ -196,6 +147,24 @@ export const SPORTS_INITIAL_OCCUPIED: Record<string, Record<SportsDay, number>> 
   SP06: { Tuesday: 16, Wednesday: 0, Thursday: 7, Friday: 4 },  // Holistic Wellbeing and Yoga Therapy
   SP07: { Tuesday: 1, Wednesday: 2, Thursday: 12, Friday: 12 }, // Throwball
   SP08: { Tuesday: 13, Wednesday: 0, Thursday: 10, Friday: 9 }, // Volleyball
+};
+
+export const STUDENT_LIFE_CONFIG: Record<string, {
+  days: StudentLifeDay[];
+  dailyMax: number;
+  initialOccupied: Record<StudentLifeDay, number>;
+}> = {
+  SL01: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 20, Friday: 2, Thursday: 0 } },
+  SL02: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 25, Friday: 23, Thursday: 0 } },
+  SL03: { days: ["Thursday", "Friday"], dailyMax: 20, initialOccupied: { Thursday: 7, Friday: 20, Wednesday: 0 } },
+  SL04: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 12, Friday: 7, Thursday: 0 } },
+  SL05: { days: ["Wednesday", "Friday"], dailyMax: 30, initialOccupied: { Wednesday: 22, Friday: 16, Thursday: 0 } },
+  SL06: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 } },
+  SL07: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 10, Friday: 0, Thursday: 0 } },
+  SL08: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 } },
+  SL09: { days: ["Wednesday", "Friday"], dailyMax: 30, initialOccupied: { Wednesday: 30, Friday: 12, Thursday: 0 } },
+  SL10: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 25, Friday: 20, Thursday: 0 } },
+  SL11: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 17, Friday: 0, Thursday: 0 } },
 };
 
 /**
@@ -221,7 +190,6 @@ export function calculateDynamicSeats(
     let s1Occupied = 0;
     let s2Occupied = 0;
 
-    // 1. Count confirmed/submitted registrations
     for (const reg of confirmed) {
       if (course.category === "Sports") {
         if (matchCourse(reg.s1Sports, course.id, course.name)) s1Occupied++;
@@ -232,7 +200,6 @@ export function calculateDynamicSeats(
       }
     }
 
-    // 2. Count active non-expired draft seat holds
     for (const hold of activeHolds) {
       if (course.category === "Sports") {
         if (matchCourse(hold.s1Sports, course.id, course.name)) s1Occupied++;
@@ -250,28 +217,24 @@ export function calculateDynamicSeats(
 
     let s1SportsDaysSeats: Record<SportsDay, SportsDaySeatInfo> | undefined;
     let s2SportsDaysSeats: Record<SportsDay, SportsDaySeatInfo> | undefined;
+    let s1LifeDaysSeats: Record<string, StudentLifeDaySeatInfo> | undefined;
+    let s2LifeDaysSeats: Record<string, StudentLifeDaySeatInfo> | undefined;
 
     if (course.category === "Sports") {
       const initOcc = SPORTS_INITIAL_OCCUPIED[course.id] || { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
-
       const s1DayOcc: Record<SportsDay, number> = { ...initOcc };
       const s2DayOcc: Record<SportsDay, number> = { ...initOcc };
-
       const s1DayHolds: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
       const s2DayHolds: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
 
       for (const reg of confirmed) {
         if (matchCourse(reg.s1Sports, course.id, course.name)) {
           const day = parseSportsDay(reg.s1Sports);
-          if (day) {
-            s1DayOcc[day]++;
-          }
+          if (day) s1DayOcc[day]++;
         }
         if (matchCourse(reg.s2Sports, course.id, course.name)) {
           const day = parseSportsDay(reg.s2Sports);
-          if (day) {
-            s2DayOcc[day]++;
-          }
+          if (day) s2DayOcc[day]++;
         }
       }
 
@@ -299,6 +262,70 @@ export function calculateDynamicSeats(
         Thursday: { day: "Thursday", maxSeats: 20, occupied: s2DayOcc.Thursday, available: Math.max(0, 20 - s2DayOcc.Thursday - s2DayHolds.Thursday) },
         Friday: { day: "Friday", maxSeats: 20, occupied: s2DayOcc.Friday, available: Math.max(0, 20 - s2DayOcc.Friday - s2DayHolds.Friday) },
       };
+    } else if (course.category === "Student Life") {
+      const config = STUDENT_LIFE_CONFIG[course.id] || {
+        days: ["Wednesday", "Friday"],
+        dailyMax: 25,
+        initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 },
+      };
+
+      const s1DayOcc: Record<StudentLifeDay, number> = { ...config.initialOccupied };
+      const s2DayOcc: Record<StudentLifeDay, number> = { ...config.initialOccupied };
+      const s1DayHolds: Record<StudentLifeDay, number> = { Wednesday: 0, Friday: 0, Thursday: 0 };
+      const s2DayHolds: Record<StudentLifeDay, number> = { Wednesday: 0, Friday: 0, Thursday: 0 };
+
+      for (const reg of confirmed) {
+        if (matchCourse(reg.s1StudentLife, course.id, course.name)) {
+          const day = parseDay(reg.s1StudentLife);
+          if (day && day in s1DayOcc) s1DayOcc[day as StudentLifeDay]++;
+        }
+        if (matchCourse(reg.s2StudentLife, course.id, course.name)) {
+          const day = parseDay(reg.s2StudentLife);
+          if (day && day in s2DayOcc) s2DayOcc[day as StudentLifeDay]++;
+        }
+      }
+
+      for (const hold of activeHolds) {
+        if (matchCourse(hold.s1StudentLife, course.id, course.name)) {
+          const day = parseDay(hold.s1StudentLife);
+          if (day && day in s1DayHolds) s1DayHolds[day as StudentLifeDay]++;
+        }
+        if (matchCourse(hold.s2StudentLife, course.id, course.name)) {
+          const day = parseDay(hold.s2StudentLife);
+          if (day && day in s2DayHolds) s2DayHolds[day as StudentLifeDay]++;
+        }
+      }
+
+      const s1SeatsMap: Record<string, StudentLifeDaySeatInfo> = {};
+      const s2SeatsMap: Record<string, StudentLifeDaySeatInfo> = {};
+
+      for (const d of config.days) {
+        const occ1 = s1DayOcc[d] || 0;
+        const hold1 = s1DayHolds[d] || 0;
+        s1SeatsMap[d] = {
+          day: d,
+          maxSeats: config.dailyMax,
+          occupied: occ1,
+          available: Math.max(0, config.dailyMax - occ1 - hold1),
+        };
+
+        const occ2 = s2DayOcc[d] || 0;
+        const hold2 = s2DayHolds[d] || 0;
+        s2SeatsMap[d] = {
+          day: d,
+          maxSeats: config.dailyMax,
+          occupied: occ2,
+          available: Math.max(0, config.dailyMax - occ2 - hold2),
+        };
+      }
+
+      s1LifeDaysSeats = s1SeatsMap;
+      s2LifeDaysSeats = s2SeatsMap;
+
+      s1Available = Object.values(s1SeatsMap).reduce((acc, curr) => acc + curr.available, 0);
+      s2Available = Object.values(s2SeatsMap).reduce((acc, curr) => acc + curr.available, 0);
+      s1MaxSeats = config.days.length * config.dailyMax;
+      s2MaxSeats = config.days.length * config.dailyMax;
     }
 
     if (course.isFrozen || course.isClosed) {
@@ -316,7 +343,6 @@ export function calculateDynamicSeats(
             if (matchCourse(hold.s1StudentLife, course.id, course.name)) s1Holds++;
           }
         }
-        // Calculate new seat cap: current occupied + remaining slots requested (capped at course.maxSeats, e.g. 50)
         const targetCap = s1Occupied + course.s1SlotsLeft;
         s1MaxSeats = targetCap > course.maxSeats ? course.maxSeats : targetCap;
         s1Available = Math.max(0, s1MaxSeats - s1Occupied - s1Holds);
@@ -349,6 +375,8 @@ export function calculateDynamicSeats(
       s2EffectiveMaxSeats: s2MaxSeats,
       s1SportsDaysSeats,
       s2SportsDaysSeats,
+      s1LifeDaysSeats,
+      s2LifeDaysSeats,
     };
   });
 }
