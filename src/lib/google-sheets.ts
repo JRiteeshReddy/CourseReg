@@ -137,6 +137,65 @@ export async function setRegistrationStatus(isOpen: boolean): Promise<boolean> {
   return isOpen;
 }
 
+let inMemoryRegistrationCutoff = '';
+
+export async function getRegistrationCutoff(): Promise<string> {
+  try {
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'registration_cutoff')
+      .maybeSingle();
+
+    if (!error && data && data.value) {
+      inMemoryRegistrationCutoff = String(data.value);
+      saveLocalSettings({ registration_cutoff: inMemoryRegistrationCutoff });
+      return inMemoryRegistrationCutoff;
+    }
+  } catch (err) {
+    // Fallback to local settings file
+  }
+
+  try {
+    ensureDataDir();
+    if (fs.existsSync(SETTINGS_FILE)) {
+      const content = fs.readFileSync(SETTINGS_FILE, 'utf-8');
+      const settings = JSON.parse(content);
+      if (settings.registration_cutoff) {
+        inMemoryRegistrationCutoff = String(settings.registration_cutoff);
+        return inMemoryRegistrationCutoff;
+      }
+    }
+  } catch (err) {
+    // Fallback
+  }
+
+  return inMemoryRegistrationCutoff;
+}
+
+export async function setRegistrationCutoff(cutoffIsoString: string): Promise<string> {
+  inMemoryRegistrationCutoff = cutoffIsoString;
+  saveLocalSettings({ registration_cutoff: cutoffIsoString });
+
+  try {
+    const { error } = await supabase
+      .from('system_settings')
+      .upsert({
+        key: 'registration_cutoff',
+        value: cutoffIsoString,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'key' });
+
+    if (error) {
+      console.warn("Could not update registration_cutoff in Supabase:", error.message);
+    }
+  } catch (err) {
+    console.warn("Supabase registration_cutoff upsert exception:", err);
+  }
+
+  return cutoffIsoString;
+}
+
 function saveLocalSettings(newSettings: Record<string, any>): void {
   try {
     ensureDataDir();

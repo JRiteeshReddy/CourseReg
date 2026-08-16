@@ -4,14 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { MasterStudent } from "@/lib/google-sheets";
-import RegistrationNoticeModal from "@/components/RegistrationNoticeModal";
 import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Ban, Info, Bell } from "lucide-react";
 
 export default function Session2Page() {
   const [student, setStudent] = useState<MasterStudent | null>(null);
   const [courses, setCourses] = useState<CalculatedCourse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showNoticeModal, setShowNoticeModal] = useState(false);
 
   // Session 1 draft choices
   const [s1SportsChoice, setS1SportsChoice] = useState<string>("");
@@ -157,13 +155,6 @@ export default function Session2Page() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowNoticeModal(true)}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#A07850]/20 hover:bg-[#A07850]/30 text-[#D6C7A1] hover:text-[#F5EBE0] text-xs font-bold border border-[#A07850]/40 transition-all shadow-sm"
-          >
-            <Bell className="w-4 h-4 text-[#7ECEB7] animate-pulse" />
-            <span>Course Notice</span>
-          </button>
           <div className="flex items-center gap-3 text-xs text-[#D6C7A1] bg-[#072C28] p-3 rounded-xl border border-[#7ECEB7]/20">
             <Sparkles className="w-4 h-4 text-[#A07850]" />
             <span>Session 1 selections are automatically disabled for Session 2</span>
@@ -433,12 +424,6 @@ export default function Session2Page() {
           <ArrowRight className="w-5 h-5" />
         </button>
       </footer>
-
-      {/* REGISTRATION ANNOUNCEMENT POPUP MODAL */}
-      <RegistrationNoticeModal
-        isOpen={showNoticeModal}
-        onClose={() => setShowNoticeModal(false)}
-      />
     </div>
   );
 }

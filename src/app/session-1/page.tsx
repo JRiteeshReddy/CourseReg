@@ -4,15 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CalculatedCourse } from "@/lib/courses";
 import { MasterStudent } from "@/lib/google-sheets";
-import RegistrationNoticeModal from "@/components/RegistrationNoticeModal";
 import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Info, Bell } from "lucide-react";
 
 export default function Session1Page() {
   const [student, setStudent] = useState<MasterStudent | null>(null);
   const [courses, setCourses] = useState<CalculatedCourse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showNoticeModal, setShowNoticeModal] = useState(false);
-  const [pendingFridayCourse, setPendingFridayCourse] = useState<CalculatedCourse | null>(null);
 
   // Temporary selections
   const [selectedSports, setSelectedSports] = useState<string>("");
@@ -138,13 +135,6 @@ export default function Session1Page() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowNoticeModal(true)}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#A07850]/20 hover:bg-[#A07850]/30 text-[#D6C7A1] hover:text-[#F5EBE0] text-xs font-bold border border-[#A07850]/40 transition-all shadow-sm"
-          >
-            <Bell className="w-4 h-4 text-[#7ECEB7] animate-pulse" />
-            <span>Course Notice</span>
-          </button>
           <div className="flex items-center gap-3 text-xs text-[#D6C7A1] bg-[#072C28] p-3 rounded-xl border border-[#7ECEB7]/20">
             <Sparkles className="w-4 h-4 text-[#A07850]" />
             <span>Pick exactly 1 Sports + 1 Student Life course</span>
@@ -279,13 +269,8 @@ export default function Session1Page() {
                 key={course.id}
                 onClick={() => {
                   if (!isFull) {
-                    const isFridayOnly = course.isS1FridayOnly || ["SL01", "SL05", "SL09", "SL10"].includes(course.id);
-                    if (isFridayOnly && selectedStudentLife !== course.id && selectedStudentLife !== course.name) {
-                      setPendingFridayCourse(course);
-                    } else {
-                      setSelectedStudentLife(course.id);
-                      syncSeatHold(selectedSports, course.id);
-                    }
+                    setSelectedStudentLife(course.id);
+                    syncSeatHold(selectedSports, course.id);
                   }
                 }}
                 className={`glass-card p-5 flex flex-col justify-between space-y-4 transition-all ${
@@ -395,69 +380,6 @@ export default function Session1Page() {
           <ArrowRight className="w-5 h-5" />
         </button>
       </footer>
-
-      {/* REGISTRATION ANNOUNCEMENT POPUP MODAL */}
-      <RegistrationNoticeModal
-        isOpen={showNoticeModal}
-        onClose={() => setShowNoticeModal(false)}
-      />
-
-      {/* FRIDAY COURSE SELECTION WARNING POP-UP MODAL */}
-      {pendingFridayCourse && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-md glass-panel bg-[#041C19]/95 border border-[#7ECEB7]/40 rounded-2xl p-6 space-y-5 shadow-2xl shadow-[#037A74]/30">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-[#A07850]/20 rounded-2xl border border-[#A07850]/40 text-[#D6C7A1] flex-shrink-0">
-                <Bell className="w-6 h-6 text-[#7ECEB7]" />
-              </div>
-              <div>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-[#037A74]/40 text-[#7ECEB7] border border-[#037A74]/60">
-                  FRIDAY CLASS NOTICE
-                </span>
-                <h3 className="text-lg font-bold text-[#F5EBE0] mt-1">
-                  Friday Class Availability Notice
-                </h3>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-sm text-[#F5EBE0] space-y-2">
-              <p className="font-semibold text-[#7ECEB7] text-base">
-                {pendingFridayCourse.name} ({pendingFridayCourse.id})
-              </p>
-              <div className="p-3 rounded-lg bg-[#041C19] border border-[#7ECEB7]/30 text-amber-200 text-xs font-medium space-y-1">
-                <p className="font-bold text-[#F5EBE0] text-sm">
-                  ⚠️ This subject is only open for Friday.
-                </p>
-                <p className="text-[#D6C7A1]">
-                  By selecting this subject, your Session 1 class will be scheduled for the Friday class.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setPendingFridayCourse(null)}
-                className="px-4 py-2.5 rounded-xl bg-[#072C28] text-[#D6C7A1] hover:text-[#F5EBE0] text-xs font-semibold border border-[#7ECEB7]/20 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedStudentLife(pendingFridayCourse.id);
-                  syncSeatHold(selectedSports, pendingFridayCourse.id);
-                  setPendingFridayCourse(null);
-                }}
-                className="px-5 py-2.5 rounded-xl bg-[#037A74] hover:bg-[#7ECEB7] text-[#F5EBE0] hover:text-[#041C19] text-xs font-bold transition-all shadow-lg flex items-center gap-1.5"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>I Understand & Select Subject</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

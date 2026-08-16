@@ -33,6 +33,9 @@ import {
   UserCheck,
   User,
   ClipboardList,
+  Calendar,
+  UserPlus,
+  Clock,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -45,6 +48,8 @@ export default function AdminDashboard() {
   const [totalReg, setTotalReg] = useState(0);
   const [adminEmail, setAdminEmail] = useState("");
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(true);
+  const [registrationCutoff, setRegistrationCutoff] = useState<string>("");
+  const [updatingCutoff, setUpdatingCutoff] = useState(false);
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
 
   // Filtering States for Faculty Attendance Section
@@ -62,6 +67,7 @@ export default function AdminDashboard() {
   const [rosterCategoryFilter, setRosterCategoryFilter] = useState<"ALL" | "Sports" | "Student Life">("ALL");
   const [rosterCourseFilter, setRosterCourseFilter] = useState("ALL");
   const [rosterSessionFilter, setRosterSessionFilter] = useState<"ALL" | "S1" | "S2">("ALL");
+  const [rosterNewOldFilter, setRosterNewOldFilter] = useState<"ALL" | "OLD" | "NEW">("ALL");
 
   const [loading, setLoading] = useState(true);
   const [togglingReg, setTogglingReg] = useState(false);
@@ -114,6 +120,9 @@ export default function AdminDashboard() {
       if (typeof data.isRegistrationOpen === "boolean") {
         setIsRegistrationOpen(data.isRegistrationOpen);
       }
+      if (data.registrationCutoff) {
+        setRegistrationCutoff(data.registrationCutoff);
+      }
     } catch (err) {
       setError("Failed to fetch admin dashboard statistics");
     } finally {
@@ -132,11 +141,14 @@ export default function AdminDashboard() {
       const res = await fetch("/api/admin/toggle-registration", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isOpen: newStatus }),
+        body: JSON.stringify({ isOpen: newStatus, updateCutoff: newStatus }),
       });
       const data = await res.json();
       if (res.ok) {
         setIsRegistrationOpen(data.isRegistrationOpen);
+        if (data.registrationCutoff) {
+          setRegistrationCutoff(data.registrationCutoff);
+        }
       } else {
         alert(data.error || "Failed to update registration status");
       }
@@ -145,6 +157,36 @@ export default function AdminDashboard() {
     } finally {
       setTogglingReg(false);
     }
+  };
+
+  const handleSetCutoffNow = async (targetIso?: string) => {
+    setUpdatingCutoff(true);
+    const isoToSet = targetIso || new Date().toISOString();
+    try {
+      const res = await fetch("/api/admin/set-cutoff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cutoffIsoString: isoToSet }),
+      });
+      const data = await res.json();
+      if (res.ok && data.registrationCutoff) {
+        setRegistrationCutoff(data.registrationCutoff);
+      } else {
+        alert(data.error || "Failed to update registration cutoff timestamp");
+      }
+    } catch (err) {
+      alert("Error setting registration cutoff timestamp");
+    } finally {
+      setUpdatingCutoff(false);
+    }
+  };
+
+  const isNewRegistration = (r: RegistrationRow) => {
+    if (!registrationCutoff) return false;
+    if (!r.timestamp) return false;
+    const regTime = new Date(r.timestamp).getTime();
+    const cutoffTime = new Date(registrationCutoff).getTime();
+    return regTime > cutoffTime;
   };
 
   const handleClearAllRegistrations = async (e: React.FormEvent) => {
@@ -354,6 +396,46 @@ export default function AdminDashboard() {
     XLSX.writeFile(
       workbook,
       `Master_University_Course_Registrations_${new Date().toISOString().split("T")[0]}.xlsx`
+    );
+  };
+
+  const exportNewRegistrationsToExcel = () => {
+    if (registrations.length === 0) {
+      alert("No registration data available to export.");
+      return;
+    }
+
+    const newStudents = registrations.filter((r) => isNewRegistration(r));
+
+    if (newStudents.length === 0) {
+      const cutoffDateStr = registrationCutoff
+        ? new Date(registrationCutoff).toLocaleString()
+        : "Not Set";
+      alert(`No newly registered students found after the cutoff date (${cutoffDateStr}).`);
+      return;
+    }
+
+    const exportRows = newStudents.map((r) => ({
+      "Registration Number": r.regNo,
+      "Student Name": r.name,
+      "Student Email": r.email,
+      "Faculty Mentor": r.facultyName || "Unassigned",
+      "Session 1 Sports": r.s1Sports,
+      "Session 1 Student Life": r.s1StudentLife,
+      "Session 2 Sports": r.s2Sports,
+      "Session 2 Student Life": r.s2StudentLife,
+      "Friday-Only S1 Course": isFridayOnlyS1Choice(r.s1StudentLife) ? "YES" : "NO",
+      "Registration Timestamp": r.timestamp,
+      Status: r.status,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "New Registrations");
+
+    XLSX.writeFile(
+      workbook,
+      `New_Student_Registrations_${new Date().toISOString().split("T")[0]}.xlsx`
     );
   };
 
@@ -788,6 +870,13 @@ export default function AdminDashboard() {
       if (!r.s2Sports && !r.s2StudentLife) return false;
     }
 
+    // New/Old List filter
+    if (rosterNewOldFilter === "NEW") {
+      if (!isNewRegistration(r)) return false;
+    } else if (rosterNewOldFilter === "OLD") {
+      if (isNewRegistration(r)) return false;
+    }
+
     return true;
   });
 
@@ -1166,13 +1255,22 @@ export default function AdminDashboard() {
           <button
             onClick={exportAllToExcel}
             className="btn-primary flex-1 sm:flex-none flex items-center justify-center gap-2 text-xs font-bold text-[#F5EBE0] py-2.5 px-4"
+            title="Download both Old (List 1) and New (List 2) student registrations"
           >
             <Download className="w-4 h-4 text-[#F5EBE0]" /> Export All (.xlsx)
           </button>
 
           <button
+            onClick={exportNewRegistrationsToExcel}
+            className="px-4 py-2.5 rounded-xl bg-[#A07850]/40 hover:bg-[#A07850]/60 text-[#F5EBE0] border border-[#A07850]/50 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md flex-1 sm:flex-none"
+            title="Download ONLY newly registered students after cutoff date"
+          >
+            <UserPlus className="w-4 h-4 text-[#F5EBE0]" /> Export New Registrations (.xlsx)
+          </button>
+
+          <button
             onClick={exportFridayOnlyS1ToExcel}
-            className="px-4 py-2.5 rounded-xl bg-[#037A74]/40 hover:bg-[#037A74]/60 text-[#7ECEB7] border border-[#7ECEB7]/30 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
+            className="px-4 py-2.5 rounded-xl bg-[#037A74]/40 hover:bg-[#037A74]/60 text-[#7ECEB7] border border-[#7ECEB7]/30 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm flex-1 sm:flex-none"
             title="Export students registered for Friday-Only S1 courses"
           >
             <FileSpreadsheet className="w-4 h-4 text-[#7ECEB7]" /> Export Friday-Only S1 (.xlsx)
@@ -1255,6 +1353,31 @@ export default function AdminDashboard() {
                 <span>Open Registration</span>
               </>
             )}
+          </button>
+        </div>
+
+        {/* REGISTRATION CUTOFF & NEW MEMBER SETTINGS */}
+        <div className="mt-4 pt-4 border-t border-[#7ECEB7]/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-[#D6C7A1]">
+            <Calendar className="w-4 h-4 text-[#7ECEB7]" />
+            <span>
+              New Registrations Cutoff Baseline:{" "}
+              <strong className="text-white font-mono">
+                {registrationCutoff
+                  ? new Date(registrationCutoff).toLocaleString()
+                  : "Not set (All registrations are currently in Old List)"}
+              </strong>
+            </span>
+          </div>
+
+          <button
+            onClick={() => handleSetCutoffNow()}
+            disabled={updatingCutoff}
+            className="px-3.5 py-2 rounded-xl bg-[#072C28] hover:bg-[#037A74]/30 text-[#7ECEB7] border border-[#7ECEB7]/30 font-semibold flex items-center gap-1.5 transition-all text-xs disabled:opacity-50 shadow-sm"
+            title="Set registration cutoff timestamp to current date/time to start tracking new registrations"
+          >
+            {updatingCutoff ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            <span>Set Cutoff to Current Time</span>
           </button>
         </div>
       </section>
@@ -2042,7 +2165,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* MULTI-FILTER BAR */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-[#072C28]/60 p-4 rounded-xl border border-[#7ECEB7]/15">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 bg-[#072C28]/60 p-4 rounded-xl border border-[#7ECEB7]/15">
           {/* Search Input */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-[#D6C7A1] uppercase tracking-wider flex items-center gap-1">
@@ -2055,6 +2178,22 @@ export default function AdminDashboard() {
               onChange={(e) => setRosterSearchQuery(e.target.value)}
               className="w-full px-3 py-2 rounded-xl bg-[#041C19] border border-[#7ECEB7]/20 text-xs text-[#F5EBE0] placeholder-[#D6C7A1]/40 focus:outline-none focus:border-[#7ECEB7]"
             />
+          </div>
+
+          {/* New / Old List Filter */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-[#D6C7A1] uppercase tracking-wider flex items-center gap-1">
+              <UserCheck className="w-3 h-3 text-[#7ECEB7]" /> List Filter
+            </label>
+            <select
+              value={rosterNewOldFilter}
+              onChange={(e) => setRosterNewOldFilter(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-xl bg-[#041C19] border border-[#7ECEB7]/20 text-xs text-[#F5EBE0] focus:outline-none focus:border-[#7ECEB7]"
+            >
+              <option value="ALL">All List (Old + New)</option>
+              <option value="OLD">Old List 1 Only</option>
+              <option value="NEW">New List 2 Only</option>
+            </select>
           </div>
 
           {/* Category Dropdown Filter */}
@@ -2119,7 +2258,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Reset Filter Button */}
-        {(rosterSearchQuery || rosterCategoryFilter !== "ALL" || rosterCourseFilter !== "ALL" || rosterSessionFilter !== "ALL") && (
+        {(rosterSearchQuery || rosterCategoryFilter !== "ALL" || rosterCourseFilter !== "ALL" || rosterSessionFilter !== "ALL" || rosterNewOldFilter !== "ALL") && (
           <div className="flex items-center justify-between text-xs pt-1">
             <span className="text-[#D6C7A1]/80">Active filters applied</span>
             <button
@@ -2128,6 +2267,7 @@ export default function AdminDashboard() {
                 setRosterCategoryFilter("ALL");
                 setRosterCourseFilter("ALL");
                 setRosterSessionFilter("ALL");
+                setRosterNewOldFilter("ALL");
               }}
               className="text-[#7ECEB7] hover:text-white flex items-center gap-1 underline"
             >
@@ -2152,22 +2292,38 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#7ECEB7]/15 bg-[#041C19]/40">
-              {filteredRegistrations.map((r, i) => (
-                <tr key={i} className="hover:bg-[#037A74]/15 transition-colors">
-                  <td className="p-3.5 font-mono text-[#D6C7A1] font-semibold">{r.regNo}</td>
-                  <td className="p-3.5 font-medium text-white">{r.name}</td>
-                  <td className="p-3.5 font-mono text-xs text-[#D6C7A1]/80">{r.email}</td>
-                  <td className="p-3.5 font-medium text-xs text-[#7ECEB7]">{r.s1Sports || <span className="text-gray-600">-</span>}</td>
-                  <td className="p-3.5 font-medium text-xs text-[#A07850]">{r.s1StudentLife || <span className="text-gray-600">-</span>}</td>
-                  <td className="p-3.5 font-medium text-xs text-[#7ECEB7]">{r.s2Sports || <span className="text-gray-600">-</span>}</td>
-                  <td className="p-3.5 font-medium text-xs text-[#A07850]">{r.s2StudentLife || <span className="text-gray-600">-</span>}</td>
-                  <td className="p-3.5">
-                    <span className="bg-[#7ECEB7]/20 text-[#7ECEB7] border border-[#7ECEB7]/30 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold">
-                      {r.status || "CONFIRMED"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {filteredRegistrations.map((r, i) => {
+                const isNew = isNewRegistration(r);
+                return (
+                  <tr key={i} className="hover:bg-[#037A74]/15 transition-colors">
+                    <td className="p-3.5 font-mono text-[#D6C7A1] font-semibold">
+                      <div className="flex items-center gap-2">
+                        <span>{r.regNo}</span>
+                        {isNew ? (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#A07850]/30 text-[#F5EBE0] border border-[#A07850]/50">
+                            NEW
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/10 text-[#D6C7A1] border border-white/10">
+                            OLD
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-3.5 font-medium text-white">{r.name}</td>
+                    <td className="p-3.5 font-mono text-xs text-[#D6C7A1]/80">{r.email}</td>
+                    <td className="p-3.5 font-medium text-xs text-[#7ECEB7]">{r.s1Sports || <span className="text-gray-600">-</span>}</td>
+                    <td className="p-3.5 font-medium text-xs text-[#A07850]">{r.s1StudentLife || <span className="text-gray-600">-</span>}</td>
+                    <td className="p-3.5 font-medium text-xs text-[#7ECEB7]">{r.s2Sports || <span className="text-gray-600">-</span>}</td>
+                    <td className="p-3.5 font-medium text-xs text-[#A07850]">{r.s2StudentLife || <span className="text-gray-600">-</span>}</td>
+                    <td className="p-3.5">
+                      <span className="bg-[#7ECEB7]/20 text-[#7ECEB7] border border-[#7ECEB7]/30 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold">
+                        {r.status || "CONFIRMED"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
 
               {filteredRegistrations.length === 0 && (
                 <tr>
