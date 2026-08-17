@@ -354,7 +354,7 @@ export default function Session2Page() {
                     <div className="space-y-1.5 pt-2 border-t border-[#7ECEB7]/15">
                       <div className="text-[10px] font-semibold text-[#D6C7A1] uppercase tracking-wider flex items-center justify-between">
                         <span>Pick Class Day:</span>
-                        <span className="text-[#A07850]">Day Seats</span>
+                        <span className="text-[#A07850]">30 seats/day</span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-1.5">

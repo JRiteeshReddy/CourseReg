@@ -224,7 +224,7 @@ export function calculateDynamicSeats(
     if (course.category === "Sports") {
       const initOcc = SPORTS_INITIAL_OCCUPIED[course.id] || { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
       const s1DayOcc: Record<SportsDay, number> = { ...initOcc };
-      const s2DayOcc: Record<SportsDay, number> = { ...initOcc };
+      const s2DayOcc: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
       const s1DayHolds: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
       const s2DayHolds: Record<SportsDay, number> = { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 };
 
@@ -263,6 +263,9 @@ export function calculateDynamicSeats(
         Thursday: { day: "Thursday", maxSeats: 20, occupied: s2DayOcc.Thursday, available: Math.max(0, 20 - s2DayOcc.Thursday - s2DayHolds.Thursday) },
         Friday: { day: "Friday", maxSeats: 20, occupied: s2DayOcc.Friday, available: Math.max(0, 20 - s2DayOcc.Friday - s2DayHolds.Friday) },
       };
+
+      s2Available = Object.values(s2SportsDaysSeats).reduce((acc, curr) => acc + curr.available, 0);
+      s2MaxSeats = 80;
     } else if (course.category === "Student Life") {
       const config = STUDENT_LIFE_CONFIG[course.id] || {
         days: ["Wednesday", "Friday"],
@@ -271,7 +274,7 @@ export function calculateDynamicSeats(
       };
 
       const s1DayOcc: Record<StudentLifeDay, number> = { ...config.initialOccupied };
-      const s2DayOcc: Record<StudentLifeDay, number> = { ...config.initialOccupied };
+      const s2DayOcc: Record<StudentLifeDay, number> = { Wednesday: 0, Friday: 0, Thursday: 0 };
       const s1DayHolds: Record<StudentLifeDay, number> = { Wednesday: 0, Friday: 0, Thursday: 0 };
       const s2DayHolds: Record<StudentLifeDay, number> = { Wednesday: 0, Friday: 0, Thursday: 0 };
 
@@ -300,6 +303,8 @@ export function calculateDynamicSeats(
       let s1Days = config.days;
       let s2Days = config.days;
 
+      const S2_STUDENT_LIFE_DAILY_MAX = 30;
+
       if (config.openFridayWhenWedFull) {
         const wedAvail1 = config.dailyMax - (s1DayOcc.Wednesday || 0) - (s1DayHolds.Wednesday || 0);
         const friHasOcc1 = (s1DayOcc.Friday || 0) + (s1DayHolds.Friday || 0) > 0;
@@ -307,7 +312,7 @@ export function calculateDynamicSeats(
           s1Days = config.days.filter((d) => d !== "Friday");
         }
 
-        const wedAvail2 = config.dailyMax - (s2DayOcc.Wednesday || 0) - (s2DayHolds.Wednesday || 0);
+        const wedAvail2 = S2_STUDENT_LIFE_DAILY_MAX - (s2DayOcc.Wednesday || 0) - (s2DayHolds.Wednesday || 0);
         const friHasOcc2 = (s2DayOcc.Friday || 0) + (s2DayHolds.Friday || 0) > 0;
         if (wedAvail2 > 0 && !friHasOcc2) {
           s2Days = config.days.filter((d) => d !== "Friday");
@@ -333,9 +338,9 @@ export function calculateDynamicSeats(
         const hold2 = s2DayHolds[d] || 0;
         s2SeatsMap[d] = {
           day: d,
-          maxSeats: config.dailyMax,
+          maxSeats: S2_STUDENT_LIFE_DAILY_MAX,
           occupied: occ2,
-          available: Math.max(0, config.dailyMax - occ2 - hold2),
+          available: Math.max(0, S2_STUDENT_LIFE_DAILY_MAX - occ2 - hold2),
         };
       }
 
@@ -345,7 +350,7 @@ export function calculateDynamicSeats(
       s1Available = Object.values(s1SeatsMap).reduce((acc, curr) => acc + curr.available, 0);
       s2Available = Object.values(s2SeatsMap).reduce((acc, curr) => acc + curr.available, 0);
       s1MaxSeats = s1Days.length * config.dailyMax;
-      s2MaxSeats = s2Days.length * config.dailyMax;
+      s2MaxSeats = s2Days.length * S2_STUDENT_LIFE_DAILY_MAX;
     }
 
     if (course.isFrozen || course.isClosed) {

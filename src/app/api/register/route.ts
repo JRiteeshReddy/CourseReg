@@ -144,7 +144,8 @@ export async function POST(request: Request) {
           return { error: `Sorry, ${s2LifeDay} is not currently open for ${s2LifeCourse.name}.` };
         }
         if (s2LifeCourse.s2LifeDaysSeats[s2LifeDay].available <= 0) {
-          return { error: `Sorry, ${s2LifeDay} for ${s2LifeCourse.name} is full. Please select another day.` };
+          const dayMax = s2LifeCourse.s2LifeDaysSeats[s2LifeDay].maxSeats;
+          return { error: `Sorry, ${s2LifeDay} for ${s2LifeCourse.name} is full (${dayMax}/${dayMax} seats taken). Please select another day.` };
         }
       }
 
