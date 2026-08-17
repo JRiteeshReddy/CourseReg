@@ -140,7 +140,7 @@ export function matchCourse(val: string | undefined | null, id: string, name: st
 
 export const SPORTS_INITIAL_OCCUPIED: Record<string, Record<SportsDay, number>> = {
   SP01: { Tuesday: 12, Wednesday: 3, Thursday: 6, Friday: 8 },  // Basketball
-  SP02: { Tuesday: 1, Wednesday: 5, Thursday: 20, Friday: 12 }, // Cricket (Thu 20 -> BLOCKED)
+  SP02: { Tuesday: 1, Wednesday: 5, Thursday: 20, Friday: 13 }, // Cricket (Thu 20 -> BLOCKED, Fri 13 occupied)
   SP03: { Tuesday: 14, Wednesday: 0, Thursday: 15, Friday: 12 }, // Fitness and Nutrition
   SP04: { Tuesday: 2, Wednesday: 2, Thursday: 9, Friday: 5 },   // Football
   SP05: { Tuesday: 4, Wednesday: 0, Thursday: 8, Friday: 16 },  // Kabaddi
@@ -165,7 +165,7 @@ export const STUDENT_LIFE_CONFIG: Record<string, {
   SL08: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 8, Friday: 0, Thursday: 0 }, openFridayWhenWedFull: true },
   SL09: { days: ["Wednesday", "Friday"], dailyMax: 30, initialOccupied: { Wednesday: 30, Friday: 12, Thursday: 0 } },
   SL10: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 25, Friday: 20, Thursday: 0 } },
-  SL11: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 17, Friday: 0, Thursday: 0 } },
+  SL11: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 18, Friday: 0, Thursday: 0 } },
 };
 
 /**
