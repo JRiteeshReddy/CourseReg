@@ -102,6 +102,18 @@ export async function POST(request: Request) {
 
       const computedSeats = calculateDynamicSeats(currentRegistrations);
 
+      const s1SportsDay = parseSportsDay(s1Sports);
+      const s1LifeDay = parseDay(s1StudentLife);
+      if (s1SportsDay && s1LifeDay && s1SportsDay === s1LifeDay) {
+        return { error: `Session 1 Sports and Student Life cannot be scheduled on the same day (${s1SportsDay}). Please select different class days.` };
+      }
+
+      const s2SportsDay = parseSportsDay(s2Sports);
+      const s2LifeDay = parseDay(s2StudentLife);
+      if (s2SportsDay && s2LifeDay && s2SportsDay === s2LifeDay) {
+        return { error: `Session 2 Sports and Student Life cannot be scheduled on the same day (${s2SportsDay}). Please select different class days.` };
+      }
+
       const s1SportsCourse = computedSeats.find(c => matchCourse(s1Sports, c.id, c.name));
       if (!s1SportsCourse || s1SportsCourse.s1SeatsAvailable <= 0) {
         return { error: `Sorry, Session 1 Sports (${s1SportsCourse?.name || s1Sports}) is full.` };
@@ -115,7 +127,6 @@ export async function POST(request: Request) {
       if (!s1LifeCourse || s1LifeCourse.s1SeatsAvailable <= 0) {
         return { error: `Sorry, Session 1 Student Life (${s1LifeCourse?.name || s1StudentLife}) is full.` };
       }
-      const s1LifeDay = parseDay(s1StudentLife);
       if (s1LifeDay && s1LifeCourse.s1LifeDaysSeats) {
         if (!s1LifeCourse.s1LifeDaysSeats[s1LifeDay]) {
           return { error: `Sorry, ${s1LifeDay} is not currently open for ${s1LifeCourse.name}.` };
@@ -129,16 +140,14 @@ export async function POST(request: Request) {
       if (!s2SportsCourse || s2SportsCourse.s2SeatsAvailable <= 0) {
         return { error: `Sorry, Session 2 Sports (${s2SportsCourse?.name || s2Sports}) is full.` };
       }
-      const s2Day = parseSportsDay(s2Sports);
-      if (s2Day && s2SportsCourse.s2SportsDaysSeats && s2SportsCourse.s2SportsDaysSeats[s2Day].available <= 0) {
-        return { error: `Sorry, ${s2Day} for ${s2SportsCourse.name} is full (20/20 seats taken). Please select another day.` };
+      if (s2SportsDay && s2SportsCourse.s2SportsDaysSeats && s2SportsCourse.s2SportsDaysSeats[s2SportsDay].available <= 0) {
+        return { error: `Sorry, ${s2SportsDay} for ${s2SportsCourse.name} is full (20/20 seats taken). Please select another day.` };
       }
 
       const s2LifeCourse = computedSeats.find(c => matchCourse(s2StudentLife, c.id, c.name));
       if (!s2LifeCourse || s2LifeCourse.s2SeatsAvailable <= 0) {
         return { error: `Sorry, Session 2 Student Life (${s2LifeCourse?.name || s2LifeCourse}) is full.` };
       }
-      const s2LifeDay = parseDay(s2StudentLife);
       if (s2LifeDay && s2LifeCourse.s2LifeDaysSeats) {
         if (!s2LifeCourse.s2LifeDaysSeats[s2LifeDay]) {
           return { error: `Sorry, ${s2LifeDay} is not currently open for ${s2LifeCourse.name}.` };

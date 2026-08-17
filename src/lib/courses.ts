@@ -127,6 +127,17 @@ export function parseSportsDay(val: string | undefined | null): SportsDay | null
   return parseDay(val) as SportsDay | null;
 }
 
+export function parseCourseAndDay(val: string | undefined | null): { course: string; day: string } {
+  if (!val) return { course: "", day: "" };
+  const str = val.trim();
+  const match = str.match(/^(.*?)\s*\((Tuesday|Wednesday|Thursday|Friday)\)$/i);
+  if (match) {
+    return { course: match[1].trim(), day: match[2].trim() };
+  }
+  const day = parseDay(str) || "";
+  return { course: str, day };
+}
+
 export function matchCourse(val: string | undefined | null, id: string, name: string): boolean {
   if (!val) return false;
   const v = val.trim().toLowerCase();

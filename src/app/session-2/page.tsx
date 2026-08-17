@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CalculatedCourse, SPORTS_DAYS, matchCourse } from "@/lib/courses";
+import { CalculatedCourse, SPORTS_DAYS, matchCourse, parseDay } from "@/lib/courses";
 import { MasterStudent } from "@/lib/google-sheets";
-import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Ban, Info, Bell, Clock } from "lucide-react";
+import { Trophy, Compass, ArrowRight, ArrowLeft, Loader2, Sparkles, CheckCircle2, Ban, Info, Bell, Clock, AlertTriangle } from "lucide-react";
 
 export default function Session2Page() {
   const [student, setStudent] = useState<MasterStudent | null>(null);
@@ -117,7 +117,11 @@ export default function Session2Page() {
   const sportsCourses = courses.filter((c) => c.category === "Sports");
   const studentLifeCourses = courses.filter((c) => c.category === "Student Life");
 
-  const canContinue = Boolean(selectedSports && selectedStudentLife);
+  const sportsDay = parseDay(selectedSports);
+  const studentLifeDay = parseDay(selectedStudentLife);
+  const hasSameDayConflict = Boolean(sportsDay && studentLifeDay && sportsDay === studentLifeDay);
+
+  const canContinue = Boolean(selectedSports && selectedStudentLife && !hasSameDayConflict);
 
   const handleContinue = () => {
     if (!canContinue) return;
@@ -239,6 +243,7 @@ export default function Session2Page() {
                       {SPORTS_DAYS.map((day) => {
                         const dayInfo = course.s2SportsDaysSeats?.[day] || { day, maxSeats: 20, occupied: 0, available: 20 };
                         const isDayFull = dayInfo.available <= 0;
+                        const isSameDayAsOther = Boolean(studentLifeDay && day === studentLifeDay);
                         const isDisabled = isSelectedInSession1 || isDayFull;
                         const formattedChoice = `${course.name} (${day})`;
                         const isThisDaySelected = selectedSports === formattedChoice;
@@ -259,6 +264,8 @@ export default function Session2Page() {
                                 ? "bg-[#7ECEB7] text-[#041C19] font-bold border-[#7ECEB7] shadow-md scale-[1.03]"
                                 : isDisabled
                                 ? "bg-red-950/20 text-red-400/60 border-red-500/20 cursor-not-allowed line-through opacity-70"
+                                : isSameDayAsOther
+                                ? "bg-[#072C28] text-[#F5EBE0] border-amber-500/50 hover:border-amber-400"
                                 : "bg-[#072C28] text-[#F5EBE0] hover:bg-[#037A74]/30 border-[#7ECEB7]/20 hover:border-[#7ECEB7]/40"
                             }`}
                           >
@@ -267,6 +274,8 @@ export default function Session2Page() {
                               <span className="text-[9px] font-bold text-[#7ECEB7]">S1</span>
                             ) : isDayFull ? (
                               <span className="text-[9px] font-bold text-red-400 uppercase">FULL</span>
+                            ) : isSameDayAsOther && !isThisDaySelected ? (
+                              <span className="text-[8px] font-bold text-amber-400 uppercase px-1 py-0.2 rounded bg-amber-400/10">SAME DAY</span>
                             ) : (
                               <span className={`text-[10px] ${isThisDaySelected ? "text-[#041C19] font-bold" : "text-[#7ECEB7]"}`}>
                                 {dayInfo.available} left
@@ -360,6 +369,7 @@ export default function Session2Page() {
                       <div className="grid grid-cols-2 gap-1.5">
                         {daysSeats.map((dayInfo) => {
                           const isDayFull = dayInfo.available <= 0;
+                          const isSameDayAsOther = Boolean(sportsDay && dayInfo.day === sportsDay);
                           const isDisabled = isSelectedInSession1 || isDayFull;
                           const formattedChoice = `${course.name} (${dayInfo.day})`;
                           const isThisDaySelected = selectedStudentLife === formattedChoice;
@@ -380,6 +390,8 @@ export default function Session2Page() {
                                   ? "bg-[#A07850] text-[#041C19] font-bold border-[#A07850] shadow-md scale-[1.03]"
                                   : isDisabled
                                   ? "bg-red-950/20 text-red-400/60 border-red-500/20 cursor-not-allowed line-through opacity-70"
+                                  : isSameDayAsOther
+                                  ? "bg-[#072C28] text-[#F5EBE0] border-amber-500/50 hover:border-amber-400"
                                   : "bg-[#072C28] text-[#F5EBE0] hover:bg-[#A07850]/30 border-[#A07850]/30 hover:border-[#A07850]/50"
                               }`}
                             >
@@ -388,6 +400,8 @@ export default function Session2Page() {
                                 <span className="text-[9px] font-bold text-[#A07850]">S1</span>
                               ) : isDayFull ? (
                                 <span className="text-[9px] font-bold text-red-400 uppercase">FULL</span>
+                              ) : isSameDayAsOther && !isThisDaySelected ? (
+                                <span className="text-[8px] font-bold text-amber-400 uppercase px-1 py-0.2 rounded bg-amber-400/10">SAME DAY</span>
                               ) : (
                                 <span className={`text-[10px] ${isThisDaySelected ? "text-[#041C19] font-bold" : "text-[#D6C7A1]"}`}>
                                   {dayInfo.available} left
@@ -411,9 +425,16 @@ export default function Session2Page() {
         <div className="text-center sm:text-left">
           <h3 className="font-semibold text-sm sm:text-base text-[#F5EBE0]">Session 2 Selections</h3>
           <p className="text-xs text-[#D6C7A1]">
-            {canContinue
-              ? "Session 2 selections ready. Proceed to final review!"
-              : "Please select 1 Sports course and 1 Student Life course."}
+            {hasSameDayConflict ? (
+              <span className="text-red-400 font-semibold flex items-center gap-1 justify-center sm:justify-start">
+                <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                Session 2 Sports and Student Life cannot be taken on the same day ({sportsDay}). Please select different class days.
+              </span>
+            ) : canContinue ? (
+              "Session 2 selections ready. Proceed to final review!"
+            ) : (
+              "Please select 1 Sports course and 1 Student Life course."
+            )}
           </p>
         </div>
 

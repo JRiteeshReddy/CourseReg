@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { CalculatedCourse, RegistrationRow, MasterStudent, SPORTS_DAYS } from "@/lib/courses";
+import { CalculatedCourse, RegistrationRow, MasterStudent, SPORTS_DAYS, parseCourseAndDay } from "@/lib/courses";
 import {
   ShieldCheck,
   Download,
@@ -442,32 +442,54 @@ export default function AdminDashboard() {
       return;
     }
 
-    const allExportRows = registrations.map((r) => ({
-      "Registration Number": r.regNo,
-      "Student Name": r.name,
-      "Student Email": r.email,
-      "Session 1 Sports": r.s1Sports,
-      "Session 1 Student Life": r.s1StudentLife,
-      "Session 2 Sports": r.s2Sports,
-      "Session 2 Student Life": r.s2StudentLife,
-      "Friday-Only S1 Course": isFridayOnlyS1Choice(r.s1StudentLife) ? "YES" : "NO",
-      "Registration Timestamp": r.timestamp,
-      Status: r.status,
-    }));
+    const allExportRows = registrations.map((r) => {
+      const s1SportsParsed = parseCourseAndDay(r.s1Sports);
+      const s1LifeParsed = parseCourseAndDay(r.s1StudentLife);
+      const s2SportsParsed = parseCourseAndDay(r.s2Sports);
+      const s2LifeParsed = parseCourseAndDay(r.s2StudentLife);
 
-    const fridayOnlyS1Rows = registrations
-      .filter((r) => isFridayOnlyS1Choice(r.s1StudentLife))
-      .map((r) => ({
+      return {
         "Registration Number": r.regNo,
         "Student Name": r.name,
         "Student Email": r.email,
-        "Session 1 Sports": r.s1Sports,
-        "Session 1 Student Life (Friday-Only Course)": r.s1StudentLife,
-        "Session 2 Sports": r.s2Sports,
-        "Session 2 Student Life": r.s2StudentLife,
+        "Session 1 Sports Course": s1SportsParsed.course,
+        "Session 1 Sports Day": s1SportsParsed.day,
+        "Session 1 Student Life Course": s1LifeParsed.course,
+        "Session 1 Student Life Day": s1LifeParsed.day,
+        "Session 2 Sports Course": s2SportsParsed.course,
+        "Session 2 Sports Day": s2SportsParsed.day,
+        "Session 2 Student Life Course": s2LifeParsed.course,
+        "Session 2 Student Life Day": s2LifeParsed.day,
+        "Friday-Only S1 Course": isFridayOnlyS1Choice(r.s1StudentLife) ? "YES" : "NO",
         "Registration Timestamp": r.timestamp,
         Status: r.status,
-      }));
+      };
+    });
+
+    const fridayOnlyS1Rows = registrations
+      .filter((r) => isFridayOnlyS1Choice(r.s1StudentLife))
+      .map((r) => {
+        const s1SportsParsed = parseCourseAndDay(r.s1Sports);
+        const s1LifeParsed = parseCourseAndDay(r.s1StudentLife);
+        const s2SportsParsed = parseCourseAndDay(r.s2Sports);
+        const s2LifeParsed = parseCourseAndDay(r.s2StudentLife);
+
+        return {
+          "Registration Number": r.regNo,
+          "Student Name": r.name,
+          "Student Email": r.email,
+          "Session 1 Sports Course": s1SportsParsed.course,
+          "Session 1 Sports Day": s1SportsParsed.day,
+          "Session 1 Student Life Course (Friday-Only Course)": s1LifeParsed.course,
+          "Session 1 Student Life Day": s1LifeParsed.day,
+          "Session 2 Sports Course": s2SportsParsed.course,
+          "Session 2 Sports Day": s2SportsParsed.day,
+          "Session 2 Student Life Course": s2LifeParsed.course,
+          "Session 2 Student Life Day": s2LifeParsed.day,
+          "Registration Timestamp": r.timestamp,
+          Status: r.status,
+        };
+      });
 
     const workbook = XLSX.utils.book_new();
 
@@ -501,19 +523,30 @@ export default function AdminDashboard() {
       return;
     }
 
-    const exportRows = newStudents.map((r) => ({
-      "Registration Number": r.regNo,
-      "Student Name": r.name,
-      "Student Email": r.email,
-      "Faculty Mentor": r.facultyName || "Unassigned",
-      "Session 1 Sports": r.s1Sports,
-      "Session 1 Student Life": r.s1StudentLife,
-      "Session 2 Sports": r.s2Sports,
-      "Session 2 Student Life": r.s2StudentLife,
-      "Friday-Only S1 Course": isFridayOnlyS1Choice(r.s1StudentLife) ? "YES" : "NO",
-      "Registration Timestamp": r.timestamp,
-      Status: r.status,
-    }));
+    const exportRows = newStudents.map((r) => {
+      const s1SportsParsed = parseCourseAndDay(r.s1Sports);
+      const s1LifeParsed = parseCourseAndDay(r.s1StudentLife);
+      const s2SportsParsed = parseCourseAndDay(r.s2Sports);
+      const s2LifeParsed = parseCourseAndDay(r.s2StudentLife);
+
+      return {
+        "Registration Number": r.regNo,
+        "Student Name": r.name,
+        "Student Email": r.email,
+        "Faculty Mentor": r.facultyName || "Unassigned",
+        "Session 1 Sports Course": s1SportsParsed.course,
+        "Session 1 Sports Day": s1SportsParsed.day,
+        "Session 1 Student Life Course": s1LifeParsed.course,
+        "Session 1 Student Life Day": s1LifeParsed.day,
+        "Session 2 Sports Course": s2SportsParsed.course,
+        "Session 2 Sports Day": s2SportsParsed.day,
+        "Session 2 Student Life Course": s2LifeParsed.course,
+        "Session 2 Student Life Day": s2LifeParsed.day,
+        "Friday-Only S1 Course": isFridayOnlyS1Choice(r.s1StudentLife) ? "YES" : "NO",
+        "Registration Timestamp": r.timestamp,
+        Status: r.status,
+      };
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(exportRows);
     const workbook = XLSX.utils.book_new();
@@ -533,18 +566,29 @@ export default function AdminDashboard() {
       return;
     }
 
-    const exportRows = fridayOnlyS1Students.map((r) => ({
-      "Registration Number": r.regNo,
-      "Student Name": r.name,
-      "Student Email": r.email,
-      "Faculty Mentor": r.facultyName || "Unassigned",
-      "Session 1 Sports": r.s1Sports,
-      "Session 1 Friday-Only Student Life Course": r.s1StudentLife,
-      "Session 2 Sports": r.s2Sports,
-      "Session 2 Student Life": r.s2StudentLife,
-      "Registration Timestamp": r.timestamp,
-      Status: r.status,
-    }));
+    const exportRows = fridayOnlyS1Students.map((r) => {
+      const s1SportsParsed = parseCourseAndDay(r.s1Sports);
+      const s1LifeParsed = parseCourseAndDay(r.s1StudentLife);
+      const s2SportsParsed = parseCourseAndDay(r.s2Sports);
+      const s2LifeParsed = parseCourseAndDay(r.s2StudentLife);
+
+      return {
+        "Registration Number": r.regNo,
+        "Student Name": r.name,
+        "Student Email": r.email,
+        "Faculty Mentor": r.facultyName || "Unassigned",
+        "Session 1 Sports Course": s1SportsParsed.course,
+        "Session 1 Sports Day": s1SportsParsed.day,
+        "Session 1 Friday-Only Student Life Course": s1LifeParsed.course,
+        "Session 1 Student Life Day": s1LifeParsed.day,
+        "Session 2 Sports Course": s2SportsParsed.course,
+        "Session 2 Sports Day": s2SportsParsed.day,
+        "Session 2 Student Life Course": s2LifeParsed.course,
+        "Session 2 Student Life Day": s2LifeParsed.day,
+        "Registration Timestamp": r.timestamp,
+        Status: r.status,
+      };
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(exportRows);
     const workbook = XLSX.utils.book_new();
@@ -565,17 +609,28 @@ export default function AdminDashboard() {
         if (category === "Sports") return Boolean(r.s1Sports || r.s2Sports);
         return Boolean(r.s1StudentLife || r.s2StudentLife);
       })
-      .map((r) => ({
-        "Registration Number": r.regNo,
-        "Student Name": r.name,
-        "Student Email": r.email,
-        "Session 1 Sports": r.s1Sports,
-        "Session 1 Student Life": r.s1StudentLife,
-        "Session 2 Sports": r.s2Sports,
-        "Session 2 Student Life": r.s2StudentLife,
-        "Registration Timestamp": r.timestamp,
-        Status: r.status,
-      }));
+      .map((r) => {
+        const s1SportsParsed = parseCourseAndDay(r.s1Sports);
+        const s1LifeParsed = parseCourseAndDay(r.s1StudentLife);
+        const s2SportsParsed = parseCourseAndDay(r.s2Sports);
+        const s2LifeParsed = parseCourseAndDay(r.s2StudentLife);
+
+        return {
+          "Registration Number": r.regNo,
+          "Student Name": r.name,
+          "Student Email": r.email,
+          "Session 1 Sports Course": s1SportsParsed.course,
+          "Session 1 Sports Day": s1SportsParsed.day,
+          "Session 1 Student Life Course": s1LifeParsed.course,
+          "Session 1 Student Life Day": s1LifeParsed.day,
+          "Session 2 Sports Course": s2SportsParsed.course,
+          "Session 2 Sports Day": s2SportsParsed.day,
+          "Session 2 Student Life Course": s2LifeParsed.course,
+          "Session 2 Student Life Day": s2LifeParsed.day,
+          "Registration Timestamp": r.timestamp,
+          Status: r.status,
+        };
+      });
 
     if (exportRows.length === 0) {
       alert(`No registrations found for category: ${category}`);
