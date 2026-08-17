@@ -50,22 +50,29 @@ export default function ReviewPage() {
         }
 
         const userEmail = (data.student?.email || "").toLowerCase();
+        const serverConfirmed = Boolean(
+          data.registration && (data.registration.status?.toUpperCase() === "CONFIRMED" || data.registration.status?.toUpperCase() === "SUBMITTED")
+        );
 
-        const draftS1Sports = (userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
-        const draftS1Life = (userEmail && localStorage.getItem(`s1StudentLife_${userEmail}`)) || sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
-        const draftS2Sports = (userEmail && localStorage.getItem(`s2Sports_${userEmail}`)) || sessionStorage.getItem("s2Sports") || data.registration?.s2Sports || "";
-        const draftS2Life = (userEmail && localStorage.getItem(`s2StudentLife_${userEmail}`)) || sessionStorage.getItem("s2StudentLife") || data.registration?.s2StudentLife || "";
+        if (!serverConfirmed && userEmail) {
+          localStorage.removeItem(`confirmed_registration_${userEmail}`);
+          localStorage.removeItem(`s1Sports_${userEmail}`);
+          localStorage.removeItem(`s1StudentLife_${userEmail}`);
+          localStorage.removeItem(`s2Sports_${userEmail}`);
+          localStorage.removeItem(`s2StudentLife_${userEmail}`);
+        }
+
+        const draftS1Sports = serverConfirmed ? (data.registration?.s1Sports || "") : ((userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || "");
+        const draftS1Life = serverConfirmed ? (data.registration?.s1StudentLife || "") : ((userEmail && localStorage.getItem(`s1StudentLife_${userEmail}`)) || sessionStorage.getItem("s1StudentLife") || "");
+        const draftS2Sports = serverConfirmed ? (data.registration?.s2Sports || "") : ((userEmail && localStorage.getItem(`s2Sports_${userEmail}`)) || sessionStorage.getItem("s2Sports") || "");
+        const draftS2Life = serverConfirmed ? (data.registration?.s2StudentLife || "") : ((userEmail && localStorage.getItem(`s2StudentLife_${userEmail}`)) || sessionStorage.getItem("s2StudentLife") || "");
 
         setS1Sports(draftS1Sports);
         setS1Life(draftS1Life);
         setS2Sports(draftS2Sports);
         setS2Life(draftS2Life);
 
-        const isConfirmed =
-          (data.registration && data.registration.status?.toUpperCase() === "CONFIRMED") ||
-          (userEmail && localStorage.getItem(`confirmed_registration_${userEmail}`) === "CONFIRMED");
-
-        if (isConfirmed) {
+        if (serverConfirmed) {
           setIsCompleted(true);
           setTimestamp(data.registration?.timestamp || new Date().toISOString());
         }

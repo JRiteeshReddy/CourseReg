@@ -46,13 +46,21 @@ export default function Session1Page() {
         setStudent(data.student);
         setCourses(data.courses || []);
 
-        if (data.isRegistrationOpen === false || data.registration?.status?.toUpperCase() === "CONFIRMED") {
+        const userEmail = (data.student?.email || "").toLowerCase();
+        const serverConfirmed = Boolean(
+          data.registration && (data.registration.status?.toUpperCase() === "CONFIRMED" || data.registration.status?.toUpperCase() === "SUBMITTED")
+        );
+
+        if (!serverConfirmed && userEmail) {
+          localStorage.removeItem(`confirmed_registration_${userEmail}`);
+        }
+
+        if (data.isRegistrationOpen === false || serverConfirmed) {
           router.push("/dashboard");
           return;
         }
 
         // Load existing draft if available
-        const userEmail = (data.student?.email || "").toLowerCase();
         const savedSports = (userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
         const savedLife = (userEmail && localStorage.getItem(`s1StudentLife_${userEmail}`)) || sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
 
