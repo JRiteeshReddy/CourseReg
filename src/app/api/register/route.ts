@@ -116,8 +116,13 @@ export async function POST(request: Request) {
         return { error: `Sorry, Session 1 Student Life (${s1LifeCourse?.name || s1StudentLife}) is full.` };
       }
       const s1LifeDay = parseDay(s1StudentLife);
-      if (s1LifeDay && s1LifeCourse.s1LifeDaysSeats && s1LifeCourse.s1LifeDaysSeats[s1LifeDay] && s1LifeCourse.s1LifeDaysSeats[s1LifeDay].available <= 0) {
-        return { error: `Sorry, ${s1LifeDay} for ${s1LifeCourse.name} is full. Please select another day.` };
+      if (s1LifeDay && s1LifeCourse.s1LifeDaysSeats) {
+        if (!s1LifeCourse.s1LifeDaysSeats[s1LifeDay]) {
+          return { error: `Sorry, ${s1LifeDay} is not currently open for ${s1LifeCourse.name}.` };
+        }
+        if (s1LifeCourse.s1LifeDaysSeats[s1LifeDay].available <= 0) {
+          return { error: `Sorry, ${s1LifeDay} for ${s1LifeCourse.name} is full. Please select another day.` };
+        }
       }
 
       const s2SportsCourse = computedSeats.find(c => matchCourse(s2Sports, c.id, c.name));
@@ -134,8 +139,13 @@ export async function POST(request: Request) {
         return { error: `Sorry, Session 2 Student Life (${s2LifeCourse?.name || s2LifeCourse}) is full.` };
       }
       const s2LifeDay = parseDay(s2StudentLife);
-      if (s2LifeDay && s2LifeCourse.s2LifeDaysSeats && s2LifeCourse.s2LifeDaysSeats[s2LifeDay] && s2LifeCourse.s2LifeDaysSeats[s2LifeDay].available <= 0) {
-        return { error: `Sorry, ${s2LifeDay} for ${s2LifeCourse.name} is full. Please select another day.` };
+      if (s2LifeDay && s2LifeCourse.s2LifeDaysSeats) {
+        if (!s2LifeCourse.s2LifeDaysSeats[s2LifeDay]) {
+          return { error: `Sorry, ${s2LifeDay} is not currently open for ${s2LifeCourse.name}.` };
+        }
+        if (s2LifeCourse.s2LifeDaysSeats[s2LifeDay].available <= 0) {
+          return { error: `Sorry, ${s2LifeDay} for ${s2LifeCourse.name} is full. Please select another day.` };
+        }
       }
 
       await upsertRegistration({

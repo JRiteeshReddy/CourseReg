@@ -153,6 +153,7 @@ export const STUDENT_LIFE_CONFIG: Record<string, {
   days: StudentLifeDay[];
   dailyMax: number;
   initialOccupied: Record<StudentLifeDay, number>;
+  openFridayWhenWedFull?: boolean;
 }> = {
   SL01: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 20, Friday: 2, Thursday: 0 } },
   SL02: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 25, Friday: 23, Thursday: 0 } },
@@ -161,7 +162,7 @@ export const STUDENT_LIFE_CONFIG: Record<string, {
   SL05: { days: ["Wednesday", "Friday"], dailyMax: 30, initialOccupied: { Wednesday: 22, Friday: 16, Thursday: 0 } },
   SL06: { days: ["Friday"], dailyMax: 20, initialOccupied: { Friday: 7, Wednesday: 0, Thursday: 0 } },
   SL07: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 10, Friday: 0, Thursday: 0 } },
-  SL08: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 8, Friday: 0, Thursday: 0 } },
+  SL08: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 8, Friday: 0, Thursday: 0 }, openFridayWhenWedFull: true },
   SL09: { days: ["Wednesday", "Friday"], dailyMax: 30, initialOccupied: { Wednesday: 30, Friday: 12, Thursday: 0 } },
   SL10: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 25, Friday: 20, Thursday: 0 } },
   SL11: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 17, Friday: 0, Thursday: 0 } },
@@ -296,10 +297,27 @@ export function calculateDynamicSeats(
         }
       }
 
+      let s1Days = config.days;
+      let s2Days = config.days;
+
+      if (config.openFridayWhenWedFull) {
+        const wedAvail1 = config.dailyMax - (s1DayOcc.Wednesday || 0) - (s1DayHolds.Wednesday || 0);
+        const friHasOcc1 = (s1DayOcc.Friday || 0) + (s1DayHolds.Friday || 0) > 0;
+        if (wedAvail1 > 0 && !friHasOcc1) {
+          s1Days = config.days.filter((d) => d !== "Friday");
+        }
+
+        const wedAvail2 = config.dailyMax - (s2DayOcc.Wednesday || 0) - (s2DayHolds.Wednesday || 0);
+        const friHasOcc2 = (s2DayOcc.Friday || 0) + (s2DayHolds.Friday || 0) > 0;
+        if (wedAvail2 > 0 && !friHasOcc2) {
+          s2Days = config.days.filter((d) => d !== "Friday");
+        }
+      }
+
       const s1SeatsMap: Record<string, StudentLifeDaySeatInfo> = {};
       const s2SeatsMap: Record<string, StudentLifeDaySeatInfo> = {};
 
-      for (const d of config.days) {
+      for (const d of s1Days) {
         const occ1 = s1DayOcc[d] || 0;
         const hold1 = s1DayHolds[d] || 0;
         s1SeatsMap[d] = {
@@ -308,7 +326,9 @@ export function calculateDynamicSeats(
           occupied: occ1,
           available: Math.max(0, config.dailyMax - occ1 - hold1),
         };
+      }
 
+      for (const d of s2Days) {
         const occ2 = s2DayOcc[d] || 0;
         const hold2 = s2DayHolds[d] || 0;
         s2SeatsMap[d] = {
@@ -324,8 +344,8 @@ export function calculateDynamicSeats(
 
       s1Available = Object.values(s1SeatsMap).reduce((acc, curr) => acc + curr.available, 0);
       s2Available = Object.values(s2SeatsMap).reduce((acc, curr) => acc + curr.available, 0);
-      s1MaxSeats = config.days.length * config.dailyMax;
-      s2MaxSeats = config.days.length * config.dailyMax;
+      s1MaxSeats = s1Days.length * config.dailyMax;
+      s2MaxSeats = s2Days.length * config.dailyMax;
     }
 
     if (course.isFrozen || course.isClosed) {
