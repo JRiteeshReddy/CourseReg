@@ -455,3 +455,59 @@ export function deleteSeatHold(email: string): void {
   saveLocalSeatHolds(inMemorySeatHolds);
 }
 
+/**
+ * Deletes a student's course registration by email address or registration number
+ */
+export async function deleteStudentRegistration(studentQuery: string): Promise<{ success: boolean; deletedEmail?: string; deletedRegNo?: string; error?: string }> {
+  const query = studentQuery.trim().toLowerCase();
+  if (!query) return { success: false, error: "Student email address or Registration Number is required." };
+
+  const currentRegistrations = await fetchRegistrations();
+  let target = currentRegistrations.find(
+    r => (r.email || '').toLowerCase() === query || (r.regNo || '').toLowerCase() === query
+  );
+
+  if (!target && !query.includes('@')) {
+    const master = await fetchMasterStudents();
+    const matchMaster = master.find(m => m.regNo.toLowerCase() === query || m.email.toLowerCase() === query);
+    if (matchMaster && matchMaster.email) {
+      const email = matchMaster.email.toLowerCase();
+      target = currentRegistrations.find(r => r.email.toLowerCase() === email);
+    }
+  }
+
+  // Delete from Supabase registrations table
+  try {
+    if (target) {
+      await supabase.from('registrations').delete().eq('email', target.email.toLowerCase());
+    } else {
+      await supabase.from('registrations').delete().or(`email.eq.${query},reg_no.eq.${query}`);
+    }
+  } catch (err) {
+    console.error("Supabase delete registration error:", err);
+  }
+
+  // Remove from in-memory registrations and local JSON file
+  inMemoryRegistrations = inMemoryRegistrations.filter(r => {
+    if (target) {
+      return r.email.toLowerCase() !== target.email.toLowerCase();
+    }
+    return r.email.toLowerCase() !== query && r.regNo.toLowerCase() !== query;
+  });
+  saveLocalRegistrations(inMemoryRegistrations);
+
+  // Clear seat holds as well
+  if (target) {
+    deleteSeatHold(target.email);
+  } else if (query.includes('@')) {
+    deleteSeatHold(query);
+  }
+
+  return {
+    success: true,
+    deletedEmail: target ? target.email : (query.includes('@') ? query : undefined),
+    deletedRegNo: target ? target.regNo : query,
+  };
+}
+
+

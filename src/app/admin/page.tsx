@@ -36,6 +36,7 @@ import {
   Calendar,
   UserPlus,
   Clock,
+  RotateCcw,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -83,6 +84,12 @@ export default function AdminDashboard() {
   const [resetStudentMsg, setResetStudentMsg] = useState("");
   const [resetStudentMsgType, setResetStudentMsgType] = useState<"success" | "error" | "">("");
   const [resettingStudentPassword, setResettingStudentPassword] = useState(false);
+
+  // Student Course Registration Reset State
+  const [targetRegResetQuery, setTargetRegResetQuery] = useState("");
+  const [resetRegMsg, setResetRegMsg] = useState("");
+  const [resetRegMsgType, setResetRegMsgType] = useState<"success" | "error" | "">("");
+  const [resettingStudentReg, setResettingStudentReg] = useState(false);
 
   // Admin Own Password Change State
   const [showAdminPasswordModal, setShowAdminPasswordModal] = useState(false);
@@ -250,6 +257,44 @@ export default function AdminDashboard() {
       setResetStudentMsgType("error");
     } finally {
       setResettingStudentPassword(false);
+    }
+  };
+
+  const handleResetStudentRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetRegMsg("");
+    setResetRegMsgType("");
+
+    if (!targetRegResetQuery.trim()) {
+      setResetRegMsg("Please enter a valid student email address or Registration Number.");
+      setResetRegMsgType("error");
+      return;
+    }
+
+    setResettingStudentReg(true);
+    try {
+      const res = await fetch("/api/admin/reset-student-registration", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentQuery: targetRegResetQuery }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setResetRegMsg(data.error || "Failed to reset student registration.");
+        setResetRegMsgType("error");
+      } else {
+        setResetRegMsg(data.message || "Student course registration reset successfully!");
+        setResetRegMsgType("success");
+        setTargetRegResetQuery("");
+        await loadAdminData();
+      }
+    } catch (err) {
+      console.error(err);
+      setResetRegMsg("An error occurred while resetting student course registration.");
+      setResetRegMsgType("error");
+    } finally {
+      setResettingStudentReg(false);
     }
   };
 
@@ -1472,64 +1517,125 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      {/* STUDENT PASSWORD RESET PANEL */}
-      <section className="glass-panel p-6 border border-[#7ECEB7]/20 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#037A74]/20 border border-[#7ECEB7]/30 flex items-center justify-center text-[#7ECEB7]">
-            <KeyRound className="w-5 h-5" />
+      {/* STUDENT MANAGEMENT & RESET PANELS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* STUDENT PASSWORD RESET PANEL */}
+        <section className="glass-panel p-6 border border-[#7ECEB7]/20 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#037A74]/20 border border-[#7ECEB7]/30 flex items-center justify-center text-[#7ECEB7]">
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-[#F5EBE0]">Reset Student Password</h2>
+              <p className="text-xs text-[#D6C7A1]">
+                Enter a student&apos;s email address to revert their password back to default (
+                <span className="font-mono text-[#7ECEB7]">&lt;prefix&gt;@reg_pass</span>).
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-bold text-[#F5EBE0]">Reset Student Password</h2>
-            <p className="text-xs text-[#D6C7A1]">
-              Enter a student&apos;s email address to revert their password back to default (
-              <span className="font-mono text-[#7ECEB7]">&lt;prefix&gt;@reg_pass</span>).
-            </p>
-          </div>
-        </div>
 
-        {resetStudentMsg && (
-          <div
-            className={`p-3.5 rounded-xl text-xs flex items-center gap-2 border ${
-              resetStudentMsgType === "success"
-                ? "bg-[#7ECEB7]/15 border-[#7ECEB7]/30 text-[#7ECEB7]"
-                : "bg-red-500/15 border-red-500/30 text-red-300"
-            }`}
-          >
-            <span>{resetStudentMsg}</span>
-          </div>
-        )}
+          {resetStudentMsg && (
+            <div
+              className={`p-3.5 rounded-xl text-xs flex items-center gap-2 border ${
+                resetStudentMsgType === "success"
+                  ? "bg-[#7ECEB7]/15 border-[#7ECEB7]/30 text-[#7ECEB7]"
+                  : "bg-red-500/15 border-red-500/30 text-red-300"
+              }`}
+            >
+              <span>{resetStudentMsg}</span>
+            </div>
+          )}
 
-        <form
-          onSubmit={handleResetStudentPassword}
-          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
-        >
-          <input
-            type="email"
-            required
-            placeholder="student@domain.com"
-            value={targetStudentEmail}
-            onChange={(e) => setTargetStudentEmail(e.target.value)}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
-          />
-          <button
-            type="submit"
-            disabled={resettingStudentPassword || !targetStudentEmail.trim()}
-            className="btn-primary px-6 py-2.5 text-xs font-bold text-[#F5EBE0] flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
+          <form
+            onSubmit={handleResetStudentPassword}
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
           >
-            {resettingStudentPassword ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin text-[#F5EBE0]" />
-                <span>Resetting...</span>
-              </>
-            ) : (
-              <>
-                <KeyRound className="w-4 h-4" />
-                <span>Reset Password to Default</span>
-              </>
-            )}
-          </button>
-        </form>
-      </section>
+            <input
+              type="email"
+              required
+              placeholder="student@domain.com"
+              value={targetStudentEmail}
+              onChange={(e) => setTargetStudentEmail(e.target.value)}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#7ECEB7]"
+            />
+            <button
+              type="submit"
+              disabled={resettingStudentPassword || !targetStudentEmail.trim()}
+              className="btn-primary px-6 py-2.5 text-xs font-bold text-[#F5EBE0] flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap"
+            >
+              {resettingStudentPassword ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-[#F5EBE0]" />
+                  <span>Resetting...</span>
+                </>
+              ) : (
+                <>
+                  <KeyRound className="w-4 h-4" />
+                  <span>Reset Password</span>
+                </>
+              )}
+            </button>
+          </form>
+        </section>
+
+        {/* STUDENT COURSE REGISTRATION RESET PANEL */}
+        <section className="glass-panel p-6 border border-[#A07850]/30 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#A07850]/20 border border-[#A07850]/40 flex items-center justify-center text-[#D6C7A1]">
+              <RotateCcw className="w-5 h-5 text-[#A07850]" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-[#F5EBE0]">Reset Student Course Registration</h2>
+              <p className="text-xs text-[#D6C7A1]">
+                Enter a student&apos;s email address or Registration Number to clear their course choices and allow them to re-register.
+              </p>
+            </div>
+          </div>
+
+          {resetRegMsg && (
+            <div
+              className={`p-3.5 rounded-xl text-xs flex items-center gap-2 border ${
+                resetRegMsgType === "success"
+                  ? "bg-[#7ECEB7]/15 border-[#7ECEB7]/30 text-[#7ECEB7]"
+                  : "bg-red-500/15 border-red-500/30 text-red-300"
+              }`}
+            >
+              <span>{resetRegMsg}</span>
+            </div>
+          )}
+
+          <form
+            onSubmit={handleResetStudentRegistration}
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+          >
+            <input
+              type="text"
+              required
+              placeholder="Email or Reg No (e.g. 23BTR101)..."
+              value={targetRegResetQuery}
+              onChange={(e) => setTargetRegResetQuery(e.target.value)}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-[#072C28] border border-[#7ECEB7]/20 text-[#F5EBE0] placeholder-[#D6C7A1]/40 text-sm focus:outline-none focus:border-[#A07850]"
+            />
+            <button
+              type="submit"
+              disabled={resettingStudentReg || !targetRegResetQuery.trim()}
+              className="px-6 py-2.5 rounded-xl bg-[#A07850] hover:bg-[#b0875c] text-[#041C19] text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50 whitespace-nowrap transition-all shadow-md"
+            >
+              {resettingStudentReg ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-[#041C19]" />
+                  <span>Resetting...</span>
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Reset Registration</span>
+                </>
+              )}
+            </button>
+          </form>
+        </section>
+      </div>
 
       {/* OVERVIEW STATS & CATEGORY BREAKDOWN CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
