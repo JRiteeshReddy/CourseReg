@@ -349,84 +349,169 @@ export default function StudentDashboard() {
 
       {/* SINGLE SESSION CARD: SESSION 2 */}
       <section className="max-w-2xl mx-auto w-full">
-        <div className="glass-panel p-8 space-y-6 relative overflow-hidden flex flex-col justify-between border-[#A07850]/40">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="px-3 py-1 rounded-full text-xs font-bold font-mono tracking-wider bg-[#A07850]/20 text-[#D6C7A1] border border-[#A07850]/40 uppercase flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-[#A07850]" /> Session 2 Registration
+        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl border border-[#7ECEB7]/25 bg-gradient-to-b from-[#072C28]/95 via-[#062421]/95 to-[#041C19]/95 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl shadow-black/50 transition-all duration-300 hover:border-[#7ECEB7]/40 flex flex-col justify-between space-y-6">
+          {/* Subtle ambient lighting effects */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#7ECEB7]/40 to-transparent pointer-events-none" />
+          <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#037A74]/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-[#7ECEB7]/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 space-y-6">
+            {/* Header: Badge & Status */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium tracking-wide bg-[#037A74]/25 text-[#7ECEB7] border border-[#7ECEB7]/30 shadow-sm backdrop-blur-sm">
+                <Calendar className="w-3.5 h-3.5 text-[#7ECEB7]" />
+                Session 2 Registration
               </span>
 
               {isAlreadyRegistered ? (
-                <span className="flex items-center gap-1 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/10 border border-[#7ECEB7]/20 px-3 py-1 rounded-full">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Confirmed
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/15 border border-[#7ECEB7]/30 px-3 py-1 rounded-full shadow-sm">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Confirmed
                 </span>
               ) : isSession2Complete ? (
-                <span className="flex items-center gap-1 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/10 border border-[#7ECEB7]/20 px-3 py-1 rounded-full">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Saved (Draft)
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/15 border border-[#7ECEB7]/30 px-3 py-1 rounded-full shadow-sm">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Choices Saved
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-xs font-semibold text-[#A07850] bg-[#A07850]/15 border border-[#A07850]/30 px-3 py-1 rounded-full">
-                  <Sparkles className="w-3.5 h-3.5" /> Ready for Selection
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#D6C7A1] bg-[#A07850]/15 border border-[#A07850]/30 px-3 py-1 rounded-full shadow-sm">
+                  <Sparkles className="w-3.5 h-3.5 text-[#D6C7A1]" />
+                  Ready for Selection
                 </span>
               )}
             </div>
 
-            <div>
-              <h3 className="text-2xl font-bold text-[#F5EBE0] mb-2">Session 2 Courses</h3>
-              <p className="text-[#D6C7A1] text-sm leading-relaxed">
+            {/* Title & Subtitle */}
+            <div className="space-y-1.5">
+              <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F5EBE0]">
+                Session 2 Courses
+              </h3>
+              <p className="text-sm text-[#D6C7A1]/85 leading-relaxed font-normal">
                 Select 1 sports activity and 1 student life course for Session 2.
               </p>
             </div>
 
-            {/* Course Summary Preview */}
-            <div className="space-y-3 pt-2">
-              <div className="glass-card p-4 flex items-center justify-between border-[#7ECEB7]/15">
-                <div className="flex items-center gap-3">
-                  <Trophy className="w-5 h-5 text-[#7ECEB7]" />
-                  <span className="text-sm font-medium text-[#F5EBE0]">Sports Activity</span>
-                </div>
-                <span className="text-xs font-mono text-[#F5EBE0] font-bold bg-[#037A74]/30 text-[#7ECEB7] px-3 py-1 rounded-md border border-[#037A74]/50">
-                  {s2Sports || "Not Selected"}
+            {/* Selection Progress Indicator */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#D6C7A1]/70 font-medium">Requirements Met</span>
+                <span className="text-[#F5EBE0] font-semibold">
+                  {((s2Sports ? 1 : 0) + (s2Life ? 1 : 0))}/2 Selected
                 </span>
               </div>
-
-              <div className="glass-card p-4 flex items-center justify-between border-[#7ECEB7]/15">
-                <div className="flex items-center gap-3">
-                  <Compass className="w-5 h-5 text-[#A07850]" />
-                  <span className="text-sm font-medium text-[#F5EBE0]">Student Life Course</span>
-                </div>
-                <span className="text-xs font-mono text-[#F5EBE0] font-bold bg-[#A07850]/30 text-[#D6C7A1] px-3 py-1 rounded-md border border-[#A07850]/50">
-                  {s2Life || "Not Selected"}
-                </span>
+              <div className="grid grid-cols-2 gap-2 h-1.5 w-full">
+                <div className={`rounded-full transition-all duration-300 ${s2Sports ? "bg-[#7ECEB7] shadow-sm shadow-[#7ECEB7]/40" : "bg-white/10"}`} />
+                <div className={`rounded-full transition-all duration-300 ${s2Life ? "bg-[#7ECEB7] shadow-sm shadow-[#7ECEB7]/40" : "bg-white/10"}`} />
               </div>
             </div>
+
+            {/* Course Summary Preview Slots */}
+            <div className="space-y-3 pt-1">
+              {/* Sports Activity Slot */}
+              <div className={`group p-4 rounded-xl border transition-all duration-200 flex items-center justify-between gap-4 ${
+                s2Sports
+                  ? "bg-[#037A74]/15 border-[#7ECEB7]/35 shadow-sm shadow-[#037A74]/15"
+                  : "bg-[#041C19]/60 hover:bg-[#072C28]/60 border-white/[0.08] hover:border-[#7ECEB7]/25"
+              }`}>
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                    s2Sports
+                      ? "bg-[#037A74]/40 text-[#7ECEB7] border border-[#7ECEB7]/30"
+                      : "bg-[#072C28] text-[#7ECEB7]/70 border border-white/[0.08] group-hover:text-[#7ECEB7]"
+                  }`}>
+                    <Trophy className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#F5EBE0] tracking-tight">Sports Activity</p>
+                    <p className="text-xs truncate mt-0.5">
+                      {s2Sports ? (
+                        <span className="text-[#7ECEB7] font-medium">{s2Sports}</span>
+                      ) : (
+                        <span className="text-[#D6C7A1]/60">1 Course Required</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex-shrink-0">
+                  {s2Sports ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#7ECEB7] bg-[#7ECEB7]/15 border border-[#7ECEB7]/30 px-3 py-1 rounded-full shadow-sm">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Selected
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#D6C7A1]/65 bg-white/[0.04] border border-white/[0.08] px-3 py-1 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" /> Not Selected
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Student Life Slot */}
+              <div className={`group p-4 rounded-xl border transition-all duration-200 flex items-center justify-between gap-4 ${
+                s2Life
+                  ? "bg-[#A07850]/15 border-[#D6C7A1]/35 shadow-sm shadow-[#A07850]/15"
+                  : "bg-[#041C19]/60 hover:bg-[#072C28]/60 border-white/[0.08] hover:border-[#7ECEB7]/25"
+              }`}>
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                    s2Life
+                      ? "bg-[#A07850]/30 text-[#D6C7A1] border border-[#A07850]/40"
+                      : "bg-[#072C28] text-[#A07850]/70 border border-white/[0.08] group-hover:text-[#A07850]"
+                  }`}>
+                    <Compass className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#F5EBE0] tracking-tight">Student Life Course</p>
+                    <p className="text-xs truncate mt-0.5">
+                      {s2Life ? (
+                        <span className="text-[#D6C7A1] font-medium">{s2Life}</span>
+                      ) : (
+                        <span className="text-[#D6C7A1]/60">1 Course Required</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex-shrink-0">
+                  {s2Life ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#D6C7A1] bg-[#A07850]/20 border border-[#A07850]/40 px-3 py-1 rounded-full shadow-sm">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Selected
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#D6C7A1]/65 bg-white/[0.04] border border-white/[0.08] px-3 py-1 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" /> Not Selected
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Action CTA Button */}
+            {!isAlreadyRegistered ? (
+              <button
+                onClick={() => { if (isRegistrationOpen) router.push("/session-2"); }}
+                disabled={!isRegistrationOpen}
+                className="group relative w-full mt-2 py-3.5 px-6 rounded-xl font-semibold text-sm sm:text-base flex items-center justify-center gap-2.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#037A74]/30 hover:shadow-[#037A74]/50 active:scale-[0.99] border border-[#7ECEB7]/35 hover:border-[#7ECEB7]/60 bg-gradient-to-r from-[#037A74] via-[#048C85] to-[#037A74] text-[#F5EBE0] hover:brightness-110"
+              >
+                {!isRegistrationOpen ? (
+                  <>
+                    <Lock className="w-4 h-4 text-red-400" />
+                    <span>Registration Closed</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{isSession2Complete ? "Edit Session 2 Choices" : "Select Session 2 Courses"}</span>
+                    <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="mt-2 p-3.5 bg-[#072C28]/80 border border-[#7ECEB7]/20 rounded-xl flex items-center justify-center gap-2 text-[#D6C7A1] text-xs font-medium">
+                <Lock className="w-3.5 h-3.5 text-[#A07850]" />
+                <span>Selection Locked (Registration Confirmed)</span>
+              </div>
+            )}
           </div>
-
-          {/* EDIT BUTTON HIDDEN IF ALREADY REGISTERED */}
-          {!isAlreadyRegistered ? (
-            <button
-              onClick={() => { if (isRegistrationOpen) router.push("/session-2"); }}
-              disabled={!isRegistrationOpen}
-              className="btn-bronze w-full mt-4 flex items-center justify-center gap-2 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {!isRegistrationOpen ? (
-                <>
-                  <Lock className="w-4 h-4 text-red-400" />
-                  <span>Registration Closed</span>
-                </>
-              ) : (
-                <>
-                  <span>{isSession2Complete ? "Edit Session 2 Choices" : "Select Session 2 Courses"}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          ) : (
-            <div className="mt-4 p-3 bg-[#072C28]/80 border border-[#7ECEB7]/20 rounded-xl flex items-center justify-center gap-2 text-[#D6C7A1] text-xs font-medium">
-              <Lock className="w-3.5 h-3.5 text-[#A07850]" />
-              <span>Selection Locked (Read-Only)</span>
-            </div>
-          )}
         </div>
       </section>
       {/* PROCEED TO REVIEW BANNER WHEN SESSION 2 IS READY */}

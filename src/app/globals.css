@@ -128,21 +128,21 @@
 }
 
 .btn-bronze {
-  background: linear-gradient(135deg, #A07850 0%, #85613C 100%);
-  color: #F5EBE0;
+  background: linear-gradient(135deg, #B88E5D 0%, #946B3B 100%);
+  color: #FFFFFF;
   font-weight: 600;
   padding: 0.875rem 1.5rem;
   border-radius: 0.75rem;
-  border: 1px solid rgba(214, 199, 161, 0.3);
+  border: 1px solid rgba(245, 235, 224, 0.25);
   cursor: pointer;
-  box-shadow: 0 4px 16px 0 rgba(160, 120, 80, 0.3);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 18px 0 rgba(148, 107, 59, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-bronze:hover:not(:disabled) {
-  background: linear-gradient(135deg, #B58A5C 0%, #A07850 100%);
+  background: linear-gradient(135deg, #C79E6D 0%, #A37947 100%);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px 0 rgba(160, 120, 80, 0.45);
+  box-shadow: 0 8px 24px 0 rgba(184, 142, 93, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 /* Custom Scrollbar */
