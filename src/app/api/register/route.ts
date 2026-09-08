@@ -20,19 +20,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { s1Sports, s1StudentLife, s2Sports, s2StudentLife } = await request.json();
+    const { s2Sports, s2StudentLife } = await request.json();
 
-    // 1. Validation: All 4 courses must be selected
-    if (!s1Sports || !s1StudentLife || !s2Sports || !s2StudentLife) {
-      return NextResponse.json({ error: "Please select all 4 required courses (Session 1 Sports & Student Life, Session 2 Sports & Student Life)." }, { status: 400 });
-    }
-
-    // 2. Validation: Selected courses cannot be identical across sessions
-    if (s1Sports === s2Sports) {
-      return NextResponse.json({ error: "You cannot select the same Sports course for both Session 1 and Session 2." }, { status: 400 });
-    }
-    if (s1StudentLife === s2StudentLife) {
-      return NextResponse.json({ error: "You cannot select the same Student Life course for both Session 1 and Session 2." }, { status: 400 });
+    // 1. Validation: Both Session 2 courses must be selected
+    if (!s2Sports || !s2StudentLife) {
+      return NextResponse.json({ error: "Please select both Session 2 Sports and Student Life courses." }, { status: 400 });
     }
 
     const student = await checkStudentAuthorized(sessionUser.email) || sessionUser;
@@ -41,13 +33,11 @@ export async function POST(request: Request) {
     const calculatedCourses = calculateDynamicSeats(allRegs);
 
     // Resolve course objects
-    const s1SportsObj = calculatedCourses.find(c => matchCourse(s1Sports, c.id, c.name));
-    const s1LifeObj = calculatedCourses.find(c => matchCourse(s1StudentLife, c.id, c.name));
     const s2SportsObj = calculatedCourses.find(c => matchCourse(s2Sports, c.id, c.name));
     const s2LifeObj = calculatedCourses.find(c => matchCourse(s2StudentLife, c.id, c.name));
 
-    const s1SportsName = s1Sports;
-    const s1LifeName = s1StudentLife;
+    const s1SportsName = "";
+    const s1LifeName = "";
     const s2SportsName = s2Sports;
     const s2LifeName = s2StudentLife;
 
@@ -61,8 +51,8 @@ export async function POST(request: Request) {
         p_s1_life: s1LifeName,
         p_s2_sports: s2SportsName,
         p_s2_life: s2LifeName,
-        p_s1_sports_max: s1SportsObj?.s1EffectiveMaxSeats || s1SportsObj?.maxSeats || 80,
-        p_s1_life_max: s1LifeObj?.s1EffectiveMaxSeats || s1LifeObj?.maxSeats || 50,
+        p_s1_sports_max: 80,
+        p_s1_life_max: 50,
         p_s2_sports_max: s2SportsObj?.s2EffectiveMaxSeats || s2SportsObj?.maxSeats || 80,
         p_s2_life_max: s2LifeObj?.s2EffectiveMaxSeats || s2LifeObj?.maxSeats || 50,
       });
@@ -102,38 +92,10 @@ export async function POST(request: Request) {
 
       const computedSeats = calculateDynamicSeats(currentRegistrations);
 
-      const s1SportsDay = parseSportsDay(s1Sports);
-      const s1LifeDay = parseDay(s1StudentLife);
-      if (s1SportsDay && s1LifeDay && s1SportsDay === s1LifeDay) {
-        return { error: `Session 1 Sports and Student Life cannot be scheduled on the same day (${s1SportsDay}). Please select different class days.` };
-      }
-
       const s2SportsDay = parseSportsDay(s2Sports);
       const s2LifeDay = parseDay(s2StudentLife);
       if (s2SportsDay && s2LifeDay && s2SportsDay === s2LifeDay) {
         return { error: `Session 2 Sports and Student Life cannot be scheduled on the same day (${s2SportsDay}). Please select different class days.` };
-      }
-
-      const s1SportsCourse = computedSeats.find(c => matchCourse(s1Sports, c.id, c.name));
-      if (!s1SportsCourse || s1SportsCourse.s1SeatsAvailable <= 0) {
-        return { error: `Sorry, Session 1 Sports (${s1SportsCourse?.name || s1Sports}) is full.` };
-      }
-      const s1Day = parseSportsDay(s1Sports);
-      if (s1Day && s1SportsCourse.s1SportsDaysSeats && s1SportsCourse.s1SportsDaysSeats[s1Day].available <= 0) {
-        return { error: `Sorry, ${s1Day} for ${s1SportsCourse.name} is full (20/20 seats taken). Please select another day.` };
-      }
-
-      const s1LifeCourse = computedSeats.find(c => matchCourse(s1StudentLife, c.id, c.name));
-      if (!s1LifeCourse || s1LifeCourse.s1SeatsAvailable <= 0) {
-        return { error: `Sorry, Session 1 Student Life (${s1LifeCourse?.name || s1StudentLife}) is full.` };
-      }
-      if (s1LifeDay && s1LifeCourse.s1LifeDaysSeats) {
-        if (!s1LifeCourse.s1LifeDaysSeats[s1LifeDay]) {
-          return { error: `Sorry, ${s1LifeDay} is not currently open for ${s1LifeCourse.name}.` };
-        }
-        if (s1LifeCourse.s1LifeDaysSeats[s1LifeDay].available <= 0) {
-          return { error: `Sorry, ${s1LifeDay} for ${s1LifeCourse.name} is full. Please select another day.` };
-        }
       }
 
       const s2SportsCourse = computedSeats.find(c => matchCourse(s2Sports, c.id, c.name));
@@ -162,8 +124,8 @@ export async function POST(request: Request) {
         regNo: student.regNo,
         name: student.name,
         email: student.email.toLowerCase(),
-        s1Sports: s1Sports,
-        s1StudentLife: s1StudentLife,
+        s1Sports: s1SportsName,
+        s1StudentLife: s1LifeName,
         s2Sports: s2Sports,
         s2StudentLife: s2StudentLife,
         timestamp: new Date().toISOString(),

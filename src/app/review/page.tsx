@@ -62,13 +62,9 @@ export default function ReviewPage() {
           localStorage.removeItem(`s2StudentLife_${userEmail}`);
         }
 
-        const draftS1Sports = serverConfirmed ? (data.registration?.s1Sports || "") : ((userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || "");
-        const draftS1Life = serverConfirmed ? (data.registration?.s1StudentLife || "") : ((userEmail && localStorage.getItem(`s1StudentLife_${userEmail}`)) || sessionStorage.getItem("s1StudentLife") || "");
         const draftS2Sports = serverConfirmed ? (data.registration?.s2Sports || "") : ((userEmail && localStorage.getItem(`s2Sports_${userEmail}`)) || sessionStorage.getItem("s2Sports") || "");
         const draftS2Life = serverConfirmed ? (data.registration?.s2StudentLife || "") : ((userEmail && localStorage.getItem(`s2StudentLife_${userEmail}`)) || sessionStorage.getItem("s2StudentLife") || "");
 
-        setS1Sports(draftS1Sports);
-        setS1Life(draftS1Life);
         setS2Sports(draftS2Sports);
         setS2Life(draftS2Life);
 
@@ -93,7 +89,7 @@ export default function ReviewPage() {
     );
   }
 
-  const isAllSelected = Boolean(s1Sports && s1Life && s2Sports && s2Life);
+  const isAllSelected = Boolean(s2Sports && s2Life);
 
   const handleRegisterSubmit = async () => {
     if (submitting || isCompleted || !isAllSelected) return;
@@ -106,8 +102,6 @@ export default function ReviewPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          s1Sports,
-          s1StudentLife: s1Life,
           s2Sports,
           s2StudentLife: s2Life,
         }),
@@ -123,8 +117,6 @@ export default function ReviewPage() {
         if (student?.email) {
           const userEmail = student.email.toLowerCase();
           localStorage.setItem(`confirmed_registration_${userEmail}`, "CONFIRMED");
-          localStorage.setItem(`s1Sports_${userEmail}`, s1Sports);
-          localStorage.setItem(`s1StudentLife_${userEmail}`, s1Life);
           localStorage.setItem(`s2Sports_${userEmail}`, s2Sports);
           localStorage.setItem(`s2StudentLife_${userEmail}`, s2Life);
         }
@@ -226,36 +218,7 @@ export default function ReviewPage() {
           </div>
         </div>
 
-        {/* SESSION 1 SUMMARY */}
-        <div className="glass-panel p-5 sm:p-6 space-y-4 border-[#037A74]/40">
-          <div className="flex items-center justify-between border-b border-[#7ECEB7]/15 pb-3">
-            <div className="flex items-center gap-2 text-[#7ECEB7] font-bold">
-              <Calendar className="w-5 h-5" />
-              <h4>Session 1 Selections</h4>
-            </div>
-            <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-[#037A74]/20 text-[#7ECEB7] border border-[#037A74]/40">
-              Session 1
-            </span>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="glass-card p-3.5 sm:p-4 flex items-center gap-3 border-[#7ECEB7]/15">
-              <Trophy className="w-5 h-5 text-[#7ECEB7] flex-shrink-0" />
-              <div>
-                <span className="text-xs text-[#D6C7A1] block">Sports Course</span>
-                <strong className="text-[#F5EBE0] font-semibold text-xs sm:text-sm">{s1Sports || "None Selected"}</strong>
-              </div>
-            </div>
-
-            <div className="glass-card p-3.5 sm:p-4 flex items-center gap-3 border-[#7ECEB7]/15">
-              <Compass className="w-5 h-5 text-[#A07850] flex-shrink-0" />
-              <div>
-                <span className="text-xs text-[#D6C7A1] block">Student Life Course</span>
-                <strong className="text-[#F5EBE0] font-semibold text-xs sm:text-sm">{s1Life || "None Selected"}</strong>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* SESSION 2 SUMMARY */}
         <div className="glass-panel p-5 sm:p-6 space-y-4 border-[#A07850]/40">

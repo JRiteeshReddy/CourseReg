@@ -61,10 +61,14 @@ let inMemoryRegistrations: RegistrationRow[] = loadLocalRegistrations();
  */
 export function clearRegistrationsCache(): void {
   inMemoryRegistrations = [];
+  inMemorySeatHolds = [];
   try {
     ensureDataDir();
     if (fs.existsSync(REGISTRATIONS_FILE)) {
       fs.writeFileSync(REGISTRATIONS_FILE, JSON.stringify([]), 'utf-8');
+    }
+    if (fs.existsSync(SEAT_HOLDS_FILE)) {
+      fs.writeFileSync(SEAT_HOLDS_FILE, JSON.stringify([]), 'utf-8');
     }
   } catch (err) {
     console.error("Failed to wipe local registrations file:", err);

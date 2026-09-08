@@ -150,14 +150,14 @@ export function matchCourse(val: string | undefined | null, id: string, name: st
 }
 
 export const SPORTS_INITIAL_OCCUPIED: Record<string, Record<SportsDay, number>> = {
-  SP01: { Tuesday: 12, Wednesday: 3, Thursday: 6, Friday: 8 },  // Basketball
-  SP02: { Tuesday: 1, Wednesday: 5, Thursday: 20, Friday: 13 }, // Cricket (Thu 20 -> BLOCKED, Fri 13 occupied)
-  SP03: { Tuesday: 14, Wednesday: 0, Thursday: 15, Friday: 12 }, // Fitness and Nutrition
-  SP04: { Tuesday: 2, Wednesday: 2, Thursday: 9, Friday: 5 },   // Football
-  SP05: { Tuesday: 4, Wednesday: 0, Thursday: 8, Friday: 16 },  // Kabaddi
-  SP06: { Tuesday: 16, Wednesday: 0, Thursday: 7, Friday: 4 },  // Holistic Wellbeing and Yoga Therapy
-  SP07: { Tuesday: 1, Wednesday: 2, Thursday: 12, Friday: 12 }, // Throwball
-  SP08: { Tuesday: 13, Wednesday: 0, Thursday: 10, Friday: 9 }, // Volleyball
+  SP01: { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 },
+  SP02: { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 },
+  SP03: { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 },
+  SP04: { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 },
+  SP05: { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 },
+  SP06: { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 },
+  SP07: { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 },
+  SP08: { Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0 },
 };
 
 export const STUDENT_LIFE_CONFIG: Record<string, {
@@ -166,17 +166,17 @@ export const STUDENT_LIFE_CONFIG: Record<string, {
   initialOccupied: Record<StudentLifeDay, number>;
   openFridayWhenWedFull?: boolean;
 }> = {
-  SL01: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 20, Friday: 2, Thursday: 0 } },
-  SL02: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 25, Friday: 23, Thursday: 0 } },
-  SL03: { days: ["Thursday", "Friday"], dailyMax: 20, initialOccupied: { Thursday: 7, Friday: 20, Wednesday: 0 } },
-  SL04: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 12, Friday: 7, Thursday: 0 } },
-  SL05: { days: ["Wednesday", "Friday"], dailyMax: 30, initialOccupied: { Wednesday: 22, Friday: 16, Thursday: 0 } },
-  SL06: { days: ["Friday"], dailyMax: 20, initialOccupied: { Friday: 7, Wednesday: 0, Thursday: 0 } },
-  SL07: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 10, Friday: 0, Thursday: 0 } },
-  SL08: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 8, Friday: 0, Thursday: 0 }, openFridayWhenWedFull: true },
-  SL09: { days: ["Wednesday", "Friday"], dailyMax: 30, initialOccupied: { Wednesday: 30, Friday: 12, Thursday: 0 } },
-  SL10: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 25, Friday: 20, Thursday: 0 } },
-  SL11: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 18, Friday: 0, Thursday: 0 } },
+  SL01: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 } },
+  SL02: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 } },
+  SL03: { days: ["Thursday", "Friday"], dailyMax: 20, initialOccupied: { Thursday: 0, Friday: 0, Wednesday: 0 } },
+  SL04: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 } },
+  SL05: { days: ["Wednesday", "Friday"], dailyMax: 30, initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 } },
+  SL06: { days: ["Friday"], dailyMax: 20, initialOccupied: { Friday: 0, Wednesday: 0, Thursday: 0 } },
+  SL07: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 } },
+  SL08: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 }, openFridayWhenWedFull: true },
+  SL09: { days: ["Wednesday", "Friday"], dailyMax: 30, initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 } },
+  SL10: { days: ["Wednesday", "Friday"], dailyMax: 25, initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 } },
+  SL11: { days: ["Wednesday", "Friday"], dailyMax: 20, initialOccupied: { Wednesday: 0, Friday: 0, Thursday: 0 } },
 };
 
 /**

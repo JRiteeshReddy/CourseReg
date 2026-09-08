@@ -24,14 +24,10 @@ export default function Session2Page() {
   // Helper to send seat holds to backend
   const syncSeatHold = async (s2Sports: string, s2Life: string) => {
     try {
-      const userEmail = (student?.email || "").toLowerCase();
-      const s1Sports = (userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || "";
-      const s1Life = (userEmail && localStorage.getItem(`s1StudentLife_${userEmail}`)) || sessionStorage.getItem("s1StudentLife") || "";
-
       const res = await fetch("/api/hold-seats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ s1Sports, s1StudentLife: s1Life, s2Sports, s2StudentLife: s2Life }),
+        body: JSON.stringify({ s2Sports, s2StudentLife: s2Life }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -67,12 +63,6 @@ export default function Session2Page() {
           router.push("/dashboard");
           return;
         }
-
-        const savedS1Sports = (userEmail && localStorage.getItem(`s1Sports_${userEmail}`)) || sessionStorage.getItem("s1Sports") || data.registration?.s1Sports || "";
-        const savedS1Life = (userEmail && localStorage.getItem(`s1StudentLife_${userEmail}`)) || sessionStorage.getItem("s1StudentLife") || data.registration?.s1StudentLife || "";
-
-        setS1SportsChoice(savedS1Sports);
-        setS1LifeChoice(savedS1Life);
 
         const savedS2Sports = (userEmail && localStorage.getItem(`s2Sports_${userEmail}`)) || sessionStorage.getItem("s2Sports") || data.registration?.s2Sports || "";
         const savedS2Life = (userEmail && localStorage.getItem(`s2StudentLife_${userEmail}`)) || sessionStorage.getItem("s2StudentLife") || data.registration?.s2StudentLife || "";
@@ -141,16 +131,16 @@ export default function Session2Page() {
       <header className="glass-panel p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-[#7ECEB7]/20">
         <div className="flex items-center gap-3 sm:gap-4">
           <button
-            onClick={() => router.push("/session-1")}
+            onClick={() => router.push("/dashboard")}
             className="p-2 sm:p-2.5 rounded-xl glass-card hover:bg-[#037A74]/30 text-[#D6C7A1] transition-all border border-[#7ECEB7]/20 flex-shrink-0"
-            title="Back to Session 1"
+            title="Back to Dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold font-mono bg-[#A07850]/20 text-[#D6C7A1] border border-[#A07850]/40">
-                SESSION 2 REGISTRATION
+                COURSE REGISTRATION — SESSION 2
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight mt-1 text-[#F5EBE0]">Select Session 2 Courses</h1>
@@ -163,7 +153,7 @@ export default function Session2Page() {
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="flex items-center gap-2 text-xs text-[#D6C7A1] bg-[#072C28] p-2.5 sm:p-3 rounded-xl border border-[#7ECEB7]/20 w-full sm:w-auto">
             <Sparkles className="w-4 h-4 text-[#A07850] flex-shrink-0" />
-            <span>Session 1 selections disabled for Session 2</span>
+            <span>Select 1 Sports course and 1 Student Life course</span>
           </div>
         </div>
       </header>
@@ -182,16 +172,13 @@ export default function Session2Page() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {sportsCourses.map((course) => {
-            const isSelectedInSession1 = matchCourse(s1SportsChoice, course.id, course.name);
             const isAnyDaySelected = matchCourse(selectedSports, course.id, course.name);
 
             return (
               <div
                 key={course.id}
                 className={`glass-card p-4 sm:p-5 flex flex-col justify-between space-y-3 sm:space-y-4 transition-all border ${
-                  isSelectedInSession1
-                    ? "opacity-40 border-[#7ECEB7]/10 bg-[#041C19]"
-                    : isAnyDaySelected
+                  isAnyDaySelected
                     ? "border-[#7ECEB7] bg-[#037A74]/35 shadow-lg shadow-[#037A74]/30 scale-[1.02]"
                     : "border-[#7ECEB7]/15 hover:border-[#7ECEB7]/40"
                 }`}
@@ -199,11 +186,7 @@ export default function Session2Page() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono text-[#D6C7A1]">{course.id}</span>
-                    {isSelectedInSession1 ? (
-                      <span className="text-[10px] font-semibold text-[#7ECEB7] bg-[#7ECEB7]/15 border border-[#7ECEB7]/30 px-2 py-0.5 rounded flex items-center gap-1">
-                        <Ban className="w-3 h-3" /> Selected in S1
-                      </span>
-                    ) : isAnyDaySelected ? (
+                    {isAnyDaySelected ? (
                       <CheckCircle2 className="w-5 h-5 text-[#7ECEB7]" />
                     ) : null}
                   </div>
@@ -244,7 +227,7 @@ export default function Session2Page() {
                         const dayInfo = course.s2SportsDaysSeats?.[day] || { day, maxSeats: 20, occupied: 0, available: 20 };
                         const isDayFull = dayInfo.available <= 0;
                         const isSameDayAsOther = Boolean(studentLifeDay && day === studentLifeDay);
-                        const isDisabled = isSelectedInSession1 || isDayFull;
+                        const isDisabled = isDayFull;
                         const formattedChoice = `${course.name} (${day})`;
                         const isThisDaySelected = selectedSports === formattedChoice;
 
@@ -270,9 +253,7 @@ export default function Session2Page() {
                             }`}
                           >
                             <span>{day.slice(0, 3)}</span>
-                            {isSelectedInSession1 ? (
-                              <span className="text-[9px] font-bold text-[#7ECEB7]">S1</span>
-                            ) : isDayFull ? (
+                            {isDayFull ? (
                               <span className="text-[9px] font-bold text-red-400 uppercase">FULL</span>
                             ) : isSameDayAsOther && !isThisDaySelected ? (
                               <span className="text-[8px] font-bold text-amber-400 uppercase px-1 py-0.2 rounded bg-amber-400/10">SAME DAY</span>
@@ -307,7 +288,6 @@ export default function Session2Page() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {studentLifeCourses.map((course) => {
-            const isSelectedInSession1 = matchCourse(s1LifeChoice, course.id, course.name);
             const isAnyDaySelected = matchCourse(selectedStudentLife, course.id, course.name);
             const daysSeats = course.s2LifeDaysSeats ? Object.values(course.s2LifeDaysSeats) : [];
 
@@ -315,9 +295,7 @@ export default function Session2Page() {
               <div
                 key={course.id}
                 className={`glass-card p-4 sm:p-5 flex flex-col justify-between space-y-3 sm:space-y-4 transition-all border ${
-                  isSelectedInSession1
-                    ? "opacity-40 border-[#7ECEB7]/10 bg-[#041C19]"
-                    : isAnyDaySelected
+                  isAnyDaySelected
                     ? "border-[#A07850] bg-[#A07850]/30 shadow-lg shadow-[#A07850]/20 scale-[1.02]"
                     : "border-[#7ECEB7]/15 hover:border-[#7ECEB7]/40"
                 }`}
@@ -325,11 +303,7 @@ export default function Session2Page() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono text-[#D6C7A1]">{course.id}</span>
-                    {isSelectedInSession1 ? (
-                      <span className="text-[10px] font-semibold text-[#A07850] bg-[#A07850]/15 border border-[#A07850]/30 px-2 py-0.5 rounded flex items-center gap-1">
-                        <Ban className="w-3 h-3" /> Selected in S1
-                      </span>
-                    ) : isAnyDaySelected ? (
+                    {isAnyDaySelected ? (
                       <CheckCircle2 className="w-5 h-5 text-[#A07850]" />
                     ) : null}
                   </div>
@@ -370,7 +344,7 @@ export default function Session2Page() {
                         {daysSeats.map((dayInfo) => {
                           const isDayFull = dayInfo.available <= 0;
                           const isSameDayAsOther = Boolean(sportsDay && dayInfo.day === sportsDay);
-                          const isDisabled = isSelectedInSession1 || isDayFull;
+                          const isDisabled = isDayFull;
                           const formattedChoice = `${course.name} (${dayInfo.day})`;
                           const isThisDaySelected = selectedStudentLife === formattedChoice;
 
@@ -396,9 +370,7 @@ export default function Session2Page() {
                               }`}
                             >
                               <span>{dayInfo.day.slice(0, 3)}</span>
-                              {isSelectedInSession1 ? (
-                                <span className="text-[9px] font-bold text-[#A07850]">S1</span>
-                              ) : isDayFull ? (
+                              {isDayFull ? (
                                 <span className="text-[9px] font-bold text-red-400 uppercase">FULL</span>
                               ) : isSameDayAsOther && !isThisDaySelected ? (
                                 <span className="text-[8px] font-bold text-amber-400 uppercase px-1 py-0.2 rounded bg-amber-400/10">SAME DAY</span>
